@@ -3,7 +3,7 @@ import { Router } from 'express';
 const router = Router();
 
 // Health check for API
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({ status: 'ok', message: 'API is running' });
 });
 

@@ -59,7 +59,30 @@ cd ../frontend
 npm install
 ```
 
-### 3. Set Up Environment Variables
+### 3. Start Dependencies with Podman
+
+**Start MongoDB and Redis containers**:
+```bash
+# From project root
+make deps-up
+```
+
+This starts:
+- MongoDB on `localhost:27017`
+- Redis on `localhost:6379`
+- Mongo Express UI on `localhost:8081`
+
+**Verify containers are running**:
+```bash
+make ps
+```
+
+**Alternative: Manual podman-compose**:
+```bash
+podman-compose up -d mongodb redis mongo-express
+```
+
+### 4. Set Up Environment Variables
 
 **Backend**:
 ```bash
@@ -71,7 +94,7 @@ Edit `backend/.env`:
 ```env
 NODE_ENV=development
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/ask-annie
+MONGODB_URI=mongodb://admin:admin123@localhost:27017/ask-annie?authSource=admin
 JWT_SECRET=dev-secret-change-in-production
 ALLOWED_ORIGINS=http://localhost:5173
 WHISPER_MODEL_SIZE=base
@@ -91,25 +114,6 @@ VITE_ENV=development
 VITE_ENABLE_VOICE_RECORDING=true
 VITE_ENABLE_NOTIFICATIONS=true
 ```
-
-### 4. Start MongoDB
-
-**Local MongoDB**:
-```bash
-# macOS (Homebrew)
-brew services start mongodb-community
-
-# Linux (systemd)
-sudo systemctl start mongod
-
-# Windows
-net start MongoDB
-```
-
-**Or use MongoDB Atlas**:
-1. Create free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-2. Get connection string
-3. Update `MONGODB_URI` in `backend/.env`
 
 ### 5. Set Up faster-whisper (Optional for Voice Features)
 
@@ -131,15 +135,21 @@ python -c "from faster_whisper import WhisperModel; WhisperModel('base')"
 
 ### Development Mode (Recommended)
 
-**Run both frontend and backend concurrently**:
+**1. Start dependencies (MongoDB + Redis)**:
+```bash
+make deps-up
+```
+
+**2. Run both frontend and backend locally**:
 ```bash
 # From project root
-npm run dev
+make dev
+# Or: npm run dev
 ```
 
 This starts:
-- Backend on `http://localhost:3000`
-- Frontend on `http://localhost:5173`
+- Backend on `http://localhost:3000` (with hot-reload)
+- Frontend on `http://localhost:5173` (with HMR)
 
 ### Run Services Separately
 
@@ -160,6 +170,14 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000/api
 - **API Health**: http://localhost:3000/health
+- **Mongo Express**: http://localhost:8081 (admin/admin)
+
+### Stop Dependencies
+
+When you're done developing:
+```bash
+make deps-down
+```
 
 ---
 

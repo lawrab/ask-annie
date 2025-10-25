@@ -39,45 +39,60 @@ ask-annie/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm/yarn
-- MongoDB (local or Railway instance)
+- Node.js 18+ and npm
+- Podman (or Docker)
 - Python 3.8+ (for faster-whisper)
 
 ### Development Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/ask-annie.git
+   git clone https://github.com/lrabbets/ask-annie.git
    cd ask-annie
    ```
 
-2. **Backend Setup**
+2. **Start dependencies (MongoDB + Redis)**
    ```bash
-   cd backend
-   npm install
-   cp .env.example .env
-   # Edit .env with your MongoDB URI and secrets
-   npm run dev
+   make deps-up
+   ```
+   This starts MongoDB on `localhost:27017` and Redis on `localhost:6379`
+
+3. **Install npm dependencies**
+   ```bash
+   make install
+   # Or manually:
+   npm run install:all
    ```
 
-3. **Frontend Setup**
+4. **Set up environment variables**
    ```bash
-   cd frontend
-   npm install
-   cp .env.example .env
-   # Edit .env with your backend API URL
-   npm run dev
+   # Backend
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your settings
+
+   # Frontend
+   cp frontend/.env.example frontend/.env
+   # Edit frontend/.env with your settings
    ```
 
-4. **Access the application**
+5. **Start development servers**
+   ```bash
+   make dev
+   ```
+   This runs both backend and frontend with hot-reload enabled.
+
+6. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3000
+   - Mongo Express UI: http://localhost:8081 (admin/admin)
 
 ## Documentation
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [Development Guide](docs/DEVELOPMENT.md)
+- [Container Setup (Podman/Docker)](docs/DOCKER.md)
+- [Podman Specific Guide](docs/PODMAN.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Contributing Guidelines](docs/CONTRIBUTING.md)
 

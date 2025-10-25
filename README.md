@@ -124,7 +124,7 @@ MIT
 
 ## Dedication
 
-Built with love in memory of Annie Rabbets 🐰
+Built with love for Annie Rabbets 🐰
 
 ---
 

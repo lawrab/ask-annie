@@ -1,4 +1,4 @@
-.PHONY: help install dev up down logs clean restart ps
+.PHONY: help install dev up down logs clean restart ps typecheck
 
 # Detect container runtime (podman or docker)
 CONTAINER_RUNTIME := $(shell command -v podman 2>/dev/null)
@@ -36,6 +36,7 @@ help:
 	@echo "  make dev              Run backend + frontend locally"
 	@echo "  make test             Run all tests"
 	@echo "  make lint             Lint all code"
+	@echo "  make typecheck        TypeScript type checking"
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-shell         Open MongoDB shell"
@@ -94,6 +95,12 @@ test:
 
 lint:
 	npm run lint
+
+typecheck:
+	@echo "Running TypeScript checks..."
+	@cd backend && npm run typecheck
+	@cd frontend && npm run typecheck
+	@echo "✓ TypeScript checks passed"
 
 # Database utilities
 db-shell:

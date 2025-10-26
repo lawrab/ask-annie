@@ -88,6 +88,7 @@ ask-annie/
 
 ## Documentation
 
+- [Development Workflow](docs/WORKFLOW.md) - **Start here for development work**
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [Development Guide](docs/DEVELOPMENT.md)

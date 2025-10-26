@@ -59,7 +59,7 @@ jobs:
       - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./backend/coverage/coverage-final.json
+          directory: ./backend/coverage
           flags: backend
 
   frontend-test:
@@ -99,7 +99,7 @@ jobs:
       - name: Upload frontend coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./frontend/coverage/coverage-final.json
+          directory: ./frontend/coverage
           flags: frontend
 
       - name: Build

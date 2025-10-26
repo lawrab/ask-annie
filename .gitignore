@@ -140,6 +140,9 @@ Thumbs.db
 *.bak
 *~
 
+# Serena (AI assistant memory)
+.serena/
+
 # Railway
 .railway/
 

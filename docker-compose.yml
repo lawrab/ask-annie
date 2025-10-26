@@ -58,12 +58,33 @@ services:
       retries: 5
     command: redis-server --appendonly yes
 
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: ask-annie-whisper
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    environment:
+      - WHISPER__MODEL=Systran/faster-distil-whisper-small.en
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    networks:
+      - ask-annie-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
 volumes:
   mongodb_data:
     driver: local
   mongodb_config:
     driver: local
   redis_data:
+    driver: local
+  whisper_models:
     driver: local
 
 networks:

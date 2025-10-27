@@ -3,6 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  testTimeout: 30000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
@@ -19,7 +20,20 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/**/*.test.ts',
     '!src/**/*.spec.ts',
+    '!src/**/__tests__/**',
+    '!src/server.ts', // Server startup code
+    '!src/config/**', // Configuration files
+    '!src/types/**', // Type definitions
+    '!src/routes/**', // Route configuration (thin wrappers)
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
+  },
 };

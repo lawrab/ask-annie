@@ -237,7 +237,9 @@ describe('ParsingService', () => {
       });
 
       it('should handle various phrase structures', () => {
-        const result = parseSymptoms('Today my grip in my hands was terrible, pain around 3 out of 10');
+        const result = parseSymptoms(
+          'Today my grip in my hands was terrible, pain around 3 out of 10'
+        );
 
         expect(result.symptoms.hand_grip).toBe('bad');
         expect(result.symptoms.pain_level).toBe(3);

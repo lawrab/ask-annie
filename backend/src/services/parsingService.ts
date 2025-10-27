@@ -48,7 +48,18 @@ const SYMPTOM_PATTERNS = {
 
   // Activity level
   activity_level: {
-    keywords: ['activity', 'active', 'movement', 'exercise', 'exertion', 'rested', 'rest', 'light', 'intense', 'workout'],
+    keywords: [
+      'activity',
+      'active',
+      'movement',
+      'exercise',
+      'exertion',
+      'rested',
+      'rest',
+      'light',
+      'intense',
+      'workout',
+    ],
     values: {
       rested: ['rested', 'rest', 'relaxed', 'inactive', 'sedentary'],
       light: ['light', 'gentle', 'easy', 'minimal'],
@@ -64,12 +75,26 @@ const SYMPTOM_PATTERNS = {
   },
 
   tingling_feet: {
-    keywords: ['tingling feet', 'feet tingling', 'numb feet', 'feet numb', 'feet are tingling', 'my feet are tingling'],
+    keywords: [
+      'tingling feet',
+      'feet tingling',
+      'numb feet',
+      'feet numb',
+      'feet are tingling',
+      'my feet are tingling',
+    ],
     boolean: true,
   },
 
   neck_stiffness: {
-    keywords: ['neck stiff', 'stiff neck', 'neck pain', 'neck ache', 'neck is stiff', 'neck is really stiff'],
+    keywords: [
+      'neck stiff',
+      'stiff neck',
+      'neck pain',
+      'neck ache',
+      'neck is stiff',
+      'neck is really stiff',
+    ],
     boolean: true,
   },
 };

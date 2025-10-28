@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createVoiceCheckin } from '../checkinController';
+import { createVoiceCheckin, createManualCheckin } from '../checkinController';
 import CheckIn from '../../models/CheckIn';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { parseSymptoms } from '../../services/parsingService';
@@ -414,6 +414,378 @@ describe('CheckinController', () => {
               structured: expect.objectContaining({
                 symptoms: {},
               }),
+            }),
+          })
+        );
+      });
+    });
+  });
+
+  describe('createManualCheckin', () => {
+    describe('Success Cases', () => {
+      it('should successfully create a manual check-in', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: {
+            hand_grip: 'moderate',
+            pain_level: 5,
+          },
+          activities: ['walking'],
+          triggers: [],
+          notes: 'Felt okay today',
+        };
+
+        mockReq = {
+          body: {
+            userId: '507f1f77bcf86cd799439011',
+            structured: mockStructured,
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          userId: '507f1f77bcf86cd799439011',
+          timestamp: new Date('2024-01-01T12:00:00Z'),
+          rawTranscript: 'manual entry',
+          structured: mockStructured,
+          flaggedForDoctor: false,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockCheckIn.save).toHaveBeenCalled();
+        expect(mockRes.status).toHaveBeenCalledWith(201);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            id: mockCheckIn._id,
+            timestamp: mockCheckIn.timestamp,
+            rawTranscript: 'manual entry',
+            structured: mockStructured,
+          },
+        });
+        expect(mockNext).not.toHaveBeenCalled();
+      });
+
+      it('should handle check-in with empty symptoms', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: {},
+          activities: ['yoga'],
+          triggers: ['stress'],
+          notes: 'Just tracking activities',
+        };
+
+        mockReq = {
+          body: {
+            structured: mockStructured,
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          timestamp: new Date(),
+          rawTranscript: 'manual entry',
+          structured: mockStructured,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(201);
+        expect(mockRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+              structured: expect.objectContaining({
+                symptoms: {},
+                activities: ['yoga'],
+                triggers: ['stress'],
+              }),
+            }),
+          })
+        );
+      });
+
+      it('should use default userId when not provided', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: { energy: 'high' },
+          activities: [],
+          triggers: [],
+          notes: '',
+        };
+
+        mockReq = {
+          body: {
+            structured: mockStructured,
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          userId: '000000000000000000000000',
+          timestamp: new Date(),
+          rawTranscript: 'manual entry',
+          structured: mockStructured,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: '000000000000000000000000',
+          })
+        );
+      });
+
+      it('should handle various symptom value types', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: {
+            hand_grip: 'good', // string
+            pain_level: 3, // number
+            raynauds_event: true, // boolean
+          },
+          activities: [],
+          triggers: [],
+          notes: 'Mixed types',
+        };
+
+        mockReq = {
+          body: {
+            structured: mockStructured,
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          timestamp: new Date(),
+          rawTranscript: 'manual entry',
+          structured: mockStructured,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(201);
+        expect(mockRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+              structured: expect.objectContaining({
+                symptoms: {
+                  hand_grip: 'good',
+                  pain_level: 3,
+                  raynauds_event: true,
+                },
+              }),
+            }),
+          })
+        );
+      });
+
+      it('should handle missing optional fields with defaults', async () => {
+        // Arrange
+        mockReq = {
+          body: {
+            structured: {
+              symptoms: { energy: 'low' },
+              // Missing activities, triggers, notes
+            },
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          timestamp: new Date(),
+          rawTranscript: 'manual entry',
+          structured: {
+            symptoms: { energy: 'low' },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            structured: expect.objectContaining({
+              activities: [],
+              triggers: [],
+              notes: '',
+            }),
+          })
+        );
+      });
+    });
+
+    describe('Validation Errors', () => {
+      it('should return 400 when structured data is missing', async () => {
+        // Arrange
+        mockReq = {
+          body: {},
+        };
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Structured check-in data is required',
+        });
+        expect(mockNext).not.toHaveBeenCalled();
+      });
+
+      it('should return 400 when structured is null', async () => {
+        // Arrange
+        mockReq = {
+          body: {
+            structured: null,
+          },
+        };
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Structured check-in data is required',
+        });
+      });
+    });
+
+    describe('Database Errors', () => {
+      it('should handle database save errors', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: { energy: 'medium' },
+          activities: [],
+          triggers: [],
+          notes: 'Test',
+        };
+
+        mockReq = {
+          body: {
+            structured: mockStructured,
+          },
+        };
+
+        const dbError = new Error('Database connection failed');
+        const mockCheckIn = {
+          save: jest.fn().mockRejectedValue(dbError),
+        };
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockCheckIn.save).toHaveBeenCalled();
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+
+      it('should handle validation errors from model', async () => {
+        // Arrange
+        mockReq = {
+          body: {
+            structured: {
+              symptoms: {},
+              activities: [],
+              triggers: [],
+              notes: '',
+            },
+          },
+        };
+
+        const validationError = new Error('Validation failed');
+        const mockCheckIn = {
+          save: jest.fn().mockRejectedValue(validationError),
+        };
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockNext).toHaveBeenCalledWith(validationError);
+      });
+    });
+
+    describe('Integration Scenarios', () => {
+      it('should handle complex symptom tracking', async () => {
+        // Arrange
+        const mockStructured = {
+          symptoms: {
+            hand_grip: 'bad',
+            pain_level: 8,
+            energy: 'low',
+            brain_fog: true,
+            raynauds_event: true,
+            tingling_feet: false,
+            activity_level: 'light',
+          },
+          activities: ['walking', 'housework', 'rest'],
+          triggers: ['stress', 'cold', 'caffeine'],
+          notes: 'Really challenging day with multiple symptoms',
+        };
+
+        mockReq = {
+          body: {
+            structured: mockStructured,
+          },
+        };
+
+        const mockCheckIn = {
+          _id: '507f191e810c19729de860ea',
+          timestamp: new Date(),
+          rawTranscript: 'manual entry',
+          structured: mockStructured,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(201);
+        expect(mockRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+              structured: mockStructured,
             }),
           })
         );

@@ -117,3 +117,72 @@ export async function createVoiceCheckin(
     next(error);
   }
 }
+
+/**
+ * POST /api/checkins/manual
+ * Accepts manually-entered structured check-in data
+ */
+export async function createManualCheckin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    logger.info('Processing manual check-in');
+
+    // TODO: Get userId from authenticated user session
+    // For now, using a placeholder - will be replaced with actual auth
+    const userId = req.body.userId || '000000000000000000000000';
+
+    // Validate structured data is provided
+    if (!req.body.structured) {
+      res.status(400).json({
+        success: false,
+        error: 'Structured check-in data is required',
+      });
+      return;
+    }
+
+    const { structured } = req.body;
+
+    logger.info('Manual check-in data received', {
+      symptomCount: Object.keys(structured.symptoms || {}).length,
+      activityCount: (structured.activities || []).length,
+      triggerCount: (structured.triggers || []).length,
+    });
+
+    // Save to database with rawTranscript set to 'manual entry'
+    const checkIn = new CheckIn({
+      userId,
+      timestamp: new Date(),
+      rawTranscript: 'manual entry',
+      structured: {
+        symptoms: structured.symptoms || {},
+        activities: structured.activities || [],
+        triggers: structured.triggers || [],
+        notes: structured.notes || '',
+      },
+      flaggedForDoctor: false,
+    });
+
+    await checkIn.save();
+
+    logger.info('Manual check-in saved successfully', {
+      checkInId: checkIn._id,
+    });
+
+    // Return response
+    res.status(201).json({
+      success: true,
+      data: {
+        id: checkIn._id,
+        timestamp: checkIn.timestamp,
+        rawTranscript: checkIn.rawTranscript,
+        structured: checkIn.structured,
+      },
+    });
+  } catch (error) {
+    logger.error('Error creating manual check-in', { error });
+    next(error);
+  }
+}

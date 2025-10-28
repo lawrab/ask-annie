@@ -1,10 +1,22 @@
 import { Router } from 'express';
 import { audioUpload } from '../middleware/upload';
 import { validateRequest } from '../middleware/validateRequest';
-import { createVoiceCheckin, createManualCheckin } from '../controllers/checkinController';
+import {
+  createVoiceCheckin,
+  createManualCheckin,
+  getCheckins,
+} from '../controllers/checkinController';
 import { manualCheckinSchema } from '../utils/validation';
 
 const router = Router();
+
+/**
+ * GET /api/checkins
+ * Retrieve check-ins with filtering, pagination, and sorting
+ * Query params: userId, startDate, endDate, symptom, activity, trigger,
+ * flaggedForDoctor, limit, offset, sortBy, sortOrder
+ */
+router.get('/', getCheckins);
 
 /**
  * POST /api/checkins

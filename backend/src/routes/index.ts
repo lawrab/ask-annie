@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import checkinRoutes from './checkinRoutes';
 
 const router = Router();
 
@@ -7,9 +8,11 @@ router.get('/health', (_req, res) => {
   res.json({ status: 'ok', message: 'API is running' });
 });
 
-// TODO: Add route modules as they are created
+// Route modules
+router.use('/checkins', checkinRoutes);
+
+// TODO: Add remaining route modules as they are created
 // router.use('/auth', authRoutes);
-// router.use('/checkins', checkinRoutes);
 // router.use('/analysis', analysisRoutes);
 // router.use('/user', userRoutes);
 

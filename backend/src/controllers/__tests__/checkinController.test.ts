@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createVoiceCheckin, createManualCheckin } from '../checkinController';
+import { createVoiceCheckin, createManualCheckin, getCheckins } from '../checkinController';
 import CheckIn from '../../models/CheckIn';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { parseSymptoms } from '../../services/parsingService';
@@ -789,6 +789,518 @@ describe('CheckinController', () => {
             }),
           })
         );
+      });
+    });
+  });
+
+  describe('getCheckins', () => {
+    let mockGetReq: Partial<Request>;
+
+    beforeEach(() => {
+      mockGetReq = {
+        query: {
+          userId: '507f1f77bcf86cd799439011',
+        },
+      };
+    });
+
+    describe('Success Cases', () => {
+      it('should retrieve check-ins with default pagination', async () => {
+        // Arrange
+        const mockCheckIns = [
+          {
+            _id: '507f191e810c19729de860ea',
+            userId: '507f1f77bcf86cd799439011',
+            timestamp: new Date('2024-01-02T12:00:00Z'),
+            rawTranscript: 'manual entry',
+            structured: {
+              symptoms: { pain_level: 5 },
+              activities: ['walking'],
+              triggers: [],
+              notes: '',
+            },
+            flaggedForDoctor: false,
+          },
+          {
+            _id: '507f191e810c19729de860eb',
+            userId: '507f1f77bcf86cd799439011',
+            timestamp: new Date('2024-01-01T12:00:00Z'),
+            rawTranscript: 'My hands hurt',
+            structured: {
+              symptoms: { hand_grip: 'bad' },
+              activities: [],
+              triggers: [],
+              notes: 'My hands hurt',
+            },
+            flaggedForDoctor: false,
+          },
+        ];
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue(mockCheckIns),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(2);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+        });
+        expect(mockQuery.sort).toHaveBeenCalledWith({ timestamp: 'desc' });
+        expect(mockQuery.limit).toHaveBeenCalledWith(20);
+        expect(mockQuery.skip).toHaveBeenCalledWith(0);
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            checkIns: mockCheckIns,
+            pagination: {
+              total: 2,
+              limit: 20,
+              offset: 0,
+              hasMore: false,
+            },
+          },
+        });
+      });
+
+      it('should apply date range filtering', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          startDate: '2024-01-01T00:00:00Z',
+          endDate: '2024-01-31T23:59:59Z',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          timestamp: {
+            $gte: new Date('2024-01-01T00:00:00Z'),
+            $lte: new Date('2024-01-31T23:59:59Z'),
+          },
+        });
+      });
+
+      it('should apply activity filtering', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          activity: 'walking',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          'structured.activities': { $in: ['walking'] },
+        });
+      });
+
+      it('should apply multiple activity filters', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          activity: ['walking', 'running'],
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          'structured.activities': { $in: ['walking', 'running'] },
+        });
+      });
+
+      it('should apply trigger filtering', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          trigger: 'stress',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          'structured.triggers': { $in: ['stress'] },
+        });
+      });
+
+      it('should apply flaggedForDoctor filtering (true)', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          flaggedForDoctor: 'true',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          flaggedForDoctor: true,
+        });
+      });
+
+      it('should apply flaggedForDoctor filtering (false)', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          flaggedForDoctor: 'false',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          flaggedForDoctor: false,
+        });
+      });
+
+      it('should apply symptom filtering', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          symptom: 'pain',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          'structured.symptoms': { $exists: true },
+        });
+      });
+
+      it('should respect custom limit and offset', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          limit: '10',
+          offset: '5',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(50);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockQuery.limit).toHaveBeenCalledWith(10);
+        expect(mockQuery.skip).toHaveBeenCalledWith(5);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            checkIns: [],
+            pagination: {
+              total: 50,
+              limit: 10,
+              offset: 5,
+              hasMore: true,
+            },
+          },
+        });
+      });
+
+      it('should enforce max limit of 100', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          limit: '500',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockQuery.limit).toHaveBeenCalledWith(100);
+      });
+
+      it('should apply ascending sort order', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          sortOrder: 'asc',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockQuery.sort).toHaveBeenCalledWith({ timestamp: 'asc' });
+      });
+
+      it('should handle complex query with multiple filters', async () => {
+        // Arrange
+        mockGetReq.query = {
+          userId: '507f1f77bcf86cd799439011',
+          startDate: '2024-01-01T00:00:00Z',
+          endDate: '2024-01-31T23:59:59Z',
+          activity: ['walking', 'running'],
+          trigger: 'stress',
+          flaggedForDoctor: 'false',
+          limit: '50',
+          offset: '10',
+          sortOrder: 'asc',
+        };
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(100);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          timestamp: {
+            $gte: new Date('2024-01-01T00:00:00Z'),
+            $lte: new Date('2024-01-31T23:59:59Z'),
+          },
+          'structured.activities': { $in: ['walking', 'running'] },
+          'structured.triggers': { $in: ['stress'] },
+          flaggedForDoctor: false,
+        });
+        expect(mockQuery.sort).toHaveBeenCalledWith({ timestamp: 'asc' });
+        expect(mockQuery.limit).toHaveBeenCalledWith(50);
+        expect(mockQuery.skip).toHaveBeenCalledWith(10);
+      });
+
+      it('should handle empty results', async () => {
+        // Arrange
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            checkIns: [],
+            pagination: {
+              total: 0,
+              limit: 20,
+              offset: 0,
+              hasMore: false,
+            },
+          },
+        });
+      });
+    });
+
+    describe('Validation Errors', () => {
+      it('should return 400 if userId is missing', async () => {
+        // Arrange
+        mockGetReq.query = {};
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'userId query parameter is required',
+        });
+        expect(CheckIn.find).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Database Errors', () => {
+      it('should handle database query errors', async () => {
+        // Arrange
+        const dbError = new Error('Database connection failed');
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockRejectedValue(dbError),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+
+      it('should handle count query errors', async () => {
+        // Arrange
+        const dbError = new Error('Count query failed');
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+        (CheckIn.countDocuments as jest.Mock).mockRejectedValue(dbError);
+
+        // Act
+        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
       });
     });
   });

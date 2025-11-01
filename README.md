@@ -2,7 +2,9 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
+> **📦 Project Status**: This was part of my weekly AI-assisted project experiments! I got the backend started during week one, but decided to move on to new projects rather than complete this one. While the concept is solid and close to my heart, dealing with GDPR compliance and sensitive health data for a hosted service felt like more complexity than I wanted for a weekly experiment. The backend API is partially implemented, but the frontend and full feature set never materialized. Might revisit this someday! For now, it lives here as a testament to "started with good intentions." 🚀
+
+Ask Annie is (or was going to be) a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
 ## Features
 

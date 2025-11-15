@@ -33,9 +33,8 @@ export async function createVoiceCheckin(
       mimetype: req.file.mimetype,
     });
 
-    // TODO: Get userId from authenticated user session
-    // For now, using a placeholder - will be replaced with actual auth
-    const userId = req.body.userId || '000000000000000000000000';
+    // Get userId from authenticated user
+    const userId = req.user!.id;
 
     // Step 1: Transcribe audio
     logger.info('Starting transcription');
@@ -120,9 +119,9 @@ export async function createVoiceCheckin(
 
 /**
  * GET /api/checkins
- * Retrieves check-ins with filtering, pagination, and sorting
+ * Retrieves check-ins for authenticated user with filtering, pagination, and sorting
+ * Requires authentication - automatically filters by authenticated user's ID
  * Query params:
- * - userId: filter by user (required for now until auth is implemented)
  * - startDate: filter by start date (ISO 8601)
  * - endDate: filter by end date (ISO 8601)
  * - symptom: filter by symptom name (can specify multiple)
@@ -138,17 +137,8 @@ export async function getCheckins(req: Request, res: Response, next: NextFunctio
   try {
     logger.info('Fetching check-ins', { query: req.query });
 
-    // TODO: Get userId from authenticated user session
-    // For now, require it as query parameter
-    const userId = req.query.userId as string;
-
-    if (!userId) {
-      res.status(400).json({
-        success: false,
-        error: 'userId query parameter is required',
-      });
-      return;
-    }
+    // Get userId from authenticated user
+    const userId = req.user!.id;
 
     // Build query filter
     interface QueryFilter {
@@ -265,9 +255,8 @@ export async function createManualCheckin(
   try {
     logger.info('Processing manual check-in');
 
-    // TODO: Get userId from authenticated user session
-    // For now, using a placeholder - will be replaced with actual auth
-    const userId = req.body.userId || '000000000000000000000000';
+    // Get userId from authenticated user
+    const userId = req.user!.id;
 
     // Validate structured data is provided
     if (!req.body.structured) {

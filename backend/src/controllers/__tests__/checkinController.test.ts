@@ -34,8 +34,11 @@ describe('CheckinController', () => {
         stream: {} as any,
         buffer: Buffer.from(''),
       },
-      body: {
-        userId: '507f1f77bcf86cd799439011',
+      body: {},
+      user: {
+        id: '507f1f77bcf86cd799439011',
+        username: 'testuser',
+        email: 'test@example.com',
       },
     };
 
@@ -143,43 +146,6 @@ describe('CheckinController', () => {
                 triggers: ['stress'],
               }),
             }),
-          })
-        );
-      });
-
-      it('should use default userId when not provided', async () => {
-        // Arrange
-        mockReq.body = {}; // No userId provided
-
-        const mockTranscript = 'Test transcript';
-        const mockParsed = {
-          symptoms: {},
-          activities: [],
-          triggers: [],
-          notes: mockTranscript,
-        };
-        const mockCheckIn = {
-          _id: '507f191e810c19729de860ea',
-          userId: '000000000000000000000000', // Default userId
-          timestamp: new Date(),
-          rawTranscript: mockTranscript,
-          structured: mockParsed,
-          save: jest.fn().mockResolvedValue(true),
-        };
-
-        (transcribeAudio as jest.Mock).mockResolvedValue({
-          text: mockTranscript,
-        });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
-        (CheckIn as any).mockImplementation(() => mockCheckIn);
-
-        // Act
-        await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(CheckIn).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: '000000000000000000000000',
           })
         );
       });
@@ -437,8 +403,12 @@ describe('CheckinController', () => {
 
         mockReq = {
           body: {
-            userId: '507f1f77bcf86cd799439011',
             structured: mockStructured,
+          },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
           },
         };
 
@@ -485,6 +455,11 @@ describe('CheckinController', () => {
           body: {
             structured: mockStructured,
           },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
+          },
         };
 
         const mockCheckIn = {
@@ -516,43 +491,6 @@ describe('CheckinController', () => {
         );
       });
 
-      it('should use default userId when not provided', async () => {
-        // Arrange
-        const mockStructured = {
-          symptoms: { energy: 'high' },
-          activities: [],
-          triggers: [],
-          notes: '',
-        };
-
-        mockReq = {
-          body: {
-            structured: mockStructured,
-          },
-        };
-
-        const mockCheckIn = {
-          _id: '507f191e810c19729de860ea',
-          userId: '000000000000000000000000',
-          timestamp: new Date(),
-          rawTranscript: 'manual entry',
-          structured: mockStructured,
-          save: jest.fn().mockResolvedValue(true),
-        };
-
-        (CheckIn as any).mockImplementation(() => mockCheckIn);
-
-        // Act
-        await createManualCheckin(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(CheckIn).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: '000000000000000000000000',
-          })
-        );
-      });
-
       it('should handle various symptom value types', async () => {
         // Arrange
         const mockStructured = {
@@ -569,6 +507,11 @@ describe('CheckinController', () => {
         mockReq = {
           body: {
             structured: mockStructured,
+          },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
           },
         };
 
@@ -612,6 +555,11 @@ describe('CheckinController', () => {
               // Missing activities, triggers, notes
             },
           },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
+          },
         };
 
         const mockCheckIn = {
@@ -650,6 +598,11 @@ describe('CheckinController', () => {
         // Arrange
         mockReq = {
           body: {},
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
+          },
         };
 
         // Act
@@ -669,6 +622,11 @@ describe('CheckinController', () => {
         mockReq = {
           body: {
             structured: null,
+          },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
           },
         };
 
@@ -698,6 +656,11 @@ describe('CheckinController', () => {
           body: {
             structured: mockStructured,
           },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
+          },
         };
 
         const dbError = new Error('Database connection failed');
@@ -725,6 +688,11 @@ describe('CheckinController', () => {
               triggers: [],
               notes: '',
             },
+          },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
           },
         };
 
@@ -764,6 +732,11 @@ describe('CheckinController', () => {
           body: {
             structured: mockStructured,
           },
+          user: {
+            id: '507f1f77bcf86cd799439011',
+            username: 'testuser',
+            email: 'test@example.com',
+          },
         };
 
         const mockCheckIn = {
@@ -798,8 +771,11 @@ describe('CheckinController', () => {
 
     beforeEach(() => {
       mockGetReq = {
-        query: {
-          userId: '507f1f77bcf86cd799439011',
+        query: {},
+        user: {
+          id: '507f1f77bcf86cd799439011',
+          username: 'testuser',
+          email: 'test@example.com',
         },
       };
     });
@@ -875,7 +851,6 @@ describe('CheckinController', () => {
       it('should apply date range filtering', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           startDate: '2024-01-01T00:00:00Z',
           endDate: '2024-01-31T23:59:59Z',
         };
@@ -907,7 +882,6 @@ describe('CheckinController', () => {
       it('should apply activity filtering', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           activity: 'walking',
         };
 
@@ -935,7 +909,6 @@ describe('CheckinController', () => {
       it('should apply multiple activity filters', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           activity: ['walking', 'running'],
         };
 
@@ -963,7 +936,6 @@ describe('CheckinController', () => {
       it('should apply trigger filtering', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           trigger: 'stress',
         };
 
@@ -991,7 +963,6 @@ describe('CheckinController', () => {
       it('should apply flaggedForDoctor filtering (true)', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           flaggedForDoctor: 'true',
         };
 
@@ -1019,7 +990,6 @@ describe('CheckinController', () => {
       it('should apply flaggedForDoctor filtering (false)', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           flaggedForDoctor: 'false',
         };
 
@@ -1047,7 +1017,6 @@ describe('CheckinController', () => {
       it('should apply symptom filtering', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           symptom: 'pain',
         };
 
@@ -1075,7 +1044,6 @@ describe('CheckinController', () => {
       it('should respect custom limit and offset', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           limit: '10',
           offset: '5',
         };
@@ -1114,7 +1082,6 @@ describe('CheckinController', () => {
       it('should enforce max limit of 100', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           limit: '500',
         };
 
@@ -1139,7 +1106,6 @@ describe('CheckinController', () => {
       it('should apply ascending sort order', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           sortOrder: 'asc',
         };
 
@@ -1164,7 +1130,6 @@ describe('CheckinController', () => {
       it('should handle complex query with multiple filters', async () => {
         // Arrange
         mockGetReq.query = {
-          userId: '507f1f77bcf86cd799439011',
           startDate: '2024-01-01T00:00:00Z',
           endDate: '2024-01-31T23:59:59Z',
           activity: ['walking', 'running'],
@@ -1235,24 +1200,6 @@ describe('CheckinController', () => {
             },
           },
         });
-      });
-    });
-
-    describe('Validation Errors', () => {
-      it('should return 400 if userId is missing', async () => {
-        // Arrange
-        mockGetReq.query = {};
-
-        // Act
-        await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(400);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: false,
-          error: 'userId query parameter is required',
-        });
-        expect(CheckIn.find).not.toHaveBeenCalled();
       });
     });
 

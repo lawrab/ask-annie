@@ -2,7 +2,7 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: Active development. Backend API is functional with comprehensive testing (98% coverage). Voice and manual check-in endpoints are implemented. Frontend scaffolded but not yet complete. See roadmap below for current progress.
+> **📦 Project Status**: Active development. Backend API is functional with comprehensive testing (98.51% coverage, 202 tests). Voice and manual check-in endpoints implemented with JWT authentication. Frontend scaffolded but not yet complete. See roadmap below for current progress.
 
 Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
@@ -105,6 +105,8 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 
 ## Privacy & Security
 
+- **JWT Authentication**: Industry-standard Passport.js authentication protects all endpoints
+- **PHI Protection**: Users can only access their own Protected Health Information
 - All audio transcription happens server-side
 - Medical data stored securely in your MongoDB instance
 - Users can export and delete all data at any time
@@ -112,14 +114,15 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 
 ## Roadmap
 
-### Backend (Wave 1) - In Progress
+### Backend (Wave 1) - Nearly Complete
 - ✅ Symptom parsing service with AI
 - ✅ Voice check-in endpoint (POST /api/checkins with audio)
 - ✅ Manual check-in endpoint (POST /api/checkins with JSON)
 - ✅ List check-ins endpoint (GET /api/checkins with filtering & pagination)
-- ✅ Comprehensive test coverage (98.44%)
-- ⚠️  Authentication & authorization (Issue #52 - critical before production)
-- 📋 End-to-end voice flow testing
+- ✅ JWT Authentication with Passport.js (Issue #52 - security fix)
+- ✅ Comprehensive test coverage (98.51%, 202 tests)
+- 📋 End-to-end voice flow testing (Issue #8)
+- 📋 Login/register endpoints (needed for JWT token generation)
 
 ### Frontend - Not Started
 - 📋 Voice recording interface

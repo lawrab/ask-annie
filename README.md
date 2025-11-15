@@ -2,9 +2,9 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: This was part of my weekly AI-assisted project experiments! I got the backend started during week one, but decided to move on to new projects rather than complete this one. While the concept is solid and close to my heart, dealing with GDPR compliance and sensitive health data for a hosted service felt like more complexity than I wanted for a weekly experiment. The backend API is partially implemented, but the frontend and full feature set never materialized. Might revisit this someday! For now, it lives here as a testament to "started with good intentions." 🚀
+> **📦 Project Status**: Active development. Backend API is functional with comprehensive testing (98% coverage). Voice and manual check-in endpoints are implemented. Frontend scaffolded but not yet complete. See roadmap below for current progress.
 
-Ask Annie is (or was going to be) a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
+Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
 ## Features
 
@@ -112,18 +112,39 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 
 ## Roadmap
 
-- ✅ Core voice check-in functionality
-- ✅ Symptom tracking and trends
-- ✅ Doctor summary generation
-- 🔄 Mobile-optimized PWA
-- 🔄 PDF export for doctor summaries
+### Backend (Wave 1) - In Progress
+- ✅ Symptom parsing service with AI
+- ✅ Voice check-in endpoint (POST /api/checkins with audio)
+- ✅ Manual check-in endpoint (POST /api/checkins with JSON)
+- ✅ List check-ins endpoint (GET /api/checkins with filtering & pagination)
+- ✅ Comprehensive test coverage (98.44%)
+- ⚠️  Authentication & authorization (Issue #52 - critical before production)
+- 📋 End-to-end voice flow testing
+
+### Frontend - Not Started
+- 📋 Voice recording interface
+- 📋 Manual check-in UI
+- 📋 Dashboard with timeline view
+- 📋 Symptom trends and charts
+- 📋 Doctor summary generation
+- 📋 Mobile-optimized PWA
+
+### Future Enhancements
+- 📋 PDF export for doctor summaries
 - 📋 Medication tracking
 - 📋 Wearable device integration
 - 📋 Advanced ML pattern detection
 
 ## License
 
-MIT
+AGPL-3.0
+
+This project is licensed under the GNU Affero General Public License v3.0. This means:
+- You can freely use, modify, and distribute this software
+- If you run a modified version on a server, you must make the source code available to users
+- Any derivative work must also be licensed under AGPL-3.0
+
+See the [LICENSE](LICENSE) file for full details.
 
 ## Dedication
 

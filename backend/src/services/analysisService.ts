@@ -90,6 +90,35 @@ function getUniqueValues(values: unknown[]): unknown[] {
 }
 
 /**
+ * Data point for a single date in trend analysis
+ */
+export interface TrendDataPoint {
+  date: string;
+  value: number;
+  count: number;
+}
+
+/**
+ * Statistics for trend analysis
+ */
+export interface TrendStatistics {
+  average: number;
+  min: number;
+  max: number;
+  median: number;
+  standardDeviation: number;
+}
+
+/**
+ * Trend analysis result interface
+ */
+export interface TrendAnalysis {
+  symptom: string;
+  dataPoints: TrendDataPoint[];
+  statistics: TrendStatistics;
+}
+
+/**
  * Analyze symptoms from user's check-ins
  */
 export async function analyzeSymptomsForUser(
@@ -166,5 +195,129 @@ export async function analyzeSymptomsForUser(
   return {
     symptoms,
     totalCheckins,
+  };
+}
+
+/**
+ * Calculate median of an array of numbers
+ */
+function calculateMedian(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+
+  if (sorted.length % 2 === 0) {
+    return Math.round(((sorted[mid - 1] + sorted[mid]) / 2) * 100) / 100;
+  }
+  return sorted[mid];
+}
+
+/**
+ * Calculate standard deviation of an array of numbers
+ */
+function calculateStandardDeviation(values: number[], mean: number): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const squaredDiffs = values.map((v) => Math.pow(v - mean, 2));
+  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / values.length;
+  return Math.round(Math.sqrt(variance) * 100) / 100;
+}
+
+/**
+ * Get symptom value from check-in
+ */
+function getSymptomValue(checkIn: ICheckIn, symptomName: string): unknown {
+  const symptoms = checkIn.structured.symptoms;
+
+  if (symptoms instanceof Map) {
+    return symptoms.get(symptomName);
+  }
+
+  return symptoms[symptomName];
+}
+
+/**
+ * Analyze trend data for a specific symptom over time
+ */
+export async function analyzeTrendForSymptom(
+  userId: string | Types.ObjectId,
+  symptomName: string,
+  days: number = 14
+): Promise<TrendAnalysis | null> {
+  // Calculate date range
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+
+  // Fetch check-ins within the date range
+  const checkIns = await CheckIn.find({
+    userId,
+    timestamp: { $gte: startDate, $lte: endDate },
+  }).sort({ timestamp: 1 });
+
+  if (checkIns.length === 0) {
+    return null;
+  }
+
+  // Group check-ins by date and extract symptom values
+  const dateMap = new Map<string, number[]>();
+  const allValues: number[] = [];
+
+  checkIns.forEach((checkIn: ICheckIn) => {
+    const value = getSymptomValue(checkIn, symptomName);
+
+    // Only process numeric values
+    if (typeof value === 'number' && !isNaN(value)) {
+      const dateKey = checkIn.timestamp.toISOString().split('T')[0];
+
+      if (!dateMap.has(dateKey)) {
+        dateMap.set(dateKey, []);
+      }
+
+      dateMap.get(dateKey)!.push(value);
+      allValues.push(value);
+    }
+  });
+
+  // If no numeric values found, return null
+  if (allValues.length === 0) {
+    return null;
+  }
+
+  // Calculate daily averages and create data points
+  const dataPoints: TrendDataPoint[] = [];
+
+  dateMap.forEach((values, date) => {
+    const average = Math.round((values.reduce((acc, val) => acc + val, 0) / values.length) * 100) / 100;
+    dataPoints.push({
+      date,
+      value: average,
+      count: values.length,
+    });
+  });
+
+  // Sort data points by date
+  dataPoints.sort((a, b) => a.date.localeCompare(b.date));
+
+  // Calculate overall statistics
+  const { min, max, average } = calculateNumericStats(allValues);
+  const median = calculateMedian(allValues);
+  const standardDeviation = calculateStandardDeviation(allValues, average);
+
+  return {
+    symptom: symptomName,
+    dataPoints,
+    statistics: {
+      average,
+      min,
+      max,
+      median,
+      standardDeviation,
+    },
   };
 }

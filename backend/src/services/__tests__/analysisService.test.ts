@@ -1,7 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 import CheckIn from '../../models/CheckIn';
-import { analyzeSymptomsForUser, SymptomValueType } from '../analysisService';
+import {
+  analyzeSymptomsForUser,
+  analyzeTrendForSymptom,
+  SymptomValueType,
+} from '../analysisService';
 
 // Mock the CheckIn model
 jest.mock('../../models/CheckIn');
@@ -282,6 +286,280 @@ describe('Analysis Service', () => {
       expect(result.symptoms.map((s) => s.name)).toEqual(
         expect.arrayContaining(['pain', 'nausea'])
       );
+    });
+  });
+
+  describe('analyzeTrendForSymptom', () => {
+    it('should return null when no check-ins exist', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => []),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when symptom has no numeric data', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01'),
+            structured: { symptoms: { mood: 'good' }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).toBeNull();
+    });
+
+    it('should calculate trend for single day with single value', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.symptom).toBe('pain_level');
+      expect(result!.dataPoints).toHaveLength(1);
+      expect(result!.dataPoints[0].date).toBe('2024-01-01');
+      expect(result!.dataPoints[0].value).toBe(5);
+      expect(result!.dataPoints[0].count).toBe(1);
+      expect(result!.statistics.min).toBe(5);
+      expect(result!.statistics.max).toBe(5);
+      expect(result!.statistics.average).toBe(5);
+      expect(result!.statistics.median).toBe(5);
+      expect(result!.statistics.standardDeviation).toBe(0);
+    });
+
+    it('should calculate daily average for multiple values per day', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T08:00:00Z'),
+            structured: { symptoms: { pain_level: 3 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-01T14:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-01T20:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(1);
+      expect(result!.dataPoints[0].date).toBe('2024-01-01');
+      expect(result!.dataPoints[0].value).toBe(5); // (3 + 7 + 5) / 3 = 5
+      expect(result!.dataPoints[0].count).toBe(3);
+    });
+
+    it('should group data by date across multiple days', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 3 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(3);
+      expect(result!.dataPoints[0].date).toBe('2024-01-01');
+      expect(result!.dataPoints[1].date).toBe('2024-01-02');
+      expect(result!.dataPoints[2].date).toBe('2024-01-03');
+    });
+
+    it('should sort data points by date', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 3 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(3);
+      expect(result!.dataPoints[0].date).toBe('2024-01-01');
+      expect(result!.dataPoints[1].date).toBe('2024-01-02');
+      expect(result!.dataPoints[2].date).toBe('2024-01-03');
+    });
+
+    it('should calculate statistics correctly', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 1 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 9 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.statistics.min).toBe(1);
+      expect(result!.statistics.max).toBe(9);
+      expect(result!.statistics.average).toBe(5); // (1 + 5 + 9) / 3 = 5
+      expect(result!.statistics.median).toBe(5);
+      expect(result!.statistics.standardDeviation).toBeGreaterThan(0);
+    });
+
+    it('should calculate median for even number of values', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 2 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 4 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 6 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-04T10:00:00Z'),
+            structured: { symptoms: { pain_level: 8 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.statistics.median).toBe(5); // (4 + 6) / 2 = 5
+    });
+
+    it('should handle symptoms stored as Mongoose Map', async () => {
+      const symptomsMap = new Map();
+      symptomsMap.set('pain_level', 5);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: symptomsMap, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(1);
+      expect(result!.dataPoints[0].value).toBe(5);
+    });
+
+    it('should filter out non-numeric values', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: {
+              symptoms: { pain_level: 'severe' },
+              activities: [],
+              triggers: [],
+              notes: '',
+            },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(2); // Only days with numeric values
+      expect(result!.statistics.average).toBe(6); // (5 + 7) / 2
+    });
+
+    it('should round daily average to 2 decimal places', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T08:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-01T16:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-01T20:00:00Z'),
+            structured: { symptoms: { pain_level: 8 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints[0].value).toBe(6.67); // (5 + 7 + 8) / 3 = 6.666...
     });
   });
 });

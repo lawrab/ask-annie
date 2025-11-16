@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getSymptomsAnalysis } from '../controllers/analysisController';
+import { getSymptomsAnalysis, getSymptomTrend } from '../controllers/analysisController';
 
 const router = Router();
 
@@ -14,5 +14,12 @@ router.use(authenticate);
  * Get aggregated symptom statistics for the authenticated user
  */
 router.get('/symptoms', getSymptomsAnalysis);
+
+/**
+ * GET /api/analysis/trends/:symptom
+ * Get time-series trend data for a specific symptom
+ * Query params: days (default: 14, max: 365)
+ */
+router.get('/trends/:symptom', getSymptomTrend);
 
 export default router;

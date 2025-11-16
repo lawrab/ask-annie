@@ -238,10 +238,20 @@ describe('Analysis Service', () => {
     it('should handle symptoms with all null/undefined values', async () => {
       mockFind([
         {
-          structured: { symptoms: { unknown_symptom: null }, activities: [], triggers: [], notes: '' },
+          structured: {
+            symptoms: { unknown_symptom: null },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
         },
         {
-          structured: { symptoms: { unknown_symptom: undefined }, activities: [], triggers: [], notes: '' },
+          structured: {
+            symptoms: { unknown_symptom: undefined },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
         },
       ]);
 
@@ -269,7 +279,9 @@ describe('Analysis Service', () => {
 
       expect(result.totalCheckins).toBe(1);
       expect(result.symptoms).toHaveLength(2);
-      expect(result.symptoms.map((s) => s.name)).toEqual(expect.arrayContaining(['pain', 'nausea']));
+      expect(result.symptoms.map((s) => s.name)).toEqual(
+        expect.arrayContaining(['pain', 'nausea'])
+      );
     });
   });
 });

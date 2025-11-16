@@ -234,5 +234,42 @@ describe('Analysis Service', () => {
 
       expect(result.symptoms[0].percentage).toBe(33.3);
     });
+
+    it('should handle symptoms with all null/undefined values', async () => {
+      mockFind([
+        {
+          structured: { symptoms: { unknown_symptom: null }, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: { unknown_symptom: undefined }, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(2);
+      expect(result.symptoms).toHaveLength(1);
+      expect(result.symptoms[0].name).toBe('unknown_symptom');
+      expect(result.symptoms[0].type).toBe(SymptomValueType.CATEGORICAL);
+    });
+
+    it('should handle symptoms stored as Mongoose Map', async () => {
+      // Simulate Mongoose Map structure
+      const symptomsMap = new Map();
+      symptomsMap.set('pain', 5);
+      symptomsMap.set('nausea', 3);
+
+      mockFind([
+        {
+          structured: { symptoms: symptomsMap, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(1);
+      expect(result.symptoms).toHaveLength(2);
+      expect(result.symptoms.map((s) => s.name)).toEqual(expect.arrayContaining(['pain', 'nausea']));
+    });
   });
 });

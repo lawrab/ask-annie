@@ -10,7 +10,12 @@ vi.mock('../../stores/authStore', () => ({
 }));
 
 interface MockAuthState {
+  user: null;
+  token: null;
   isAuthenticated: () => boolean;
+  login: () => Promise<void>;
+  register: () => Promise<void>;
+  logout: () => void;
   restoreSession: () => void;
 }
 
@@ -25,7 +30,12 @@ describe('ProtectedRoute', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       if (typeof selector === 'function') {
         const mockState: MockAuthState = {
+          user: null,
+          token: null,
           isAuthenticated: () => true,
+          login: vi.fn().mockResolvedValue(undefined),
+          register: vi.fn().mockResolvedValue(undefined),
+          logout: vi.fn(),
           restoreSession: mockRestoreSession,
         };
         return selector(mockState);
@@ -55,7 +65,12 @@ describe('ProtectedRoute', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       if (typeof selector === 'function') {
         const mockState: MockAuthState = {
+          user: null,
+          token: null,
           isAuthenticated: () => false,
+          login: vi.fn().mockResolvedValue(undefined),
+          register: vi.fn().mockResolvedValue(undefined),
+          logout: vi.fn(),
           restoreSession: mockRestoreSession,
         };
         return selector(mockState);
@@ -87,7 +102,12 @@ describe('ProtectedRoute', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       if (typeof selector === 'function') {
         const mockState: MockAuthState = {
+          user: null,
+          token: null,
           isAuthenticated: () => true,
+          login: vi.fn().mockResolvedValue(undefined),
+          register: vi.fn().mockResolvedValue(undefined),
+          logout: vi.fn(),
           restoreSession: mockRestoreSession,
         };
         return selector(mockState);
@@ -123,7 +143,12 @@ describe('ProtectedRoute', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       if (typeof selector === 'function') {
         const mockState: MockAuthState = {
+          user: null,
+          token: null,
           isAuthenticated: () => isAuth,
+          login: vi.fn().mockResolvedValue(undefined),
+          register: vi.fn().mockResolvedValue(undefined),
+          logout: vi.fn(),
           restoreSession: mockRestore,
         };
         return selector(mockState);

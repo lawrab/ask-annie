@@ -5,10 +5,8 @@ import { useAuthStore } from '../stores/authStore';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore((state) => ({
-    user: state.user,
-    logout: state.logout,
-  }));
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);

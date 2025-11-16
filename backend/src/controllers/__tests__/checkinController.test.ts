@@ -99,10 +99,12 @@ describe('CheckinController', () => {
         expect(mockRes.json).toHaveBeenCalledWith({
           success: true,
           data: {
-            id: mockCheckIn._id,
-            timestamp: mockCheckIn.timestamp,
-            rawTranscript: mockTranscript,
-            structured: mockParsed,
+            checkIn: {
+              id: mockCheckIn._id,
+              timestamp: mockCheckIn.timestamp,
+              rawTranscript: mockTranscript,
+              structured: mockParsed,
+            },
           },
         });
         expect(mockNext).not.toHaveBeenCalled();
@@ -141,9 +143,11 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              structured: expect.objectContaining({
-                activities: ['walking'],
-                triggers: ['stress'],
+              checkIn: expect.objectContaining({
+                structured: expect.objectContaining({
+                  activities: ['walking'],
+                  triggers: ['stress'],
+                }),
               }),
             }),
           })
@@ -339,7 +343,9 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              rawTranscript: '',
+              checkIn: expect.objectContaining({
+                rawTranscript: '',
+              }),
             }),
           })
         );
@@ -377,8 +383,10 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              structured: expect.objectContaining({
-                symptoms: {},
+              checkIn: expect.objectContaining({
+                structured: expect.objectContaining({
+                  symptoms: {},
+                }),
               }),
             }),
           })
@@ -433,10 +441,12 @@ describe('CheckinController', () => {
         expect(mockRes.json).toHaveBeenCalledWith({
           success: true,
           data: {
-            id: mockCheckIn._id,
-            timestamp: mockCheckIn.timestamp,
-            rawTranscript: 'manual entry',
-            structured: mockStructured,
+            checkIn: {
+              id: mockCheckIn._id,
+              timestamp: mockCheckIn.timestamp,
+              rawTranscript: 'manual entry',
+              structured: mockStructured,
+            },
           },
         });
         expect(mockNext).not.toHaveBeenCalled();
@@ -481,10 +491,12 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              structured: expect.objectContaining({
-                symptoms: {},
-                activities: ['yoga'],
-                triggers: ['stress'],
+              checkIn: expect.objectContaining({
+                structured: expect.objectContaining({
+                  symptoms: {},
+                  activities: ['yoga'],
+                  triggers: ['stress'],
+                }),
               }),
             }),
           })
@@ -534,12 +546,14 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              structured: expect.objectContaining({
-                symptoms: {
-                  hand_grip: 'good',
-                  pain_level: 3,
-                  raynauds_event: true,
-                },
+              checkIn: expect.objectContaining({
+                structured: expect.objectContaining({
+                  symptoms: {
+                    hand_grip: 'good',
+                    pain_level: 3,
+                    raynauds_event: true,
+                  },
+                }),
               }),
             }),
           })
@@ -758,7 +772,9 @@ describe('CheckinController', () => {
           expect.objectContaining({
             success: true,
             data: expect.objectContaining({
-              structured: mockStructured,
+              checkIn: expect.objectContaining({
+                structured: mockStructured,
+              }),
             }),
           })
         );

@@ -149,9 +149,11 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
  */
 export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // Type assertion for req.user to handle ts-node type resolution issues
+    const user = req.user as { id: string; username: string; email: string } | undefined;
     logger.info('User logged out', {
-      userId: req.user?.id,
-      username: req.user?.username,
+      userId: user?.id,
+      username: user?.username,
     });
 
     res.status(200).json({

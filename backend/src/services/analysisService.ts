@@ -293,7 +293,8 @@ export async function analyzeTrendForSymptom(
   const dataPoints: TrendDataPoint[] = [];
 
   dateMap.forEach((values, date) => {
-    const average = Math.round((values.reduce((acc, val) => acc + val, 0) / values.length) * 100) / 100;
+    const average =
+      Math.round((values.reduce((acc, val) => acc + val, 0) / values.length) * 100) / 100;
     dataPoints.push({
       date,
       value: average,

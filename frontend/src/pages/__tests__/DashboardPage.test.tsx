@@ -41,9 +41,17 @@ describe('DashboardPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAuthStore).mockReturnValue({
-      user: mockUser,
-      logout: mockLogout,
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      const state = {
+        user: mockUser,
+        token: 'mock-token',
+        isAuthenticated: () => true,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: mockLogout,
+        restoreSession: vi.fn(),
+      };
+      return selector(state);
     });
   });
 

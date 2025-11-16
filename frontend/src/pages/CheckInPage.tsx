@@ -14,6 +14,9 @@ interface StructuredCheckInData {
   notes: string;
 }
 
+// NOTE: Voice-related code in this component has lower test coverage due to Web Audio API
+// mocking complexity in jsdom. Manual check-in flow is fully tested. See skipped tests in
+// CheckInPage.test.tsx for voice-related tests that are skipped.
 export default function CheckInPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);

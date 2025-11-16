@@ -5,6 +5,9 @@ interface VoiceRecorderProps {
   onError?: (error: string) => void;
 }
 
+// NOTE: This component has lower test coverage due to Web Audio API (MediaRecorder/getUserMedia)
+// being extremely difficult to mock properly in jsdom. The implementation is functional and
+// tested manually. See skipped tests in VoiceRecorder.test.tsx for details.
 export default function VoiceRecorder({
   onRecordingComplete,
   onError,

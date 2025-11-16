@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authRoutes from './authRoutes';
 import checkinRoutes from './checkinRoutes';
+import analysisRoutes from './analysisRoutes';
 
 const router = Router();
 
@@ -12,9 +13,9 @@ router.get('/health', (_req, res) => {
 // Route modules
 router.use('/auth', authRoutes);
 router.use('/checkins', checkinRoutes);
+router.use('/analysis', analysisRoutes);
 
 // TODO: Add remaining route modules as they are created
-// router.use('/analysis', analysisRoutes);
 // router.use('/user', userRoutes);
 
 export default router;

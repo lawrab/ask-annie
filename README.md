@@ -2,7 +2,7 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: v0.1.0 - MVP Infrastructure Complete. Backend API functional with comprehensive testing (98.51% coverage, 202 tests). Frontend authentication and routing implemented with 63 passing tests. Ready for check-in feature development. See roadmap below for current progress.
+> **📦 Project Status**: v0.1.0 - MVP Complete! Backend API fully functional (98.51% coverage, 255 tests). Frontend includes authentication, routing, dashboard, and complete check-in functionality with voice/manual entry (73 tests, 17 skipped). Ready for Wave 3 (Dashboard enhancements & Analysis). See roadmap below for progress.
 
 Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
@@ -123,19 +123,27 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ Comprehensive test coverage (98.51%, 202 tests)
 - 📋 End-to-end voice flow testing (Issue #8)
 
-### Frontend (Wave 2) - v0.1.0 MVP Infrastructure
+### Frontend (Wave 2) - v0.1.0 MVP Complete ✅
 - ✅ API client service with Axios interceptors (Issue #56)
 - ✅ Zustand authentication store with session persistence (Issue #26)
 - ✅ Login and Register pages with validation (Issue #25)
 - ✅ Protected routing with session restoration (Issue #60)
 - ✅ Dashboard page with check-ins display (Issue #61)
 - ✅ Complete routing setup (Issue #64)
-- ✅ Comprehensive test coverage (63 tests passing)
-- 📋 Voice recording interface (Issue #11)
-- 📋 Manual check-in UI (Issue #11)
-- 📋 Symptom trends and charts
-- 📋 Doctor summary generation
-- 📋 Settings page for notifications
+- ✅ Check-in page with voice/manual toggle (Issue #11)
+- ✅ Voice recording component with Web Audio API (Issue #9)
+- ✅ Manual check-in form with validation (Issue #10)
+- ✅ Comprehensive test coverage (73 tests, 17 skipped due to Web Audio API mocking)
+- 📋 Browser notification permissions (Issue #13)
+
+### Frontend (Wave 3) - Dashboard & Analysis
+- 📋 Enhanced dashboard with timeline view (Issue #18)
+- 📋 Symptom trends page with charts (Issue #19)
+- 📋 Doctor summary generation (Issue #20)
+- 📋 Reusable CheckInCard component (Issue #21)
+
+### Frontend (Wave 4) - Settings & Polish
+- 📋 Settings page (Issue #28)
 - 📋 Mobile-optimized PWA
 
 ### Future Enhancements

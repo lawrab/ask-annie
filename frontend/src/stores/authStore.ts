@@ -1,0 +1,84 @@
+import { create } from 'zustand';
+import { authApi, User } from '../services/api';
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: () => boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string) => Promise<void>;
+  logout: () => void;
+  restoreSession: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  token: null,
+
+  isAuthenticated: () => {
+    return !!get().token && !!get().user;
+  },
+
+  login: async (email: string, password: string) => {
+    const response = await authApi.login({ email, password });
+
+    if (response.success) {
+      const { user, token } = response.data;
+
+      // Store in state
+      set({ user, token });
+
+      // Persist to localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  },
+
+  register: async (username: string, email: string, password: string) => {
+    const response = await authApi.register({ username, email, password });
+
+    if (response.success) {
+      const { user, token } = response.data;
+
+      // Store in state
+      set({ user, token });
+
+      // Persist to localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  },
+
+  logout: () => {
+    // Call API logout (best effort, don't await)
+    authApi.logout().catch(() => {
+      // Ignore errors on logout
+    });
+
+    // Clear state
+    set({ user: null, token: null });
+
+    // Clear localStorage (API client also does this, but be explicit)
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+
+  restoreSession: () => {
+    const token = localStorage.getItem('token');
+    const userJson = localStorage.getItem('user');
+
+    if (token && userJson) {
+      try {
+        const user = JSON.parse(userJson) as User;
+        set({ user, token });
+      } catch {
+        // Invalid user data, clear everything
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+  },
+}));
+
+// Export hook alias for convenience
+export const useAuth = useAuthStore;

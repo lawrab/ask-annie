@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
-import { getSymptomsAnalysis } from '../analysisController';
+import { getSymptomsAnalysis, getSymptomTrend } from '../analysisController';
 import * as analysisService from '../../services/analysisService';
 
 // Mock the analysis service
@@ -21,10 +21,15 @@ describe('Analysis Controller', () => {
   let mockAnalyzeSymptomsForUser: jest.MockedFunction<
     typeof analysisService.analyzeSymptomsForUser
   >;
+  let mockAnalyzeTrendForSymptom: jest.MockedFunction<
+    typeof analysisService.analyzeTrendForSymptom
+  >;
 
   beforeEach(() => {
     mockRequest = {
       user: { id: 'user123', username: 'testuser', email: 'test@example.com' },
+      params: {},
+      query: {},
     };
 
     mockResponse = {
@@ -36,6 +41,10 @@ describe('Analysis Controller', () => {
 
     mockAnalyzeSymptomsForUser = analysisService.analyzeSymptomsForUser as jest.MockedFunction<
       typeof analysisService.analyzeSymptomsForUser
+    >;
+
+    mockAnalyzeTrendForSymptom = analysisService.analyzeTrendForSymptom as jest.MockedFunction<
+      typeof analysisService.analyzeTrendForSymptom
     >;
 
     jest.clearAllMocks();
@@ -137,6 +146,126 @@ describe('Analysis Controller', () => {
         success: true,
         data: mockAnalysis,
       });
+    });
+  });
+
+  describe('getSymptomTrend', () => {
+    beforeEach(() => {
+      mockRequest.params = { symptom: 'pain_level' };
+    });
+
+    it('should return trend data with default days parameter', async () => {
+      const mockTrend = {
+        symptom: 'pain_level',
+        dataPoints: [
+          { date: '2024-01-01', value: 5, count: 2 },
+          { date: '2024-01-02', value: 6.5, count: 3 },
+        ],
+        statistics: {
+          average: 5.2,
+          min: 1,
+          max: 9,
+          median: 5,
+          standardDeviation: 1.8,
+        },
+      };
+
+      mockAnalyzeTrendForSymptom.mockResolvedValue(mockTrend);
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockAnalyzeTrendForSymptom).toHaveBeenCalledWith('user123', 'pain_level', 14);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        data: mockTrend,
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should use custom days parameter when provided', async () => {
+      mockRequest.query = { days: '30' };
+
+      const mockTrend = {
+        symptom: 'pain_level',
+        dataPoints: [],
+        statistics: {
+          average: 0,
+          min: 0,
+          max: 0,
+          median: 0,
+          standardDeviation: 0,
+        },
+      };
+
+      mockAnalyzeTrendForSymptom.mockResolvedValue(mockTrend);
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockAnalyzeTrendForSymptom).toHaveBeenCalledWith('user123', 'pain_level', 30);
+    });
+
+    it('should return 404 when no numeric data found', async () => {
+      mockAnalyzeTrendForSymptom.mockResolvedValue(null);
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'No numeric data found for this symptom in the specified time period',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for invalid days parameter (non-numeric)', async () => {
+      mockRequest.query = { days: 'invalid' };
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Days parameter must be a positive integer',
+      });
+      expect(mockAnalyzeTrendForSymptom).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for negative days parameter', async () => {
+      mockRequest.query = { days: '-5' };
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Days parameter must be a positive integer',
+      });
+      expect(mockAnalyzeTrendForSymptom).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for days parameter exceeding 365', async () => {
+      mockRequest.query = { days: '400' };
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Days parameter cannot exceed 365',
+      });
+      expect(mockAnalyzeTrendForSymptom).not.toHaveBeenCalled();
+    });
+
+    it('should call next with error when service throws', async () => {
+      const error = new Error('Database error');
+      mockAnalyzeTrendForSymptom.mockRejectedValue(error);
+
+      await getSymptomTrend(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockResponse.status).not.toHaveBeenCalled();
+      expect(mockResponse.json).not.toHaveBeenCalled();
     });
   });
 });

@@ -2,16 +2,37 @@
 
 React TypeScript frontend for the Ask Annie symptom tracking application.
 
-## Features
+## Status
 
-- React 18 with TypeScript
-- Tailwind CSS for styling
-- Vite for blazing fast development
-- React Router for navigation
-- Zustand for state management
-- React Hook Form for forms
-- Recharts for data visualisation
-- Web Audio API integration for voice recording
+**Version**: 0.1.0 - MVP Infrastructure Complete
+
+Implemented features:
+- ✅ JWT-based authentication (login/register)
+- ✅ Protected routing with session restoration
+- ✅ Dashboard with check-ins display
+- ✅ API client with Axios interceptors
+- ✅ Form validation with React Hook Form + Zod
+- ✅ State management with Zustand
+- ✅ 63 passing tests with Vitest
+
+Coming next:
+- 📋 Voice recording interface (Issue #11)
+- 📋 Manual check-in form (Issue #11)
+- 📋 Symptom trends and charts
+- 📋 Doctor summary generation
+
+## Tech Stack
+
+- React 18.3.1 with TypeScript
+- Vite 6.2.1 for blazing fast development
+- React Router 7.1.3 for navigation
+- Zustand 5.0.2 for state management
+- React Hook Form 7.54.2 + Zod 3.24.1 for forms
+- Axios 1.7.9 for API communication
+- Tailwind CSS 3.4.17 for styling
+- Vitest 3.0.4 for testing
+- Recharts for data visualization (planned)
+- Web Audio API for voice recording (planned)
 
 ## Project Structure
 
@@ -96,19 +117,24 @@ npm run lint:fix
 
 ## Component Structure
 
-### Pages
-- `/` - Landing/Dashboard
-- `/checkin` - Voice/manual check-in interface
-- `/dashboard` - Timeline view of all check-ins
+### Pages (Implemented)
+- `/login` - Authentication page with email/password validation
+- `/register` - User registration with username/email/password
+- `/dashboard` - Main dashboard displaying check-ins timeline
+- `/checkin` - Check-in page (placeholder for Issue #11)
+- `/` - Redirects to dashboard
+
+### Pages (Planned)
 - `/trends` - Symptom trends and charts
 - `/doctor-summary` - Doctor report generation
 - `/settings` - User settings and preferences
-- `/login` - Authentication
-- `/register` - User registration
 
-### Key Components
+### Components (Implemented)
+- `ProtectedRoute` - Route guard with session restoration
+
+### Components (Planned)
 - `VoiceRecorder` - Voice recording interface
-- `SymptomChart` - Visualisation for symptom trends
+- `SymptomChart` - Visualization for symptom trends
 - `CheckInCard` - Display single check-in
 - `SymptomBadge` - Display individual symptom
 - `NotificationPermission` - Request notification access

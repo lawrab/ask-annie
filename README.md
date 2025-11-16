@@ -2,7 +2,7 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: Active development. Backend API is functional with comprehensive testing (98.51% coverage, 202 tests). Voice and manual check-in endpoints implemented with JWT authentication. Frontend scaffolded but not yet complete. See roadmap below for current progress.
+> **📦 Project Status**: v0.1.0 - MVP Infrastructure Complete. Backend API functional with comprehensive testing (98.51% coverage, 202 tests). Frontend authentication and routing implemented with 63 passing tests. Ready for check-in feature development. See roadmap below for current progress.
 
 Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
@@ -114,7 +114,7 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 
 ## Roadmap
 
-### Backend (Wave 1) - Nearly Complete
+### Backend (Wave 1) - Complete
 - ✅ Symptom parsing service with AI
 - ✅ Voice check-in endpoint (POST /api/checkins with audio)
 - ✅ Manual check-in endpoint (POST /api/checkins with JSON)
@@ -122,14 +122,20 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ JWT Authentication with Passport.js (Issue #52 - security fix)
 - ✅ Comprehensive test coverage (98.51%, 202 tests)
 - 📋 End-to-end voice flow testing (Issue #8)
-- 📋 Login/register endpoints (needed for JWT token generation)
 
-### Frontend - Not Started
-- 📋 Voice recording interface
-- 📋 Manual check-in UI
-- 📋 Dashboard with timeline view
+### Frontend (Wave 2) - v0.1.0 MVP Infrastructure
+- ✅ API client service with Axios interceptors (Issue #56)
+- ✅ Zustand authentication store with session persistence (Issue #26)
+- ✅ Login and Register pages with validation (Issue #25)
+- ✅ Protected routing with session restoration (Issue #60)
+- ✅ Dashboard page with check-ins display (Issue #61)
+- ✅ Complete routing setup (Issue #64)
+- ✅ Comprehensive test coverage (63 tests passing)
+- 📋 Voice recording interface (Issue #11)
+- 📋 Manual check-in UI (Issue #11)
 - 📋 Symptom trends and charts
 - 📋 Doctor summary generation
+- 📋 Settings page for notifications
 - 📋 Mobile-optimized PWA
 
 ### Future Enhancements

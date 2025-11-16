@@ -36,5 +36,25 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.test.{ts,tsx}',
+        '**/*.config.{js,ts}',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+      ],
+      // Thresholds accounting for Web Audio API mocking limitations
+      // VoiceRecorder and voice-related CheckInPage code are hard to test in jsdom
+      thresholds: {
+        lines: 70,
+        functions: 60,
+        branches: 75,
+        statements: 70,
+      },
+    },
   },
 });

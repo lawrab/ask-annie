@@ -34,7 +34,7 @@ export async function createVoiceCheckin(
     });
 
     // Get userId from authenticated user
-    const userId = req.user!.id;
+    const userId = (req.user as { id: string })!.id;
 
     // Step 1: Transcribe audio
     logger.info('Starting transcription');
@@ -138,7 +138,7 @@ export async function getCheckins(req: Request, res: Response, next: NextFunctio
     logger.info('Fetching check-ins', { query: req.query });
 
     // Get userId from authenticated user
-    const userId = req.user!.id;
+    const userId = (req.user as { id: string })!.id;
 
     // Build query filter
     interface QueryFilter {
@@ -256,7 +256,7 @@ export async function createManualCheckin(
     logger.info('Processing manual check-in');
 
     // Get userId from authenticated user
-    const userId = req.user!.id;
+    const userId = (req.user as { id: string })!.id;
 
     // Validate structured data is provided
     if (!req.body.structured) {

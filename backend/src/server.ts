@@ -7,6 +7,7 @@ import { connectDatabase } from './config/database';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
+import passport from './config/passport';
 import routes from './routes';
 
 dotenv.config();
@@ -16,6 +17,9 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // CORS configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];

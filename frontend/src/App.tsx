@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import CheckInPage from './pages/CheckInPage';
+import DesignSystemPage from './pages/DesignSystemPage';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/design-system" element={<DesignSystemPage />} />
 
         {/* Protected routes */}
         <Route

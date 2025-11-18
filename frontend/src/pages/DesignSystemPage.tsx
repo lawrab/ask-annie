@@ -7,7 +7,14 @@
  * Note: This page is for development/documentation purposes only.
  */
 
+import { useState } from 'react';
+import { Button, Input, TextArea, Checkbox, Radio, RadioGroup } from '../components/ui';
+
 export default function DesignSystemPage() {
+  const [inputValue, setInputValue] = useState('');
+  const [textAreaValue, setTextAreaValue] = useState('');
+  const [checkboxValue, setCheckboxValue] = useState(false);
+  const [radioValue, setRadioValue] = useState('');
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -491,10 +498,138 @@ export default function DesignSystemPage() {
           </div>
         </section>
 
+        {/* Component Library */}
+        <section className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Component Library</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Reusable, accessible components following the design system
+          </p>
+
+          <div className="space-y-8">
+            {/* Buttons */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Button Component</h3>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="primary">Primary</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="tertiary">Tertiary</Button>
+                <Button variant="danger">Danger</Button>
+                <Button variant="link">Link</Button>
+                <Button disabled>Disabled</Button>
+                <Button loading>Loading...</Button>
+                <Button size="small">Small</Button>
+                <Button size="large">Large</Button>
+              </div>
+            </div>
+
+            {/* Input */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Input Component</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                <Input
+                  label="Email address"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  helperText="We'll never share your email"
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                />
+                <Input
+                  label="With error"
+                  value="invalid@"
+                  error="Please enter a valid email"
+                />
+                <Input
+                  label="Disabled"
+                  disabled
+                  value="Cannot edit"
+                />
+              </div>
+            </div>
+
+            {/* TextArea */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">TextArea Component</h3>
+              <div className="max-w-2xl">
+                <TextArea
+                  label="Additional notes"
+                  placeholder="Enter any additional notes..."
+                  value={textAreaValue}
+                  onChange={(e) => setTextAreaValue(e.target.value)}
+                  maxLength={500}
+                  showCount
+                  helperText="Describe any symptoms, triggers, or activities"
+                />
+              </div>
+            </div>
+
+            {/* Checkbox */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Checkbox Component</h3>
+              <div className="space-y-3 max-w-md">
+                <Checkbox
+                  label="I agree to the terms and conditions"
+                  checked={checkboxValue}
+                  onChange={(e) => setCheckboxValue(e.target.checked)}
+                />
+                <Checkbox
+                  label="Send me email notifications"
+                  helperText="You can change this later in settings"
+                />
+                <Checkbox
+                  label="Disabled checkbox"
+                  disabled
+                />
+              </div>
+            </div>
+
+            {/* Radio */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Radio Component</h3>
+              <div className="max-w-md">
+                <RadioGroup
+                  label="Severity level"
+                  helperText="Select the severity of your symptoms"
+                  required
+                >
+                  <Radio
+                    name="severity"
+                    value="mild"
+                    label="Mild (1-3)"
+                    checked={radioValue === 'mild'}
+                    onChange={(e) => setRadioValue(e.target.value)}
+                  />
+                  <Radio
+                    name="severity"
+                    value="moderate"
+                    label="Moderate (4-6)"
+                    checked={radioValue === 'moderate'}
+                    onChange={(e) => setRadioValue(e.target.value)}
+                  />
+                  <Radio
+                    name="severity"
+                    value="severe"
+                    label="Severe (7-10)"
+                    checked={radioValue === 'severe'}
+                    onChange={(e) => setRadioValue(e.target.value)}
+                  />
+                </RadioGroup>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <div className="text-center pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            Ask Annie Design System v1.0.0 • See{' '}
+            Ask Annie Design System v1.1.0 • Component Library v1.0.0<br />
+            See{' '}
             <a href="/docs/DESIGN_SYSTEM.md" className="text-primary-600 hover:text-primary-700 underline">
               full documentation
             </a>

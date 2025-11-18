@@ -1,7 +1,7 @@
 # Ask Annie Design System
 
-**Version**: 1.1.0
-**Last Updated**: 2025-11-17
+**Version**: 1.2.0
+**Last Updated**: 2025-11-18
 **Status**: Active
 
 ## Overview
@@ -944,6 +944,22 @@ xl:  1280px  (Desktops)
 ---
 
 ## Version History
+
+**v1.2.0** (2025-11-18)
+- Component Library Phase 2 complete
+- Added 10 production-ready UI components:
+  - Button (5 variants, 3 sizes, loading states, icon support)
+  - Input (password toggle, error states, start/end icons)
+  - TextArea (auto-resize, character count)
+  - Checkbox (indeterminate state)
+  - Radio + RadioGroup
+  - Card (compound component with Header/Body/Footer)
+  - Badge (7 semantic variants, removable)
+  - Alert (4 types with icons, dismissible)
+  - Divider (horizontal/vertical, labels)
+- 236 comprehensive tests with full accessibility coverage
+- Living documentation in DesignSystemPage with interactive examples
+- All components WCAG 2.1 AA compliant
 
 **v1.1.0** (2025-11-17)
 - Added timeline layout patterns for scalable check-in display

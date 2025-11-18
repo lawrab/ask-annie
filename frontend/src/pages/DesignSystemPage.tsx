@@ -8,13 +8,25 @@
  */
 
 import { useState } from 'react';
-import { Button, Input, TextArea, Checkbox, Radio, RadioGroup } from '../components/ui';
+import {
+  Button,
+  Input,
+  TextArea,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  Card,
+  Badge,
+  Alert,
+  Divider,
+} from '../components/ui';
 
 export default function DesignSystemPage() {
   const [inputValue, setInputValue] = useState('');
   const [textAreaValue, setTextAreaValue] = useState('');
   const [checkboxValue, setCheckboxValue] = useState(false);
   const [radioValue, setRadioValue] = useState('');
+  const [showAlert, setShowAlert] = useState(true);
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -622,13 +634,159 @@ export default function DesignSystemPage() {
                 </RadioGroup>
               </div>
             </div>
+
+            {/* Card */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Card Component</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                <Card variant="elevated">
+                  <Card.Header>
+                    <h4 className="font-semibold text-gray-900">Elevated Card</h4>
+                  </Card.Header>
+                  <Card.Body>
+                    <p className="text-sm text-gray-600">
+                      This card has a shadow for elevation. Use for primary content.
+                    </p>
+                  </Card.Body>
+                </Card>
+
+                <Card variant="outlined">
+                  <Card.Header>
+                    <h4 className="font-semibold text-gray-900">Outlined Card</h4>
+                  </Card.Header>
+                  <Card.Body>
+                    <p className="text-sm text-gray-600">
+                      This card has a border. Use for secondary content.
+                    </p>
+                  </Card.Body>
+                </Card>
+
+                <Card variant="interactive" onClick={() => alert('Card clicked!')}>
+                  <Card.Header>
+                    <h4 className="font-semibold text-gray-900">Interactive Card</h4>
+                  </Card.Header>
+                  <Card.Body>
+                    <p className="text-sm text-gray-600">
+                      Click me! Hoverable and clickable with keyboard support.
+                    </p>
+                  </Card.Body>
+                </Card>
+
+                <Card variant="elevated">
+                  <Card.Header>
+                    <h4 className="font-semibold text-gray-900">With Footer</h4>
+                  </Card.Header>
+                  <Card.Body>
+                    <p className="text-sm text-gray-600">
+                      Cards can have headers, body, and footers.
+                    </p>
+                  </Card.Body>
+                  <Card.Footer>
+                    <Button size="small" variant="tertiary">Edit</Button>
+                    <Button size="small" variant="danger">Delete</Button>
+                  </Card.Footer>
+                </Card>
+              </div>
+            </div>
+
+            {/* Badge */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Badge Component</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Semantic variants:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="default">Default</Badge>
+                    <Badge variant="primary">Primary</Badge>
+                    <Badge variant="secondary">Secondary</Badge>
+                    <Badge variant="success">Success</Badge>
+                    <Badge variant="warning">Warning</Badge>
+                    <Badge variant="error">Error</Badge>
+                    <Badge variant="info">Info</Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Sizes:</p>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Badge size="small" variant="primary">Small</Badge>
+                    <Badge size="medium" variant="primary">Medium</Badge>
+                    <Badge size="large" variant="primary">Large</Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Removable badges (click × to remove):</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="primary" removable onRemove={() => alert('Removed!')}>
+                      headache: 7
+                    </Badge>
+                    <Badge variant="success" removable onRemove={() => alert('Removed!')}>
+                      exercise
+                    </Badge>
+                    <Badge variant="error" removable onRemove={() => alert('Removed!')}>
+                      stress
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alert */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Alert Component</h3>
+              <div className="space-y-3 max-w-2xl">
+                <Alert type="success">
+                  Check-in saved successfully!
+                </Alert>
+
+                <Alert type="error" title="Error">
+                  Failed to save check-in. Please try again.
+                </Alert>
+
+                <Alert type="warning" title="Warning">
+                  This symptom has been flagged for doctor review.
+                </Alert>
+
+                <Alert type="info" title="Info" dismissible onDismiss={() => setShowAlert(false)}>
+                  Voice recordings are processed asynchronously. Click × to dismiss.
+                </Alert>
+
+                {!showAlert && (
+                  <Button size="small" onClick={() => setShowAlert(true)}>
+                    Show dismissible alert again
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Divider Component</h3>
+              <div className="space-y-6 max-w-2xl">
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Plain divider:</p>
+                  <Divider />
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Divider with label:</p>
+                  <Divider label="or" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Divider with custom label:</p>
+                  <Divider label="Continue with" />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Footer */}
         <div className="text-center pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            Ask Annie Design System v1.1.0 • Component Library v1.0.0<br />
+            Ask Annie Design System v1.1.0 • Component Library v1.1.0<br />
             See{' '}
             <a href="/docs/DESIGN_SYSTEM.md" className="text-primary-600 hover:text-primary-700 underline">
               full documentation

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "playwright-mcp-wrapper",
+      "args": [
+        "--browser=chromium"
+      ]
+    }
+  }
+}

@@ -90,10 +90,12 @@ export async function createVoiceCheckin(
     res.status(201).json({
       success: true,
       data: {
-        id: checkIn._id,
-        timestamp: checkIn.timestamp,
-        rawTranscript: checkIn.rawTranscript,
-        structured: checkIn.structured,
+        checkIn: {
+          id: checkIn._id,
+          timestamp: checkIn.timestamp,
+          rawTranscript: checkIn.rawTranscript,
+          structured: checkIn.structured,
+        },
       },
     });
   } catch (error) {
@@ -299,10 +301,12 @@ export async function createManualCheckin(
     res.status(201).json({
       success: true,
       data: {
-        id: checkIn._id,
-        timestamp: checkIn.timestamp,
-        rawTranscript: checkIn.rawTranscript,
-        structured: checkIn.structured,
+        checkIn: {
+          id: checkIn._id,
+          timestamp: checkIn.timestamp,
+          rawTranscript: checkIn.rawTranscript,
+          structured: checkIn.structured,
+        },
       },
     });
   } catch (error) {

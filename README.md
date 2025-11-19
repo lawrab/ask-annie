@@ -2,7 +2,7 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: v0.1.0 - MVP Complete! Backend API fully functional (98.51% coverage, 255 tests). Frontend includes authentication, routing, dashboard, and complete check-in functionality with voice/manual entry (73 tests, 17 skipped). Ready for Wave 3 (Dashboard enhancements & Analysis). See roadmap below for progress.
+> **📦 Project Status**: v0.1.0 MVP + Wave 2B (85% Complete) - Backend API fully functional (98.51% coverage, 255 tests). Frontend includes authentication, routing, dashboard, complete check-in functionality (270 tests), and comprehensive design system with 12 accessible UI components documented in Storybook. See roadmap below for progress.
 
 Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
@@ -18,9 +18,11 @@ Ask Annie is a health symptom tracking app designed to help people with undiagno
 
 ### Frontend
 - React 18 with TypeScript
-- Tailwind CSS for styling
+- Tailwind CSS for styling with comprehensive design system
+- Storybook for component development and documentation
 - Web Audio API for voice recording
 - Chart.js/Recharts for data visualization
+- Headless UI for accessible modals and overlays
 
 ### Backend
 - Node.js/Express with TypeScript
@@ -87,10 +89,12 @@ ask-annie/
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3000
    - Mongo Express UI: http://localhost:8081 (admin/admin)
+   - Storybook (component docs): `npm run storybook` → http://localhost:6006
 
 ## Documentation
 
 - [Development Workflow](docs/WORKFLOW.md) - **Start here for development work**
+- [Design System](docs/DESIGN_SYSTEM.md) - UI components and design tokens
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [Development Guide](docs/DEVELOPMENT.md)
@@ -133,8 +137,18 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ Check-in page with voice/manual toggle (Issue #11)
 - ✅ Voice recording component with Web Audio API (Issue #9)
 - ✅ Manual check-in form with validation (Issue #10)
-- ✅ Comprehensive test coverage (73 tests, 17 skipped due to Web Audio API mocking)
+- ✅ Comprehensive test coverage (270 tests)
 - 📋 Browser notification permissions (Issue #13)
+
+### Frontend (Wave 2B) - Design System & Component Library (85% Complete)
+- ✅ Comprehensive design system with Tailwind tokens (Issue #72)
+- ✅ Button, Input, TextArea, Checkbox, Radio components (Issue #73)
+- ✅ Card, Badge, Alert, Divider components (Issue #74)
+- ✅ Modal and ConfirmDialog with Headless UI (Issue #75)
+- ✅ Storybook 10 setup with 69+ stories (Issue #76)
+- 📋 Refactor existing pages to use component library (Issue #77)
+- 📋 Accessibility audit (Issue #70)
+- 📋 Toast notification system (Issue #71)
 
 ### Frontend (Wave 3) - Dashboard & Analysis
 - 📋 Enhanced dashboard with timeline view (Issue #18)

@@ -19,6 +19,8 @@ import {
   Badge,
   Alert,
   Divider,
+  Modal,
+  ConfirmDialog,
 } from '../components/ui';
 
 export default function DesignSystemPage() {
@@ -27,6 +29,12 @@ export default function DesignSystemPage() {
   const [checkboxValue, setCheckboxValue] = useState(false);
   const [radioValue, setRadioValue] = useState('');
   const [showAlert, setShowAlert] = useState(true);
+  const [showBasicModal, setShowBasicModal] = useState(false);
+  const [showModalWithFooter, setShowModalWithFooter] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDangerDialog, setShowDangerDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -780,13 +788,122 @@ export default function DesignSystemPage() {
                 </div>
               </div>
             </div>
+
+            {/* Modal & Dialog */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Modal & Dialog Components</h3>
+              <div className="space-y-6 max-w-2xl">
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Basic modal:</p>
+                  <Button onClick={() => setShowBasicModal(true)}>Open Basic Modal</Button>
+                  <Modal
+                    open={showBasicModal}
+                    onClose={() => setShowBasicModal(false)}
+                    title="Basic Modal"
+                    description="This is a basic modal with title and description"
+                  >
+                    <p>This is the modal content. You can put any React components here.</p>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Press Escape or click outside to close.
+                    </p>
+                  </Modal>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Modal with footer actions:</p>
+                  <Button onClick={() => setShowModalWithFooter(true)}>
+                    Open Modal with Footer
+                  </Button>
+                  <Modal
+                    open={showModalWithFooter}
+                    onClose={() => setShowModalWithFooter(false)}
+                    title="Edit Check-in"
+                    size="large"
+                    footer={
+                      <>
+                        <Button variant="tertiary" onClick={() => setShowModalWithFooter(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={() => setShowModalWithFooter(false)}>
+                          Save Changes
+                        </Button>
+                      </>
+                    }
+                  >
+                    <div className="space-y-4">
+                      <Input
+                        label="Symptom"
+                        placeholder="e.g., headache"
+                      />
+                      <TextArea
+                        label="Notes"
+                        placeholder="Additional details..."
+                        rows={3}
+                      />
+                    </div>
+                  </Modal>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Confirm dialog (primary):</p>
+                  <Button onClick={() => setShowConfirmDialog(true)}>Open Confirm Dialog</Button>
+                  <ConfirmDialog
+                    open={showConfirmDialog}
+                    onClose={() => setShowConfirmDialog(false)}
+                    onConfirm={() => {
+                      console.log('Confirmed!');
+                      setShowConfirmDialog(false);
+                    }}
+                    title="Save Changes?"
+                    description="Are you sure you want to save these changes?"
+                    confirmText="Save"
+                    cancelText="Cancel"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Confirm dialog (danger with loading):</p>
+                  <Button
+                    variant="danger"
+                    onClick={() => setShowDangerDialog(true)}
+                  >
+                    Delete Check-in
+                  </Button>
+                  <ConfirmDialog
+                    open={showDangerDialog}
+                    onClose={() => {
+                      setShowDangerDialog(false);
+                      setIsDeleting(false);
+                    }}
+                    onConfirm={() => {
+                      setIsDeleting(true);
+                      // Simulate async deletion
+                      setTimeout(() => {
+                        console.log('Deleted!');
+                        setIsDeleting(false);
+                        setShowDangerDialog(false);
+                      }, 2000);
+                    }}
+                    title="Delete Check-in"
+                    description="This action cannot be undone. Are you sure you want to delete this check-in?"
+                    confirmText="Delete"
+                    confirmVariant="danger"
+                    isLoading={isDeleting}
+                  >
+                    <Alert type="warning">
+                      All associated data including symptoms, notes, and analysis will be permanently removed.
+                    </Alert>
+                  </ConfirmDialog>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Footer */}
         <div className="text-center pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            Ask Annie Design System v1.1.0 • Component Library v1.1.0<br />
+            Ask Annie Design System v1.2.0 • Component Library v1.2.0<br />
             See{' '}
             <a href="/docs/DESIGN_SYSTEM.md" className="text-primary-600 hover:text-primary-700 underline">
               full documentation

@@ -13,3 +13,4 @@ export { Card, CardHeader, CardBody, CardFooter, type CardProps } from './Card';
 export { Badge, type BadgeProps } from './Badge';
 export { Alert, type AlertProps } from './Alert';
 export { Divider, type DividerProps } from './Divider';
+export { Modal, ConfirmDialog, type ModalProps, type ConfirmDialogProps } from './Modal';

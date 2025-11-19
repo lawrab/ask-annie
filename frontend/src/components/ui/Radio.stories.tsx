@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { Radio, RadioGroup } from '.';
 
@@ -41,18 +41,34 @@ export const Disabled: Story = {
 };
 
 export const RadioGroupExample: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [value, setValue] = useState('email');
     return (
       <div className="space-y-4">
-        <RadioGroup
-          label="Notification preferences"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        >
-          <Radio label="Email" value="email" />
-          <Radio label="SMS" value="sms" />
-          <Radio label="Push notifications" value="push" />
+        <RadioGroup label="Notification preferences">
+          <Radio
+            name="notification"
+            label="Email"
+            value="email"
+            checked={value === 'email'}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <Radio
+            name="notification"
+            label="SMS"
+            value="sms"
+            checked={value === 'sms'}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <Radio
+            name="notification"
+            label="Push notifications"
+            value="push"
+            checked={value === 'push'}
+            onChange={(e) => setValue(e.target.value)}
+          />
         </RadioGroup>
         <p className="text-sm text-gray-600">Selected: {value}</p>
       </div>
@@ -61,18 +77,33 @@ export const RadioGroupExample: Story = {
 };
 
 export const RadioGroupHorizontal: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [value, setValue] = useState('moderate');
     return (
-      <RadioGroup
-        label="Severity Level"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        orientation="horizontal"
-      >
-        <Radio label="Mild" value="mild" />
-        <Radio label="Moderate" value="moderate" />
-        <Radio label="Severe" value="severe" />
+      <RadioGroup label="Severity Level" direction="horizontal">
+        <Radio
+          name="severity"
+          label="Mild"
+          value="mild"
+          checked={value === 'mild'}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <Radio
+          name="severity"
+          label="Moderate"
+          value="moderate"
+          checked={value === 'moderate'}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <Radio
+          name="severity"
+          label="Severe"
+          value="severe"
+          checked={value === 'severe'}
+          onChange={(e) => setValue(e.target.value)}
+        />
       </RadioGroup>
     );
   },

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from './Badge';
 
 const meta = {
@@ -23,6 +23,8 @@ export const Default: Story = {
 };
 
 export const AllVariants: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="flex flex-wrap gap-2">
       <Badge variant="default">Default</Badge>
@@ -37,6 +39,8 @@ export const AllVariants: Story = {
 };
 
 export const AllSizes: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="flex items-center gap-2">
       <Badge size="small">Small</Badge>

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { TextArea } from './TextArea';
 
@@ -47,12 +47,13 @@ export const WithCharacterCount: Story = {
   args: {
     label: 'Notes',
     maxLength: 200,
-    showCharacterCount: true,
     value: 'This textarea shows character count.',
   },
 };
 
 export const AutoResize: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [value, setValue] = useState('Type to see auto-resize...');
     return (

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Divider } from './Divider';
 
 const meta = {
@@ -32,6 +32,8 @@ export const WithCustomLabel: Story = {
 };
 
 export const Vertical: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="flex items-center h-20">
       <span>Left</span>

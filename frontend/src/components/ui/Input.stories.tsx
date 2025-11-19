@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { Mail, Search, Eye, EyeOff } from 'lucide-react';
+import { Mail, Search } from 'lucide-react';
 import { Input } from './Input';
 
 const meta = {
@@ -72,11 +72,12 @@ export const Password: Story = {
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
-    showPasswordToggle: true,
   },
 };
 
 export const Interactive: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [value, setValue] = useState('');
     return (

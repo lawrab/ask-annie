@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Card, CardHeader, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';
@@ -16,6 +16,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <Card>
       <CardHeader>
@@ -29,6 +31,8 @@ export const Default: Story = {
 };
 
 export const WithFooter: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <Card>
       <CardHeader>
@@ -48,6 +52,8 @@ export const WithFooter: Story = {
 };
 
 export const Elevated: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <Card variant="elevated">
       <CardBody>
@@ -58,6 +64,8 @@ export const Elevated: Story = {
 };
 
 export const Outlined: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <Card variant="outlined">
       <CardBody>
@@ -68,16 +76,20 @@ export const Outlined: Story = {
 };
 
 export const Interactive: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <Card variant="interactive" onClick={() => alert('Card clicked!')}>
       <CardBody>
-        <p>Click me! I'm interactive</p>
+        <p>Click me! I&apos;m interactive</p>
       </CardBody>
     </Card>
   ),
 };
 
 export const AllVariants: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="grid grid-cols-2 gap-4">
       <Card variant="default">

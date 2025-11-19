@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { Modal, ConfirmDialog } from './Modal';
 import { Button } from './Button';
@@ -22,6 +22,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const BasicModal: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: (args) => {
     const [open, setOpen] = useState(false);
     return (
@@ -36,6 +38,8 @@ export const BasicModal: Story = {
 };
 
 export const WithDescription: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -55,6 +59,8 @@ export const WithDescription: Story = {
 };
 
 export const WithFooter: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -85,6 +91,8 @@ export const WithFooter: Story = {
 };
 
 export const SmallSize: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -99,6 +107,8 @@ export const SmallSize: Story = {
 };
 
 export const LargeSize: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -113,6 +123,8 @@ export const LargeSize: Story = {
 };
 
 export const NoCloseButton: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -125,23 +137,18 @@ export const NoCloseButton: Story = {
           showCloseButton={false}
           footer={<Button onClick={() => setOpen(false)}>Close</Button>}
         >
-          <p>This modal doesn't have a close button in the header.</p>
+          <p>This modal doesn&apos;t have a close button in the header.</p>
         </Modal>
       </>
     );
   },
 };
 
-const ConfirmDialogMeta = {
-  title: 'Components/ConfirmDialog',
-  component: ConfirmDialog,
-  parameters: {
-    layout: 'centered',
-  },
-  tags: ['autodocs'],
-} satisfies Meta<typeof ConfirmDialog>;
+type ConfirmDialogMeta = Meta<typeof ConfirmDialog>;
 
-export const ConfirmDialogPrimary: StoryObj<typeof ConfirmDialogMeta> = {
+export const ConfirmDialogPrimary: StoryObj<ConfirmDialogMeta> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -162,7 +169,9 @@ export const ConfirmDialogPrimary: StoryObj<typeof ConfirmDialogMeta> = {
   },
 };
 
-export const ConfirmDialogDanger: StoryObj<typeof ConfirmDialogMeta> = {
+export const ConfirmDialogDanger: StoryObj<ConfirmDialogMeta> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [open, setOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);

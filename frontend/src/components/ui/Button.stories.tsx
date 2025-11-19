@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Heart, Trash2, Download } from 'lucide-react';
 import { Button } from './Button';
 
@@ -135,6 +135,8 @@ export const FullWidth: Story = {
 };
 
 export const AllVariants: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="space-y-4">
       <div className="space-x-2">
@@ -152,6 +154,8 @@ export const AllVariants: Story = {
 };
 
 export const AllSizes: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="space-y-4">
       <div className="space-x-2 flex items-center">
@@ -167,6 +171,8 @@ export const AllSizes: Story = {
 };
 
 export const WithIcons: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="space-y-4">
       <div className="space-x-2">

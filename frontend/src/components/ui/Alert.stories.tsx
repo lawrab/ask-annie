@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Alert } from './Alert';
 
 const meta = {
@@ -62,6 +62,8 @@ export const Dismissible: Story = {
 };
 
 export const AllTypes: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => (
     <div className="space-y-4">
       <Alert type="success">Success alert</Alert>

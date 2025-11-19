@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { Checkbox } from './Checkbox';
 
@@ -45,6 +45,8 @@ export const Indeterminate: Story = {
 };
 
 export const Interactive: Story = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: undefined as any,
   render: () => {
     const [checked, setChecked] = useState(false);
     return (

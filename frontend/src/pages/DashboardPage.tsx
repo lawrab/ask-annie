@@ -62,7 +62,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold">Ask Annie</h1>
               <p className="text-indigo-100">Welcome, {user?.username}!</p>
             </div>
-            <Button onClick={handleLogout} variant="secondary" size="sm">
+            <Button onClick={handleLogout} variant="secondary" size="small">
               Logout
             </Button>
           </div>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
           {/* Action Bar */}
           <div className="mb-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Your Check-ins</h2>
-            <Button onClick={() => navigate('/checkin')} variant="primary" size="sm">
+            <Button onClick={() => navigate('/checkin')} variant="primary" size="small">
               + New Check-in
             </Button>
           </div>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
               <Button
                 onClick={() => navigate('/checkin')}
                 variant="primary"
-                size="sm"
+                size="small"
                 className="mt-6"
               >
                 Create your first check-in
@@ -126,7 +126,7 @@ export default function DashboardPage() {
           {!isLoading && !error && checkIns.length > 0 && (
             <div className="space-y-4">
               {checkIns.map((checkIn) => (
-                <Card key={checkIn._id} variant="default" hover>
+                <Card key={checkIn._id} variant="default">
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-sm text-gray-500">
                       {formatDate(checkIn.timestamp)}
@@ -187,7 +187,7 @@ export default function DashboardPage() {
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {checkIn.structured.triggers.map((trigger) => (
-                            <Badge key={trigger} variant="danger">
+                            <Badge key={trigger} variant="error">
                               {trigger}
                             </Badge>
                           ))}

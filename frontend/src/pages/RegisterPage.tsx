@@ -109,7 +109,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               variant="primary"
-              size="md"
+              size="medium"
               fullWidth
               loading={isLoading}
             >

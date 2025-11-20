@@ -119,7 +119,7 @@ export default function CheckInPage() {
             <Button
               onClick={() => navigate('/dashboard')}
               variant="secondary"
-              size="sm"
+              size="small"
             >
               ← Back to Dashboard
             </Button>
@@ -144,16 +144,16 @@ export default function CheckInPage() {
           <div className="flex space-x-2 mb-6">
             <Button
               onClick={() => setMode('voice')}
-              variant={mode === 'voice' ? 'primary' : 'outline'}
-              size="md"
+              variant={mode === 'voice' ? 'primary' : 'secondary'}
+              size="medium"
               fullWidth
             >
               Voice Recording
             </Button>
             <Button
               onClick={() => setMode('manual')}
-              variant={mode === 'manual' ? 'primary' : 'outline'}
-              size="md"
+              variant={mode === 'manual' ? 'primary' : 'secondary'}
+              size="medium"
               fullWidth
             >
               Manual Entry
@@ -172,7 +172,7 @@ export default function CheckInPage() {
                   <Button
                     onClick={handleVoiceSubmit}
                     variant="primary"
-                    size="md"
+                    size="medium"
                     fullWidth
                     loading={isSubmitting}
                   >

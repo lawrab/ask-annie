@@ -115,7 +115,7 @@ export default function ManualCheckInForm({ onSubmit }: ManualCheckInFormProps) 
                 {symptomSeverity}
               </span>
             </div>
-            <Button type="button" onClick={addSymptom} variant="primary" size="sm">
+            <Button type="button" onClick={addSymptom} variant="primary" size="small">
               Add
             </Button>
           </div>
@@ -168,7 +168,7 @@ export default function ManualCheckInForm({ onSubmit }: ManualCheckInFormProps) 
         />
 
         {/* Submit Button */}
-        <Button type="submit" variant="primary" size="md" fullWidth>
+        <Button type="submit" variant="primary" size="medium" fullWidth>
           Submit Check-In
         </Button>
       </form>

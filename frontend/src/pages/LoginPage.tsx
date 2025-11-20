@@ -95,7 +95,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               variant="primary"
-              size="md"
+              size="medium"
               fullWidth
               loading={isLoading}
             >

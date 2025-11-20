@@ -36,9 +36,9 @@ describe('RegisterPage', () => {
     );
 
     expect(screen.getByText('Create your account')).toBeInTheDocument();
-    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
   });
 
@@ -63,7 +63,7 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const usernameInput = screen.getByLabelText(/username/i);
+    const usernameInput = screen.getByLabelText('Username');
     await user.type(usernameInput, 'ab');
     await user.tab();
 
@@ -81,7 +81,7 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const usernameInput = screen.getByLabelText(/username/i);
+    const usernameInput = screen.getByLabelText('Username');
     await user.type(usernameInput, 'a'.repeat(31));
     await user.tab();
 
@@ -99,7 +99,7 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText('Email address');
     await user.type(emailInput, 'invalid-email');
     await user.tab();
 
@@ -117,7 +117,7 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText('Password');
     await user.type(passwordInput, 'short');
     await user.tab();
 
@@ -135,14 +135,14 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement;
-    const toggleButton = screen.getByRole('button', { name: /show/i });
+    const passwordInput = screen.getByLabelText('Password') as HTMLInputElement;
+    const toggleButton = screen.getByRole('button', { name: /show password/i });
 
     expect(passwordInput.type).toBe('password');
 
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('text');
-    expect(screen.getByRole('button', { name: /hide/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hide password/i })).toBeInTheDocument();
 
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('password');
@@ -158,9 +158,9 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Username'), 'testuser');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
@@ -179,9 +179,9 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Username'), 'testuser');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
@@ -199,9 +199,9 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Username'), 'testuser');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
@@ -223,14 +223,14 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Username'), 'testuser');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
 
     const submitButton = screen.getByRole('button', { name: /create account/i });
     await user.click(submitButton);
 
-    expect(screen.getByRole('button', { name: /creating account\.\.\./i })).toBeDisabled();
+    expect(submitButton).toBeDisabled();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled();

@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Link } from 'react-router';
 import { useAuthStore } from '../stores/authStore';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
 
 const registerSchema = z.object({
   username: z
@@ -19,7 +22,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
-  const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,85 +71,50 @@ export default function RegisterPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          {apiError && (
-            <div
-              className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded"
-              role="alert"
-            >
-              <span className="block sm:inline">{apiError}</span>
-            </div>
-          )}
+          {apiError && <Alert type="error">{apiError}</Alert>}
 
           <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                {...registerField('username')}
-                id="username"
-                type="text"
-                autoComplete="username"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="johndoe"
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-              )}
-            </div>
+            <Input
+              {...registerField('username')}
+              id="username"
+              type="text"
+              label="Username"
+              placeholder="johndoe"
+              autoComplete="username"
+              error={errors.username?.message}
+            />
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                {...registerField('email')}
-                id="email"
-                type="email"
-                autoComplete="email"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
+            <Input
+              {...registerField('email')}
+              id="email"
+              type="email"
+              label="Email address"
+              placeholder="you@example.com"
+              autoComplete="email"
+              error={errors.email?.message}
+            />
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  {...registerField('password')}
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm text-gray-600 hover:text-gray-900"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
+            <Input
+              {...registerField('password')}
+              id="password"
+              type="password"
+              label="Password"
+              placeholder="••••••••"
+              autoComplete="new-password"
+              error={errors.password?.message}
+            />
           </div>
 
           <div>
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="primary"
+              size="md"
+              fullWidth
+              loading={isLoading}
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
-            </button>
+              Create account
+            </Button>
           </div>
         </form>
       </div>

@@ -135,8 +135,8 @@ describe('CheckInPage', () => {
     const voiceButton = screen.getByRole('button', { name: /voice recording/i });
     const manualButton = screen.getByRole('button', { name: /manual entry/i });
 
-    expect(voiceButton).toHaveClass('bg-indigo-600');
-    expect(manualButton).not.toHaveClass('bg-indigo-600');
+    expect(voiceButton).toHaveClass('bg-primary-600');
+    expect(manualButton).not.toHaveClass('bg-primary-600');
     expect(
       screen.getByRole('button', { name: /start recording/i })
     ).toBeInTheDocument();

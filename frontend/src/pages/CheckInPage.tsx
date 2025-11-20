@@ -4,6 +4,8 @@ import { useAuthStore } from '../stores/authStore';
 import { checkInsApi } from '../services/api';
 import VoiceRecorder from '../components/VoiceRecorder';
 import ManualCheckInForm from '../components/ManualCheckInForm';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
 
 type CheckInMode = 'voice' | 'manual';
 
@@ -114,12 +116,13 @@ export default function CheckInPage() {
               <h1 className="text-3xl font-bold">Ask Annie</h1>
               <p className="text-indigo-100">Hi, {user?.username}!</p>
             </div>
-            <button
+            <Button
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-md text-sm font-medium transition-colors"
+              variant="secondary"
+              size="small"
             >
               ← Back to Dashboard
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -132,41 +135,29 @@ export default function CheckInPage() {
           </h2>
 
           {/* Success Message */}
-          {success && (
-            <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-              {success}
-            </div>
-          )}
+          {success && <Alert type="success" className="mb-6">{success}</Alert>}
 
           {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
-            </div>
-          )}
+          {error && <Alert type="error" className="mb-6">{error}</Alert>}
 
           {/* Mode Toggle */}
           <div className="flex space-x-2 mb-6">
-            <button
+            <Button
               onClick={() => setMode('voice')}
-              className={`flex-1 px-4 py-3 rounded-md font-medium transition-colors ${
-                mode === 'voice'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
+              variant={mode === 'voice' ? 'primary' : 'secondary'}
+              size="medium"
+              fullWidth
             >
               Voice Recording
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setMode('manual')}
-              className={`flex-1 px-4 py-3 rounded-md font-medium transition-colors ${
-                mode === 'manual'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
+              variant={mode === 'manual' ? 'primary' : 'secondary'}
+              size="medium"
+              fullWidth
             >
               Manual Entry
-            </button>
+            </Button>
           </div>
 
           {/* Voice Mode */}
@@ -178,13 +169,15 @@ export default function CheckInPage() {
               />
               {audioBlob && (
                 <div className="mt-4">
-                  <button
+                  <Button
                     onClick={handleVoiceSubmit}
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    size="medium"
+                    fullWidth
+                    loading={isSubmitting}
                   >
-                    {isSubmitting ? 'Submitting...' : 'Submit Check-In'}
-                  </button>
+                    Submit Check-In
+                  </Button>
                 </div>
               )}
             </>

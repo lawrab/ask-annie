@@ -36,8 +36,8 @@ describe('LoginPage', () => {
     );
 
     expect(screen.getByText('Sign in to Ask Annie')).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
@@ -62,7 +62,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText('Email address');
     await user.type(emailInput, 'invalid-email');
     await user.tab();
 
@@ -80,7 +80,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText('Password');
     await user.type(passwordInput, 'short');
     await user.tab();
 
@@ -98,14 +98,14 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement;
-    const toggleButton = screen.getByRole('button', { name: /show/i });
+    const passwordInput = screen.getByLabelText('Password') as HTMLInputElement;
+    const toggleButton = screen.getByRole('button', { name: /show password/i });
 
     expect(passwordInput.type).toBe('password');
 
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('text');
-    expect(screen.getByRole('button', { name: /hide/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hide password/i })).toBeInTheDocument();
 
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('password');
@@ -121,8 +121,8 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
@@ -141,8 +141,8 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'wrongpassword');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
@@ -160,8 +160,8 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
@@ -183,13 +183,13 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
 
     const submitButton = screen.getByRole('button', { name: /sign in/i });
     await user.click(submitButton);
 
-    expect(screen.getByRole('button', { name: /signing in\.\.\./i })).toBeDisabled();
+    expect(submitButton).toBeDisabled();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /sign in/i })).not.toBeDisabled();

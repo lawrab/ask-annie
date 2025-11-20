@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Input } from './ui/Input';
+import { TextArea } from './ui/TextArea';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
 const manualCheckInSchema = z.object({
   activities: z.string(),
@@ -91,12 +95,12 @@ export default function ManualCheckInForm({ onSubmit }: ManualCheckInFormProps) 
 
           {/* Add Symptom */}
           <div className="flex space-x-2 mb-3">
-            <input
+            <Input
               type="text"
               placeholder="Symptom name (e.g., headache)"
               value={symptomName}
               onChange={(e) => setSymptomName(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1"
             />
             <div className="flex items-center space-x-2">
               <input
@@ -111,108 +115,62 @@ export default function ManualCheckInForm({ onSubmit }: ManualCheckInFormProps) 
                 {symptomSeverity}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={addSymptom}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors"
-            >
+            <Button type="button" onClick={addSymptom} variant="primary" size="small">
               Add
-            </button>
+            </Button>
           </div>
 
           {/* Symptoms List */}
           {symptoms.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {symptoms.map((symptom, index) => (
-                <div
+                <Badge
                   key={index}
-                  className="flex items-center space-x-2 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full"
+                  variant="primary"
+                  removable
+                  onRemove={() => removeSymptom(index)}
                 >
-                  <span className="text-sm">
-                    {symptom.name}: {symptom.severity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeSymptom(index)}
-                    className="text-indigo-600 hover:text-indigo-800"
-                  >
-                    &times;
-                  </button>
-                </div>
+                  {symptom.name}: {symptom.severity}
+                </Badge>
               ))}
             </div>
           )}
         </div>
 
         {/* Activities */}
-        <div>
-          <label
-            htmlFor="activities"
-            className="block text-sm font-semibold text-gray-700 mb-2"
-          >
-            Activities
-          </label>
-          <input
-            {...register('activities')}
-            id="activities"
-            type="text"
-            placeholder="e.g., working, exercising, reading (comma-separated)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.activities && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.activities.message}
-            </p>
-          )}
-        </div>
+        <Input
+          {...register('activities')}
+          id="activities"
+          type="text"
+          label="Activities"
+          placeholder="e.g., working, exercising, reading (comma-separated)"
+          error={errors.activities?.message}
+        />
 
         {/* Triggers */}
-        <div>
-          <label
-            htmlFor="triggers"
-            className="block text-sm font-semibold text-gray-700 mb-2"
-          >
-            Triggers
-          </label>
-          <input
-            {...register('triggers')}
-            id="triggers"
-            type="text"
-            placeholder="e.g., stress, lack of sleep, weather (comma-separated)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.triggers && (
-            <p className="mt-1 text-sm text-red-600">{errors.triggers.message}</p>
-          )}
-        </div>
+        <Input
+          {...register('triggers')}
+          id="triggers"
+          type="text"
+          label="Triggers"
+          placeholder="e.g., stress, lack of sleep, weather (comma-separated)"
+          error={errors.triggers?.message}
+        />
 
         {/* Notes */}
-        <div>
-          <label
-            htmlFor="notes"
-            className="block text-sm font-semibold text-gray-700 mb-2"
-          >
-            Additional Notes
-          </label>
-          <textarea
-            {...register('notes')}
-            id="notes"
-            rows={4}
-            placeholder="Any additional details about how you're feeling..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.notes && (
-            <p className="mt-1 text-sm text-red-600">{errors.notes.message}</p>
-          )}
-        </div>
+        <TextArea
+          {...register('notes')}
+          id="notes"
+          label="Additional Notes"
+          rows={4}
+          placeholder="Any additional details about how you're feeling..."
+          error={errors.notes?.message}
+        />
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors"
-        >
+        <Button type="submit" variant="primary" size="medium" fullWidth>
           Submit Check-In
-        </button>
+        </Button>
       </form>
     </div>
   );

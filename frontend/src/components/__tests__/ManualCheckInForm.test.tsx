@@ -47,7 +47,7 @@ describe('ManualCheckInForm', () => {
 
     expect(screen.getByText(/headache: 5/i)).toBeInTheDocument();
 
-    const removeButton = screen.getByText('×');
+    const removeButton = screen.getByRole('button', { name: /remove/i });
     await user.click(removeButton);
 
     expect(screen.queryByText(/headache: 5/i)).not.toBeInTheDocument();

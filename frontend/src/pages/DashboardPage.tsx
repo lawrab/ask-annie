@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { checkInsApi, CheckIn } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -58,12 +62,9 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold">Ask Annie</h1>
               <p className="text-indigo-100">Welcome, {user?.username}!</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-md text-sm font-medium transition-colors"
-            >
+            <Button onClick={handleLogout} variant="secondary" size="sm">
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -74,12 +75,9 @@ export default function DashboardPage() {
           {/* Action Bar */}
           <div className="mb-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Your Check-ins</h2>
-            <button
-              onClick={() => navigate('/checkin')}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors"
-            >
+            <Button onClick={() => navigate('/checkin')} variant="primary" size="sm">
               + New Check-in
-            </button>
+            </Button>
           </div>
 
           {/* Loading State */}
@@ -91,15 +89,11 @@ export default function DashboardPage() {
           )}
 
           {/* Error State */}
-          {error && (
-            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <Alert type="error">{error}</Alert>}
 
           {/* Empty State */}
           {!isLoading && !error && checkIns.length === 0 && (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <Card variant="default" className="p-12 text-center">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
                 fill="none"
@@ -117,31 +111,28 @@ export default function DashboardPage() {
               <p className="mt-1 text-gray-500">
                 Get started by recording your first check-in.
               </p>
-              <button
+              <Button
                 onClick={() => navigate('/checkin')}
-                className="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors"
+                variant="primary"
+                size="sm"
+                className="mt-6"
               >
                 Create your first check-in
-              </button>
-            </div>
+              </Button>
+            </Card>
           )}
 
           {/* Check-ins List */}
           {!isLoading && !error && checkIns.length > 0 && (
             <div className="space-y-4">
               {checkIns.map((checkIn) => (
-                <div
-                  key={checkIn._id}
-                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-                >
+                <Card key={checkIn._id} variant="default" hover>
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-sm text-gray-500">
                       {formatDate(checkIn.timestamp)}
                     </span>
                     {checkIn.flaggedForDoctor && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                        Flagged for Doctor
-                      </span>
+                      <Badge variant="warning">Flagged for Doctor</Badge>
                     )}
                   </div>
 
@@ -163,12 +154,9 @@ export default function DashboardPage() {
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(checkIn.structured.symptoms).map(
                             ([symptom, value]) => (
-                              <span
-                                key={symptom}
-                                className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full"
-                              >
+                              <Badge key={symptom} variant="primary">
                                 {symptom}: {value}
-                              </span>
+                              </Badge>
                             )
                           )}
                         </div>
@@ -183,12 +171,9 @@ export default function DashboardPage() {
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {checkIn.structured.activities.map((activity) => (
-                            <span
-                              key={activity}
-                              className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
-                            >
+                            <Badge key={activity} variant="success">
                               {activity}
-                            </span>
+                            </Badge>
                           ))}
                         </div>
                       </div>
@@ -202,12 +187,9 @@ export default function DashboardPage() {
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {checkIn.structured.triggers.map((trigger) => (
-                            <span
-                              key={trigger}
-                              className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full"
-                            >
+                            <Badge key={trigger} variant="danger">
                               {trigger}
-                            </span>
+                            </Badge>
                           ))}
                         </div>
                       </div>
@@ -225,7 +207,7 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}

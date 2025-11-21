@@ -1,4 +1,4 @@
-import { parseSymptoms, calculateConfidence } from '../parsingService';
+import { parseSymptoms, calculateConfidence, categoricalToNumeric } from '../parsingService';
 
 describe('ParsingService', () => {
   describe('parseSymptoms', () => {
@@ -6,25 +6,25 @@ describe('ParsingService', () => {
       it('should detect bad hand grip', () => {
         const result = parseSymptoms('My hand grip was really bad today');
 
-        expect(result.symptoms.hand_grip).toBe('bad');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
       });
 
       it('should detect moderate hand grip', () => {
         const result = parseSymptoms('Hands feel okay, moderate grip');
 
-        expect(result.symptoms.hand_grip).toBe('moderate');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 5 });
       });
 
       it('should detect good hand grip', () => {
         const result = parseSymptoms('Hand strength is great today');
 
-        expect(result.symptoms.hand_grip).toBe('good');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 1 });
       });
 
       it('should handle multiple grip descriptors', () => {
         const result = parseSymptoms('My grip was terrible and weak');
 
-        expect(result.symptoms.hand_grip).toBe('bad');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
       });
     });
 
@@ -32,19 +32,19 @@ describe('ParsingService', () => {
       it('should extract numeric pain level', () => {
         const result = parseSymptoms('Pain level around 7 today');
 
-        expect(result.symptoms.pain_level).toBe(7);
+        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
       });
 
       it('should extract pain with "out of 10" format', () => {
         const result = parseSymptoms('My pain is 8 out of 10');
 
-        expect(result.symptoms.pain_level).toBe(8);
+        expect(result.symptoms.pain_level).toEqual({ severity: 8 });
       });
 
       it('should extract pain with slash format', () => {
         const result = parseSymptoms('Pain about 5/10');
 
-        expect(result.symptoms.pain_level).toBe(5);
+        expect(result.symptoms.pain_level).toEqual({ severity: 5 });
       });
 
       it('should not extract pain levels outside 0-10 range', () => {
@@ -65,19 +65,19 @@ describe('ParsingService', () => {
       it('should detect low energy', () => {
         const result = parseSymptoms('Feeling really tired and drained');
 
-        expect(result.symptoms.energy).toBe('low');
+        expect(result.symptoms.energy).toEqual({ severity: 9 });
       });
 
       it('should detect medium energy', () => {
         const result = parseSymptoms('Energy is moderate today');
 
-        expect(result.symptoms.energy).toBe('medium');
+        expect(result.symptoms.energy).toEqual({ severity: 5 });
       });
 
       it('should detect high energy', () => {
         const result = parseSymptoms('Very energetic and alert');
 
-        expect(result.symptoms.energy).toBe('high');
+        expect(result.symptoms.energy).toEqual({ severity: 2 });
       });
     });
 
@@ -85,25 +85,25 @@ describe('ParsingService', () => {
       it('should detect Raynauds event', () => {
         const result = parseSymptoms('Had a raynauds episode today');
 
-        expect(result.symptoms.raynauds_event).toBe(true);
+        expect(result.symptoms.raynauds_event).toEqual({ severity: 7 });
       });
 
       it('should detect brain fog', () => {
         const result = parseSymptoms('Experiencing brain fog and confusion');
 
-        expect(result.symptoms.brain_fog).toBe(true);
+        expect(result.symptoms.brain_fog).toEqual({ severity: 7 });
       });
 
       it('should detect tingling feet', () => {
         const result = parseSymptoms('My feet are tingling again');
 
-        expect(result.symptoms.tingling_feet).toBe(true);
+        expect(result.symptoms.tingling_feet).toEqual({ severity: 7 });
       });
 
       it('should detect neck stiffness', () => {
         const result = parseSymptoms('Neck is really stiff today');
 
-        expect(result.symptoms.neck_stiffness).toBe(true);
+        expect(result.symptoms.neck_stiffness).toEqual({ severity: 7 });
       });
     });
 
@@ -111,25 +111,25 @@ describe('ParsingService', () => {
       it('should detect rested activity level', () => {
         const result = parseSymptoms('Mostly rested today');
 
-        expect(result.symptoms.activity_level).toBe('rested');
+        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
       });
 
       it('should detect light activity level', () => {
         const result = parseSymptoms('Did some light exercise');
 
-        expect(result.symptoms.activity_level).toBe('light');
+        expect(result.symptoms.activity_level).toEqual({ severity: 4 });
       });
 
       it('should detect normal activity level', () => {
         const result = parseSymptoms('Normal activity today');
 
-        expect(result.symptoms.activity_level).toBe('normal');
+        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
       });
 
       it('should detect high activity level', () => {
         const result = parseSymptoms('Very intense workout today');
 
-        expect(result.symptoms.activity_level).toBe('high');
+        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
       });
     });
 
@@ -214,10 +214,10 @@ describe('ParsingService', () => {
 
         const result = parseSymptoms(transcript);
 
-        expect(result.symptoms.hand_grip).toBe('bad');
-        expect(result.symptoms.pain_level).toBe(7);
-        expect(result.symptoms.activity_level).toBe('light');
-        expect(result.symptoms.energy).toBe('low');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
+        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
+        expect(result.symptoms.activity_level).toEqual({ severity: 4 });
+        expect(result.symptoms.energy).toEqual({ severity: 9 });
         expect(result.activities).toContain('housework');
       });
 
@@ -232,8 +232,8 @@ describe('ParsingService', () => {
       it('should be case insensitive', () => {
         const result = parseSymptoms('PAIN LEVEL 8 AND VERY TIRED');
 
-        expect(result.symptoms.pain_level).toBe(8);
-        expect(result.symptoms.energy).toBe('low');
+        expect(result.symptoms.pain_level).toEqual({ severity: 8 });
+        expect(result.symptoms.energy).toEqual({ severity: 9 });
       });
 
       it('should handle various phrase structures', () => {
@@ -241,8 +241,8 @@ describe('ParsingService', () => {
           'Today my grip in my hands was terrible, pain around 3 out of 10'
         );
 
-        expect(result.symptoms.hand_grip).toBe('bad');
-        expect(result.symptoms.pain_level).toBe(3);
+        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
+        expect(result.symptoms.pain_level).toEqual({ severity: 3 });
       });
     });
 
@@ -253,8 +253,8 @@ describe('ParsingService', () => {
 
         const result = parseSymptoms(transcript);
 
-        expect(result.symptoms.hand_grip).toBe('bad');
-        expect(result.symptoms.pain_level).toBe(7);
+        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
+        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
         expect(result.activities).toContain('housework');
         expect(result.notes).toBe(transcript);
       });
@@ -264,7 +264,7 @@ describe('ParsingService', () => {
 
         const result = parseSymptoms(transcript);
 
-        expect(result.symptoms.hand_grip).toBe('good');
+        expect(result.symptoms.hand_grip).toEqual({ severity: 1 });
         expect(result.activities).toContain('walk');
       });
 
@@ -273,9 +273,9 @@ describe('ParsingService', () => {
 
         const result = parseSymptoms(transcript);
 
-        expect(result.symptoms.raynauds_event).toBe(true);
-        expect(result.symptoms.brain_fog).toBe(true);
-        expect(result.symptoms.pain_level).toBe(6);
+        expect(result.symptoms.raynauds_event).toEqual({ severity: 7 });
+        expect(result.symptoms.brain_fog).toEqual({ severity: 7 });
+        expect(result.symptoms.pain_level).toEqual({ severity: 6 });
         expect(result.triggers).toContain('stressed');
       });
     });
@@ -297,7 +297,7 @@ describe('ParsingService', () => {
 
     it('should calculate confidence based on symptoms', () => {
       const parsed = {
-        symptoms: { pain_level: 7, hand_grip: 'bad' },
+        symptoms: { pain_level: { severity: 7 }, hand_grip: { severity: 8 } },
         activities: [],
         triggers: [],
         notes: '',
@@ -336,7 +336,11 @@ describe('ParsingService', () => {
 
     it('should combine all factors for total confidence', () => {
       const parsed = {
-        symptoms: { pain_level: 7, hand_grip: 'bad', energy: 'low' },
+        symptoms: {
+          pain_level: { severity: 7 },
+          hand_grip: { severity: 8 },
+          energy: { severity: 8 },
+        },
         activities: ['walking'],
         triggers: ['stress'],
         notes: '',
@@ -350,11 +354,11 @@ describe('ParsingService', () => {
     it('should cap confidence at 100', () => {
       const parsed = {
         symptoms: {
-          pain_level: 7,
-          hand_grip: 'bad',
-          energy: 'low',
-          brain_fog: true,
-          raynauds_event: true,
+          pain_level: { severity: 7 },
+          hand_grip: { severity: 8 },
+          energy: { severity: 8 },
+          brain_fog: { severity: 7 },
+          raynauds_event: { severity: 7 },
         },
         activities: ['walking', 'running', 'yoga'],
         triggers: ['stress', 'cold'],
@@ -369,12 +373,12 @@ describe('ParsingService', () => {
     it('should cap symptom score at 60', () => {
       const parsed = {
         symptoms: {
-          symptom1: true,
-          symptom2: true,
-          symptom3: true,
-          symptom4: true,
-          symptom5: true,
-          symptom6: true,
+          symptom1: { severity: 7 },
+          symptom2: { severity: 7 },
+          symptom3: { severity: 7 },
+          symptom4: { severity: 7 },
+          symptom5: { severity: 7 },
+          symptom6: { severity: 7 },
         },
         activities: [],
         triggers: [],
@@ -410,6 +414,45 @@ describe('ParsingService', () => {
       const confidence = calculateConfidence(parsed);
 
       expect(confidence).toBe(20); // Capped at 20 for triggers
+    });
+  });
+
+  describe('categoricalToNumeric', () => {
+    it('should convert low severity categories', () => {
+      expect(categoricalToNumeric('good')).toBe(1);
+      expect(categoricalToNumeric('great')).toBe(1);
+      expect(categoricalToNumeric('excellent')).toBe(1);
+      expect(categoricalToNumeric('fine')).toBe(2);
+      expect(categoricalToNumeric('normal')).toBe(2);
+    });
+
+    it('should convert medium severity categories', () => {
+      expect(categoricalToNumeric('moderate')).toBe(5);
+      expect(categoricalToNumeric('okay')).toBe(5);
+      expect(categoricalToNumeric('fair')).toBe(5);
+      expect(categoricalToNumeric('light')).toBe(4);
+    });
+
+    it('should convert high severity categories', () => {
+      expect(categoricalToNumeric('bad')).toBe(10);
+      expect(categoricalToNumeric('terrible')).toBe(10);
+      expect(categoricalToNumeric('awful')).toBe(10);
+      expect(categoricalToNumeric('poor')).toBe(8);
+      expect(categoricalToNumeric('tired')).toBe(8);
+      expect(categoricalToNumeric('exhausted')).toBe(9);
+    });
+
+    it('should be case insensitive', () => {
+      expect(categoricalToNumeric('GOOD')).toBe(1);
+      expect(categoricalToNumeric('Bad')).toBe(10);
+      expect(categoricalToNumeric('MoDeRaTe')).toBe(5);
+    });
+
+    it('should return default value for unknown categories', () => {
+      expect(categoricalToNumeric('unknown')).toBe(5);
+      expect(categoricalToNumeric('weird')).toBe(5);
+      expect(categoricalToNumeric('xyz')).toBe(5);
+      expect(categoricalToNumeric('')).toBe(5);
     });
   });
 });

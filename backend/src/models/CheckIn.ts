@@ -1,10 +1,19 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
 /**
+ * Standardized symptom value with numeric severity
+ */
+export interface SymptomValue {
+  severity: number; // Required: 1-10 scale
+  location?: string; // Optional: body location (e.g., "lower back", "left hand")
+  notes?: string; // Optional: additional context
+}
+
+/**
  * Structured data interface for parsed check-in information
  */
 export interface IStructured {
-  symptoms: { [key: string]: unknown };
+  symptoms: { [key: string]: SymptomValue };
   activities: string[];
   triggers: string[];
   notes: string;
@@ -22,6 +31,29 @@ export interface ICheckIn extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/**
+ * Symptom value schema for nested Map validation
+ */
+const symptomValueSchema = new Schema(
+  {
+    severity: {
+      type: Number,
+      required: [true, 'Symptom severity is required'],
+      min: [1, 'Severity must be at least 1'],
+      max: [10, 'Severity must not exceed 10'],
+    },
+    location: {
+      type: String,
+      required: false,
+    },
+    notes: {
+      type: String,
+      required: false,
+    },
+  },
+  { _id: false } // Disable _id for subdocuments
+);
 
 /**
  * CheckIn schema for symptom tracking entries
@@ -47,7 +79,7 @@ const checkInSchema = new Schema<ICheckIn>(
     structured: {
       symptoms: {
         type: Map,
-        of: Schema.Types.Mixed,
+        of: symptomValueSchema,
         default: {},
       },
       activities: {

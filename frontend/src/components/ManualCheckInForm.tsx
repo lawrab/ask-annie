@@ -6,6 +6,7 @@ import { Input } from './ui/Input';
 import { TextArea } from './ui/TextArea';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { SymptomValue } from '../services/api';
 
 const manualCheckInSchema = z.object({
   activities: z.string(),
@@ -16,7 +17,7 @@ const manualCheckInSchema = z.object({
 type ManualCheckInFormData = z.infer<typeof manualCheckInSchema>;
 
 interface StructuredCheckInData {
-  symptoms: { [key: string]: number };
+  symptoms: { [key: string]: SymptomValue };
   activities: string[];
   triggers: string[];
   notes: string;
@@ -63,10 +64,10 @@ export default function ManualCheckInForm({ onSubmit }: ManualCheckInFormProps) 
     const structuredData: StructuredCheckInData = {
       symptoms: symptoms.reduce(
         (acc, s) => {
-          acc[s.name] = s.severity;
+          acc[s.name] = { severity: s.severity };
           return acc;
         },
-        {} as { [key: string]: number }
+        {} as { [key: string]: SymptomValue }
       ),
       activities: data.activities
         .split(',')

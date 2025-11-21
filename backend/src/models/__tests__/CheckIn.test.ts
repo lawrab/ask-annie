@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import CheckIn from '../CheckIn';
+import CheckIn, { SymptomValue } from '../CheckIn';
 
 const testUserId = new mongoose.Types.ObjectId();
 
@@ -11,7 +11,7 @@ describe('CheckIn Model', () => {
         timestamp: new Date(),
         rawTranscript: 'Test transcript',
         structured: {
-          symptoms: { headache: 5, fatigue: 7 },
+          symptoms: { headache: { severity: 5 }, fatigue: { severity: 7 } },
           activities: ['walking', 'reading'],
           triggers: ['stress'],
           notes: 'Feeling tired today',
@@ -58,17 +58,17 @@ describe('CheckIn Model', () => {
     });
   });
 
-  describe('Flexible Symptoms Storage', () => {
-    it('should store symptoms as flexible key-value pairs', () => {
+  describe('Standardized Symptoms Storage', () => {
+    it('should store symptoms with severity values', () => {
       const checkIn = new CheckIn({
         userId: testUserId,
         timestamp: new Date(),
         rawTranscript: 'Test',
         structured: {
           symptoms: {
-            headache: 5,
-            nausea: 3,
-            'custom-symptom': 'moderate',
+            headache: { severity: 5 },
+            nausea: { severity: 3 },
+            'custom-symptom': { severity: 7 },
             'another-symptom': { severity: 7, location: 'lower back' },
           },
           activities: [],
@@ -79,10 +79,15 @@ describe('CheckIn Model', () => {
 
       expect(checkIn.structured).toBeDefined();
       expect(checkIn.structured.symptoms).toBeDefined();
-      const symptoms = checkIn.structured.symptoms as unknown as Map<string, unknown>;
-      expect(symptoms.get('headache')).toBe(5);
-      expect(symptoms.get('nausea')).toBe(3);
-      expect(symptoms.get('custom-symptom')).toBe('moderate');
+      const symptoms = checkIn.structured.symptoms as unknown as Map<string, SymptomValue>;
+      expect(symptoms).toBeInstanceOf(Map);
+      expect(symptoms.get('headache')).toMatchObject({ severity: 5 });
+      expect(symptoms.get('nausea')).toMatchObject({ severity: 3 });
+      expect(symptoms.get('custom-symptom')).toMatchObject({ severity: 7 });
+      expect(symptoms.get('another-symptom')).toMatchObject({
+        severity: 7,
+        location: 'lower back',
+      });
     });
 
     it('should handle empty symptoms', () => {

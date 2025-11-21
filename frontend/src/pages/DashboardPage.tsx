@@ -155,7 +155,7 @@ export default function DashboardPage() {
                           {Object.entries(checkIn.structured.symptoms).map(
                             ([symptom, value]) => (
                               <Badge key={symptom} variant="primary">
-                                {symptom}: {value}
+                                {symptom}: {value.severity}
                               </Badge>
                             )
                           )}

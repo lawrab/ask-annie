@@ -228,7 +228,7 @@ describe('API Client', () => {
                 userId: '123',
                 timestamp: '2024-01-01T12:00:00.000Z',
                 structured: {
-                  symptoms: { pain: 7 },
+                  symptoms: { pain: { severity: 7 } },
                   activities: ['walking'],
                   triggers: ['stress'],
                   notes: 'test notes',
@@ -245,7 +245,7 @@ describe('API Client', () => {
 
         const result = await checkInsApi.createManual({
           structured: {
-            symptoms: { pain: 7 },
+            symptoms: { pain: { severity: 7 } },
             activities: ['walking'],
             triggers: ['stress'],
             notes: 'test notes',
@@ -253,7 +253,7 @@ describe('API Client', () => {
         });
 
         expect(result.success).toBe(true);
-        expect(result.data.checkIn.structured.symptoms.pain).toBe(7);
+        expect(result.data.checkIn.structured.symptoms.pain.severity).toBe(7);
       });
     });
   });

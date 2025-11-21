@@ -104,7 +104,7 @@ describe('ManualCheckInForm', () => {
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
-        symptoms: { headache: 5 },
+        symptoms: { headache: { severity: 5 } },
         activities: ['working', 'reading'],
         triggers: ['stress', 'weather'],
         notes: 'Felt tired all day',
@@ -164,7 +164,7 @@ describe('ManualCheckInForm', () => {
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
-        symptoms: { fatigue: 5 },
+        symptoms: { fatigue: { severity: 5 } },
         activities: [],
         triggers: [],
         notes: '',
@@ -212,7 +212,10 @@ describe('ManualCheckInForm', () => {
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          symptoms: { headache: 5, nausea: 5 },
+          symptoms: {
+            headache: { severity: 5 },
+            nausea: { severity: 5 },
+          },
         })
       );
     });

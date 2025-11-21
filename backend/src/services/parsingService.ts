@@ -13,8 +13,9 @@ export interface ParsedSymptoms {
 
 /**
  * Convert categorical severity to numeric 1-10 scale
+ * @internal - Exported for testing
  */
-function categoricalToNumeric(category: string): number {
+export function categoricalToNumeric(category: string): number {
   const severityMap: { [key: string]: number } = {
     // Low severity (1-3) - good/minimal symptoms
     good: 1,

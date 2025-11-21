@@ -1,4 +1,4 @@
-import { parseSymptoms, calculateConfidence } from '../parsingService';
+import { parseSymptoms, calculateConfidence, categoricalToNumeric } from '../parsingService';
 
 describe('ParsingService', () => {
   describe('parseSymptoms', () => {
@@ -414,6 +414,45 @@ describe('ParsingService', () => {
       const confidence = calculateConfidence(parsed);
 
       expect(confidence).toBe(20); // Capped at 20 for triggers
+    });
+  });
+
+  describe('categoricalToNumeric', () => {
+    it('should convert low severity categories', () => {
+      expect(categoricalToNumeric('good')).toBe(1);
+      expect(categoricalToNumeric('great')).toBe(1);
+      expect(categoricalToNumeric('excellent')).toBe(1);
+      expect(categoricalToNumeric('fine')).toBe(2);
+      expect(categoricalToNumeric('normal')).toBe(2);
+    });
+
+    it('should convert medium severity categories', () => {
+      expect(categoricalToNumeric('moderate')).toBe(5);
+      expect(categoricalToNumeric('okay')).toBe(5);
+      expect(categoricalToNumeric('fair')).toBe(5);
+      expect(categoricalToNumeric('light')).toBe(4);
+    });
+
+    it('should convert high severity categories', () => {
+      expect(categoricalToNumeric('bad')).toBe(10);
+      expect(categoricalToNumeric('terrible')).toBe(10);
+      expect(categoricalToNumeric('awful')).toBe(10);
+      expect(categoricalToNumeric('poor')).toBe(8);
+      expect(categoricalToNumeric('tired')).toBe(8);
+      expect(categoricalToNumeric('exhausted')).toBe(9);
+    });
+
+    it('should be case insensitive', () => {
+      expect(categoricalToNumeric('GOOD')).toBe(1);
+      expect(categoricalToNumeric('Bad')).toBe(10);
+      expect(categoricalToNumeric('MoDeRaTe')).toBe(5);
+    });
+
+    it('should return default value for unknown categories', () => {
+      expect(categoricalToNumeric('unknown')).toBe(5);
+      expect(categoricalToNumeric('weird')).toBe(5);
+      expect(categoricalToNumeric('xyz')).toBe(5);
+      expect(categoricalToNumeric('')).toBe(5);
     });
   });
 });

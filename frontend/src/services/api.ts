@@ -56,13 +56,19 @@ export interface AuthResponse {
   };
 }
 
+export interface SymptomValue {
+  severity: number; // 1-10 scale
+  location?: string;
+  notes?: string;
+}
+
 export interface CheckIn {
   _id: string;
   userId: string;
   timestamp: string;
   rawTranscript?: string;
   structured: {
-    symptoms: Record<string, string | number | boolean>;
+    symptoms: Record<string, SymptomValue>;
     activities: string[];
     triggers: string[];
     notes: string;
@@ -147,7 +153,7 @@ export const checkInsApi = {
 
   createManual: async (data: {
     structured: {
-      symptoms: Record<string, string | number | boolean>;
+      symptoms: Record<string, SymptomValue>;
       activities: string[];
       triggers: string[];
       notes: string;

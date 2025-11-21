@@ -9,8 +9,10 @@ import { Alert } from '../components/ui/Alert';
 
 type CheckInMode = 'voice' | 'manual';
 
+import { SymptomValue } from '../services/api';
+
 interface StructuredCheckInData {
-  symptoms: { [key: string]: number };
+  symptoms: { [key: string]: SymptomValue };
   activities: string[];
   triggers: string[];
   notes: string;
@@ -51,7 +53,7 @@ export default function CheckInPage() {
 
       if (response.success) {
         const symptoms = Object.entries(response.data.checkIn.structured.symptoms)
-          .map(([name, value]) => `${name}: ${value}`)
+          .map(([name, value]) => `${name}: ${value.severity}`)
           .join(', ');
 
         setSuccess(
@@ -81,7 +83,7 @@ export default function CheckInPage() {
 
       if (response.success) {
         const symptoms = Object.entries(response.data.checkIn.structured.symptoms)
-          .map(([name, value]) => `${name}: ${value}`)
+          .map(([name, value]) => `${name}: ${value.severity}`)
           .join(', ');
 
         setSuccess(

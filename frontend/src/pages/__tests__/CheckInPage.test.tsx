@@ -170,7 +170,7 @@ describe('CheckInPage', () => {
           userId: '123',
           timestamp: '2024-01-01T12:00:00.000Z',
           structured: {
-            symptoms: { headache: 7 },
+            symptoms: { headache: { severity: 7 } },
             activities: ['working'],
             triggers: ['stress'],
             notes: 'Test note',
@@ -276,7 +276,7 @@ describe('CheckInPage', () => {
           timestamp: '2024-01-01T12:00:00.000Z',
           rawTranscript: 'I have a headache',
           structured: {
-            symptoms: { headache: 8 },
+            symptoms: { headache: { severity: 8 } },
             activities: [],
             triggers: [],
             notes: '',

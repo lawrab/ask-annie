@@ -119,7 +119,7 @@ describe('DashboardPage', () => {
         timestamp: '2024-01-01T12:00:00.000Z',
         rawTranscript: 'I have a headache',
         structured: {
-          symptoms: { headache: 7 },
+          symptoms: { headache: { severity: 7 } },
           activities: ['working'],
           triggers: ['stress'],
           notes: 'Bad day at work',
@@ -160,7 +160,7 @@ describe('DashboardPage', () => {
         userId: '123',
         timestamp: '2024-01-01T12:00:00.000Z',
         structured: {
-          symptoms: { pain: 9 },
+          symptoms: { pain: { severity: 9 } },
           activities: [],
           triggers: [],
           notes: '',
@@ -290,7 +290,7 @@ describe('DashboardPage', () => {
         userId: '123',
         timestamp: '2024-06-15T14:30:00.000Z',
         structured: {
-          symptoms: { headache: 5 },
+          symptoms: { headache: { severity: 5 } },
           activities: [],
           triggers: [],
           notes: '',

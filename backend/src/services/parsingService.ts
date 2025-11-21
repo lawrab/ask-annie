@@ -1,13 +1,52 @@
 import { logger } from '../utils/logger';
+import { SymptomValue } from '../models/CheckIn';
 
 /**
  * Structured data extracted from transcript
  */
 export interface ParsedSymptoms {
-  symptoms: { [key: string]: unknown };
+  symptoms: { [key: string]: SymptomValue };
   activities: string[];
   triggers: string[];
   notes: string;
+}
+
+/**
+ * Convert categorical severity to numeric 1-10 scale
+ */
+function categoricalToNumeric(category: string): number {
+  const severityMap: { [key: string]: number } = {
+    // Low severity (1-3) - good/minimal symptoms
+    good: 1,
+    great: 1,
+    fine: 2,
+    excellent: 1,
+    normal: 2,
+    strong: 1,
+    high: 2, // for energy level (high energy = good = low severity)
+    rested: 2, // for activity level (well rested = good = low severity)
+    // Medium severity (4-7)
+    moderate: 5,
+    okay: 5,
+    ok: 5,
+    fair: 5,
+    middling: 5,
+    medium: 5,
+    light: 4,
+    // High severity (8-10) - bad/intense symptoms
+    bad: 10,
+    terrible: 10,
+    awful: 10,
+    poor: 8,
+    weak: 8,
+    horrible: 10,
+    low: 9, // for energy level (low energy = bad = high severity)
+    tired: 8,
+    exhausted: 9,
+    drained: 9,
+  };
+
+  return severityMap[category.toLowerCase()] || 5; // Default to middle if unknown
 }
 
 /**
@@ -209,7 +248,7 @@ function extractValue(text: string, valueMap: { [key: string]: string[] }): stri
  * Parse transcript into structured symptom data
  */
 export function parseSymptoms(transcript: string): ParsedSymptoms {
-  const symptoms: { [key: string]: unknown } = {};
+  const symptoms: { [key: string]: SymptomValue } = {};
   const activities: string[] = [];
   const triggers: string[] = [];
 
@@ -224,22 +263,27 @@ export function parseSymptoms(transcript: string): ParsedSymptoms {
 
     // Extract value based on type
     if ('numeric' in config && config.numeric) {
-      // Extract numeric value
+      // Extract numeric value (already 1-10 scale)
       const numericValue = extractNumericValue(transcript, config.keywords[0]);
       if (numericValue !== null) {
-        symptoms[symptomKey] = numericValue;
-        logger.debug('Extracted numeric symptom', { symptomKey, value: numericValue });
+        symptoms[symptomKey] = { severity: numericValue };
+        logger.debug('Extracted numeric symptom', { symptomKey, severity: numericValue });
       }
     } else if ('boolean' in config && config.boolean) {
-      // Boolean symptom - presence indicates true
-      symptoms[symptomKey] = true;
-      logger.debug('Extracted boolean symptom', { symptomKey, value: true });
+      // Boolean symptom - presence indicates moderate-high severity (7)
+      symptoms[symptomKey] = { severity: 7 };
+      logger.debug('Extracted boolean symptom', { symptomKey, severity: 7 });
     } else if ('values' in config && config.values) {
-      // Extract categorical value
-      const value = extractValue(transcript, config.values);
-      if (value) {
-        symptoms[symptomKey] = value;
-        logger.debug('Extracted categorical symptom', { symptomKey, value });
+      // Extract categorical value and convert to numeric
+      const category = extractValue(transcript, config.values);
+      if (category) {
+        const severity = categoricalToNumeric(category);
+        symptoms[symptomKey] = { severity };
+        logger.debug('Extracted categorical symptom', {
+          symptomKey,
+          category,
+          severity,
+        });
       }
     }
   }

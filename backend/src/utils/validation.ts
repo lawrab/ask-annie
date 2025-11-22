@@ -44,7 +44,14 @@ export const loginSchema = Joi.object({
 export const manualCheckinSchema = Joi.object({
   structured: Joi.object({
     symptoms: Joi.object()
-      .pattern(Joi.string(), Joi.alternatives().try(Joi.string(), Joi.number(), Joi.boolean()))
+      .pattern(
+        Joi.string(),
+        Joi.object({
+          severity: Joi.number().min(1).max(10).required(),
+          location: Joi.string().optional(),
+          notes: Joi.string().optional(),
+        })
+      )
       .required(),
     activities: Joi.array().items(Joi.string()).required(),
     triggers: Joi.array().items(Joi.string()).required(),

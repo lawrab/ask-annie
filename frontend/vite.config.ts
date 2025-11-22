@@ -36,6 +36,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    watch: false, // Prevent watch mode by default (use vitest --watch to enable)
+    pool: 'forks', // Use forks instead of threads to prevent hanging
+    poolOptions: {
+      forks: {
+        singleFork: false,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

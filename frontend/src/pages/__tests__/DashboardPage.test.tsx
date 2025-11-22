@@ -4,7 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import DashboardPage from '../DashboardPage';
 import { useAuthStore } from '../../stores/authStore';
-import * as api from '../../services/api';
+import { checkInsApi, analysisApi } from '../../services/api';
+import type {
+  DailyStatusResponse,
+  StreakResponse,
+  QuickStatsResponse,
+  CheckIn,
+} from '../../services/api';
 
 // Mock the auth store
 vi.mock('../../stores/authStore', () => ({
@@ -15,7 +21,21 @@ vi.mock('../../stores/authStore', () => ({
 vi.mock('../../services/api', () => ({
   checkInsApi: {
     getAll: vi.fn(),
+    getStatus: vi.fn(),
   },
+  analysisApi: {
+    getStreak: vi.fn(),
+    getQuickStats: vi.fn(),
+  },
+}));
+
+// Mock the CheckInCard component
+vi.mock('../../components/CheckInCard', () => ({
+  CheckInCard: ({ checkIn }: { checkIn: { createdAt: string } }) => (
+    <div data-testid="check-in-card">
+      CheckInCard - {checkIn.createdAt}
+    </div>
+  ),
 }));
 
 // Mock react-router navigation
@@ -39,6 +59,139 @@ describe('DashboardPage', () => {
     createdAt: '2024-01-01T00:00:00.000Z',
   };
 
+  // Mock data for Section A: Daily Momentum
+  const mockStatusData: DailyStatusResponse = {
+    success: true,
+    data: {
+      today: {
+        date: '2024-01-15',
+        scheduledTimes: ['08:00', '20:00'],
+        completedLogs: [],
+        nextSuggested: '2024-01-15T20:00:00.000Z',
+        isComplete: false,
+      },
+      stats: {
+        todayCount: 0,
+        scheduledCount: 2,
+      },
+    },
+  };
+
+  const mockStatusDataComplete: DailyStatusResponse = {
+    success: true,
+    data: {
+      today: {
+        date: '2024-01-15',
+        scheduledTimes: ['08:00', '20:00'],
+        completedLogs: [
+          { time: '08:00', checkInId: 'checkin1' },
+          { time: '20:00', checkInId: 'checkin2' },
+        ],
+        nextSuggested: null,
+        isComplete: true,
+      },
+      stats: {
+        todayCount: 2,
+        scheduledCount: 2,
+      },
+    },
+  };
+
+  const mockStreakData: StreakResponse = {
+    success: true,
+    data: {
+      currentStreak: 45,
+      longestStreak: 60,
+      activeDays: 120,
+      totalDays: 180,
+      streakStartDate: '2023-12-01T00:00:00.000Z',
+      lastLogDate: '2024-01-15T00:00:00.000Z',
+    },
+  };
+
+  // Mock data for Section B: Weekly Insights
+  const mockQuickStatsData: QuickStatsResponse = {
+    success: true,
+    data: {
+      period: {
+        current: {
+          start: '2024-01-08',
+          end: '2024-01-15',
+          days: 7,
+        },
+        previous: {
+          start: '2024-01-01',
+          end: '2024-01-07',
+          days: 7,
+        },
+      },
+      checkInCount: {
+        current: 14,
+        previous: 10,
+        change: 4,
+        percentChange: 40,
+      },
+      topSymptoms: [
+        { name: 'headache', frequency: 8, avgSeverity: 6.5, trend: 'worsening' },
+        { name: 'fatigue', frequency: 6, avgSeverity: 5.0, trend: 'stable' },
+        { name: 'nausea', frequency: 4, avgSeverity: 3.5, trend: 'improving' },
+      ],
+      averageSeverity: {
+        current: 5.5,
+        previous: 6.0,
+        change: -0.5,
+        trend: 'improving',
+      },
+    },
+  };
+
+  // Mock data for Section C: Timeline History
+  const mockCheckIns: CheckIn[] = [
+    {
+      _id: '1',
+      userId: '123',
+      timestamp: new Date().toISOString(), // Today
+      rawTranscript: 'I have a headache',
+      structured: {
+        symptoms: { headache: { severity: 7 } },
+        activities: ['working'],
+        triggers: ['stress'],
+        notes: 'Bad day at work',
+      },
+      flaggedForDoctor: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      _id: '2',
+      userId: '123',
+      timestamp: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+      structured: {
+        symptoms: { fatigue: { severity: 5 } },
+        activities: ['resting'],
+        triggers: [],
+        notes: '',
+      },
+      flaggedForDoctor: false,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      _id: '3',
+      userId: '123',
+      timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+      structured: {
+        symptoms: { nausea: { severity: 3 } },
+        activities: [],
+        triggers: [],
+        notes: '',
+      },
+      flaggedForDoctor: false,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      updatedAt: new Date(Date.now() - 172800000).toISOString(),
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useAuthStore).mockImplementation((selector) => {
@@ -55,269 +208,672 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('should render dashboard with user welcome message', async () => {
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: [],
-        pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-      },
+  // ============================================================================
+  // Header & Navigation Tests
+  // ============================================================================
+
+  describe('Header & Navigation', () => {
+    it('displays user\'s name in header', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Ask Annie')).toBeInTheDocument();
+      expect(screen.getByText('Welcome, testuser!')).toBeInTheDocument();
     });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+    it('logout button calls logout and navigates to login', async () => {
+      const user = userEvent.setup();
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    expect(screen.getByText('Ask Annie')).toBeInTheDocument();
-    expect(screen.getByText('Welcome, testuser!')).toBeInTheDocument();
-  });
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
 
-  it('should show loading state initially', () => {
-    vi.mocked(api.checkInsApi.getAll).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
-    );
+      const logoutButton = screen.getByRole('button', { name: /logout/i });
+      await user.click(logoutButton);
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Loading check-ins...')).toBeInTheDocument();
-  });
-
-  it('should show empty state when no check-ins', async () => {
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: [],
-        pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-      },
+      expect(mockLogout).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+    it('"New Check-In" button navigates to /checkin', async () => {
+      const user = userEvent.setup();
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    await waitFor(() => {
-      expect(screen.getByText('No check-ins yet')).toBeInTheDocument();
-      expect(
-        screen.getByText('Get started by recording your first check-in.')
-      ).toBeInTheDocument();
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Timeline')).toBeInTheDocument();
+      });
+
+      const newCheckInButton = screen.getByRole('button', { name: /\+ new check-in/i });
+      await user.click(newCheckInButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/checkin');
     });
   });
 
-  it('should display check-ins list', async () => {
-    const mockCheckIns = [
-      {
-        _id: '1',
-        userId: '123',
-        timestamp: '2024-01-01T12:00:00.000Z',
-        rawTranscript: 'I have a headache',
-        structured: {
-          symptoms: { headache: { severity: 7 } },
-          activities: ['working'],
-          triggers: ['stress'],
-          notes: 'Bad day at work',
+  // ============================================================================
+  // Section A: Daily Momentum Tests
+  // ============================================================================
+
+  describe('Section A: Daily Momentum', () => {
+    it('renders check-in CTA when pending (nextSuggested available)', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Daily Momentum')).toBeInTheDocument();
+        expect(screen.getByText('Today\'s Check-In')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /evening check-in/i })).toBeInTheDocument();
+        expect(screen.getByText(/next suggested: 8:00 PM/i)).toBeInTheDocument();
+      });
+    });
+
+    it('renders completion alert when isComplete=true', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusDataComplete);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('All caught up for today!')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByRole('button', { name: /evening check-in/i })).not.toBeInTheDocument();
+    });
+
+    it('displays streak information correctly', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Your Progress')).toBeInTheDocument();
+        expect(screen.getByText('45')).toBeInTheDocument();
+        expect(screen.getByText('Day Streak')).toBeInTheDocument();
+        expect(screen.getByText('120 active days')).toBeInTheDocument();
+      });
+    });
+
+    it('shows loading state while fetching', () => {
+      vi.mocked(checkInsApi.getStatus).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      vi.mocked(analysisApi.getStreak).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Daily Momentum')).toBeInTheDocument();
+      const loadingElements = screen.getAllByText('Loading...');
+      expect(loadingElements.length).toBeGreaterThan(0);
+    });
+
+    it('shows error state on API failure', async () => {
+      vi.mocked(checkInsApi.getStatus).mockRejectedValue(new Error('Status failed'));
+      vi.mocked(analysisApi.getStreak).mockRejectedValue(new Error('Streak failed'));
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load daily status and streak data.')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to /checkin when button clicked', async () => {
+      const user = userEvent.setup();
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /evening check-in/i })).toBeInTheDocument();
+      });
+
+      const checkInButton = screen.getByRole('button', { name: /evening check-in/i });
+      await user.click(checkInButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/checkin');
+    });
+  });
+
+  // ============================================================================
+  // Section B: Weekly Insights Tests
+  // ============================================================================
+
+  describe('Section B: Weekly Insights', () => {
+    it('renders check-in count card with trend indicators', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Weekly Insights')).toBeInTheDocument();
+        expect(screen.getByText('Check-ins This Week')).toBeInTheDocument();
+        expect(screen.getByText('14')).toBeInTheDocument();
+        expect(screen.getByText(/4 vs last week/i)).toBeInTheDocument();
+      });
+    });
+
+    it('renders top symptoms card with color-coded badges', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Top Symptoms')).toBeInTheDocument();
+        expect(screen.getByText('headache')).toBeInTheDocument();
+        expect(screen.getByText('fatigue')).toBeInTheDocument();
+        expect(screen.getByText('nausea')).toBeInTheDocument();
+      });
+    });
+
+    it('renders average severity card with correct color', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Average Severity')).toBeInTheDocument();
+        expect(screen.getByText('5.5')).toBeInTheDocument();
+        expect(screen.getByText('Improving trend')).toBeInTheDocument();
+      });
+    });
+
+    it('shows trend icons correctly (⬆️/⬇️/➡️)', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        // Check for trend icons in the document
+        const pageText = screen.getByText('Weekly Insights').parentElement?.textContent || '';
+        expect(pageText).toContain('⬆️'); // worsening trend for headache
+        expect(pageText).toContain('⬇️'); // improving trend for severity/nausea
+        expect(pageText).toContain('➡️'); // stable trend for fatigue
+      });
+    });
+
+    it('shows loading state while fetching', () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Weekly Insights')).toBeInTheDocument();
+      const loadingElements = screen.getAllByText('Loading...');
+      expect(loadingElements.length).toBeGreaterThan(0);
+    });
+
+    it('shows error state on API failure', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockRejectedValue(new Error('Stats failed'));
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
+      });
+    });
+
+    it('shows "No symptoms recorded" when topSymptoms is empty', async () => {
+      const emptyStatsData: QuickStatsResponse = {
+        ...mockQuickStatsData,
+        data: {
+          ...mockQuickStatsData.data,
+          topSymptoms: [],
         },
-        flaggedForDoctor: false,
-        createdAt: '2024-01-01T12:00:00.000Z',
-        updatedAt: '2024-01-01T12:00:00.000Z',
-      },
-    ];
+      };
 
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: mockCheckIns,
-        pagination: { total: 1, limit: 20, offset: 0, hasMore: false },
-      },
-    });
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(emptyStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
 
-    await waitFor(() => {
-      expect(screen.getByText(/I have a headache/i)).toBeInTheDocument();
-      expect(screen.getByText('headache: 7')).toBeInTheDocument();
-      expect(screen.getByText('working')).toBeInTheDocument();
-      expect(screen.getByText('stress')).toBeInTheDocument();
-      expect(screen.getByText('Bad day at work')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('No symptoms recorded')).toBeInTheDocument();
+      });
     });
   });
 
-  it('should show flagged indicator for flagged check-ins', async () => {
-    const mockCheckIns = [
-      {
-        _id: '1',
-        userId: '123',
-        timestamp: '2024-01-01T12:00:00.000Z',
-        structured: {
-          symptoms: { pain: { severity: 9 } },
-          activities: [],
-          triggers: [],
-          notes: '',
-        },
-        flaggedForDoctor: true,
-        createdAt: '2024-01-01T12:00:00.000Z',
-        updatedAt: '2024-01-01T12:00:00.000Z',
-      },
-    ];
+  // ============================================================================
+  // Section C: Timeline History Tests
+  // ============================================================================
 
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: mockCheckIns,
-        pagination: { total: 1, limit: 20, offset: 0, hasMore: false },
-      },
+  describe('Section C: Timeline History', () => {
+    it('renders CheckInCard components', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        const checkInCards = screen.getAllByTestId('check-in-card');
+        expect(checkInCards).toHaveLength(3);
+      });
     });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+    it('groups check-ins by date correctly', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    await waitFor(() => {
-      expect(screen.getByText('Flagged for Doctor')).toBeInTheDocument();
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Timeline')).toBeInTheDocument();
+        // Check that date groupings are present
+        const checkInCards = screen.getAllByTestId('check-in-card');
+        expect(checkInCards.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('shows "Today", "Yesterday", formatted dates', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/^Today$/i)).toBeInTheDocument();
+        expect(screen.getByText(/^Yesterday$/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows empty state when no check-ins', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('No check-ins yet')).toBeInTheDocument();
+        expect(screen.getByText('Get started by recording your first check-in.')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create your first check-in/i })).toBeInTheDocument();
+      });
+    });
+
+    it('shows loading state while fetching', () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Timeline')).toBeInTheDocument();
+      expect(screen.getByText('Loading check-ins...')).toBeInTheDocument();
+    });
+
+    it('shows error state on API failure', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockRejectedValue(new Error('CheckIns failed'));
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load check-ins.')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to /checkin from empty state button', async () => {
+      const user = userEvent.setup();
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('No check-ins yet')).toBeInTheDocument();
+      });
+
+      const createButton = screen.getByRole('button', { name: /create your first check-in/i });
+      await user.click(createButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/checkin');
     });
   });
 
-  it('should show error message on API failure', async () => {
-    vi.mocked(api.checkInsApi.getAll).mockRejectedValue(new Error('API Error'));
+  // ============================================================================
+  // Independent Error Handling Tests
+  // ============================================================================
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+  describe('Independent Error Handling', () => {
+    it('Section A error does not block Section B', async () => {
+      vi.mocked(checkInsApi.getStatus).mockRejectedValue(new Error('Status failed'));
+      vi.mocked(analysisApi.getStreak).mockRejectedValue(new Error('Streak failed'));
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('Failed to load check-ins. Please try again.')
-      ).toBeInTheDocument();
-    });
-  });
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
 
-  it('should navigate to checkin page when clicking new check-in button', async () => {
-    const user = userEvent.setup();
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: [],
-        pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-      },
-    });
-
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('No check-ins yet')).toBeInTheDocument();
+      await waitFor(() => {
+        // Section A shows error
+        expect(screen.getByText('Failed to load daily status and streak data.')).toBeInTheDocument();
+        // Section B still renders successfully
+        expect(screen.getByText('Weekly Insights')).toBeInTheDocument();
+        expect(screen.getByText('Check-ins This Week')).toBeInTheDocument();
+        expect(screen.getByText('14')).toBeInTheDocument();
+      });
     });
 
-    const newCheckInButton = screen.getByRole('button', { name: /new check-in/i });
-    await user.click(newCheckInButton);
+    it('Section B error does not block Section C', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockRejectedValue(new Error('Stats failed'));
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/checkin');
-  });
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
 
-  it('should navigate to checkin page from empty state', async () => {
-    const user = userEvent.setup();
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: [],
-        pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-      },
+      await waitFor(() => {
+        // Section B shows error
+        expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
+        // Section C still renders successfully
+        expect(screen.getByText('Timeline')).toBeInTheDocument();
+        const checkInCards = screen.getAllByTestId('check-in-card');
+        expect(checkInCards).toHaveLength(3);
+      });
     });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+    it('multiple sections can error independently', async () => {
+      vi.mocked(checkInsApi.getStatus).mockRejectedValue(new Error('Status failed'));
+      vi.mocked(analysisApi.getStreak).mockRejectedValue(new Error('Streak failed'));
+      vi.mocked(analysisApi.getQuickStats).mockRejectedValue(new Error('Stats failed'));
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    await waitFor(() => {
-      expect(screen.getByText('No check-ins yet')).toBeInTheDocument();
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        // Sections A and B show errors
+        expect(screen.getByText('Failed to load daily status and streak data.')).toBeInTheDocument();
+        expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
+        // Section C still renders successfully
+        expect(screen.getByText('Timeline')).toBeInTheDocument();
+        const checkInCards = screen.getAllByTestId('check-in-card');
+        expect(checkInCards).toHaveLength(3);
+      });
     });
 
-    const createButton = screen.getByRole('button', {
-      name: /create your first check-in/i,
-    });
-    await user.click(createButton);
+    it('all sections can fail without crashing', async () => {
+      vi.mocked(checkInsApi.getStatus).mockRejectedValue(new Error('Status failed'));
+      vi.mocked(analysisApi.getStreak).mockRejectedValue(new Error('Streak failed'));
+      vi.mocked(analysisApi.getQuickStats).mockRejectedValue(new Error('Stats failed'));
+      vi.mocked(checkInsApi.getAll).mockRejectedValue(new Error('CheckIns failed'));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/checkin');
-  });
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
 
-  it('should call logout and navigate to login when logout button clicked', async () => {
-    const user = userEvent.setup();
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: [],
-        pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-      },
-    });
-
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
-
-    const logoutButton = screen.getByRole('button', { name: /logout/i });
-    await user.click(logoutButton);
-
-    expect(mockLogout).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
-  });
-
-  it('should format date correctly', async () => {
-    const mockCheckIns = [
-      {
-        _id: '1',
-        userId: '123',
-        timestamp: '2024-06-15T14:30:00.000Z',
-        structured: {
-          symptoms: { headache: { severity: 5 } },
-          activities: [],
-          triggers: [],
-          notes: '',
-        },
-        flaggedForDoctor: false,
-        createdAt: '2024-06-15T14:30:00.000Z',
-        updatedAt: '2024-06-15T14:30:00.000Z',
-      },
-    ];
-
-    vi.mocked(api.checkInsApi.getAll).mockResolvedValue({
-      success: true,
-      data: {
-        checkIns: mockCheckIns,
-        pagination: { total: 1, limit: 20, offset: 0, hasMore: false },
-      },
+      await waitFor(() => {
+        // All sections show errors
+        expect(screen.getByText('Failed to load daily status and streak data.')).toBeInTheDocument();
+        expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
+        expect(screen.getByText('Failed to load check-ins.')).toBeInTheDocument();
+        // Page still renders
+        expect(screen.getByText('Ask Annie')).toBeInTheDocument();
+      });
     });
 
-    render(
-      <MemoryRouter>
-        <DashboardPage />
-      </MemoryRouter>
-    );
+    it('Section A error does not block Section C', async () => {
+      vi.mocked(checkInsApi.getStatus).mockRejectedValue(new Error('Status failed'));
+      vi.mocked(analysisApi.getStreak).mockRejectedValue(new Error('Streak failed'));
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: mockCheckIns, pagination: { total: 3, limit: 20, offset: 0, hasMore: false } },
+      });
 
-    await waitFor(() => {
-      // Date formatting may vary by locale, just check it renders
-      expect(screen.getByText(/Jun 15, 2024/i)).toBeInTheDocument();
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        // Section A shows error
+        expect(screen.getByText('Failed to load daily status and streak data.')).toBeInTheDocument();
+        // Section C still renders successfully
+        expect(screen.getByText('Timeline')).toBeInTheDocument();
+        const checkInCards = screen.getAllByTestId('check-in-card');
+        expect(checkInCards).toHaveLength(3);
+      });
     });
   });
 });

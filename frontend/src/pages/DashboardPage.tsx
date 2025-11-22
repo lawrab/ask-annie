@@ -1,56 +1,175 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { checkInsApi, CheckIn } from '../services/api';
+import { checkInsApi, analysisApi } from '../services/api';
+import type {
+  DailyStatusResponse,
+  StreakResponse,
+  QuickStatsResponse,
+  CheckIn,
+} from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { CheckInCard } from '../components/CheckInCard';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Section A: Daily Momentum
+  const [statusData, setStatusData] = useState<DailyStatusResponse['data'] | null>(null);
+  const [streakData, setStreakData] = useState<StreakResponse['data'] | null>(null);
+  const [isLoadingMomentum, setIsLoadingMomentum] = useState(true);
+  const [momentumError, setMomentumError] = useState<string | null>(null);
 
+  // Section B: Insights & Value
+  const [statsData, setStatsData] = useState<QuickStatsResponse['data'] | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Section C: Timeline History
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const [isLoadingCheckIns, setIsLoadingCheckIns] = useState(true);
+  const [checkInsError, setCheckInsError] = useState<string | null>(null);
+
+  // Fetch Section A: Status + Streak
+  useEffect(() => {
+    const fetchMomentumData = async () => {
+      try {
+        setIsLoadingMomentum(true);
+        setMomentumError(null);
+
+        const [statusResponse, streakResponse] = await Promise.all([
+          checkInsApi.getStatus(),
+          analysisApi.getStreak(),
+        ]);
+
+        if (statusResponse.success) {
+          setStatusData(statusResponse.data);
+        }
+        if (streakResponse.success) {
+          setStreakData(streakResponse.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch momentum data:', error);
+        setMomentumError('Failed to load daily status and streak data.');
+      } finally {
+        setIsLoadingMomentum(false);
+      }
+    };
+
+    fetchMomentumData();
+  }, []);
+
+  // Fetch Section B: Quick Stats
+  useEffect(() => {
+    const fetchStatsData = async () => {
+      try {
+        setIsLoadingStats(true);
+        setStatsError(null);
+
+        const response = await analysisApi.getQuickStats(7);
+
+        if (response.success) {
+          setStatsData(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats data:', error);
+        setStatsError('Failed to load weekly insights.');
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStatsData();
+  }, []);
+
+  // Fetch Section C: Check-ins
   useEffect(() => {
     const fetchCheckIns = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLoadingCheckIns(true);
+        setCheckInsError(null);
+
         const response = await checkInsApi.getAll();
 
         if (response.success) {
           setCheckIns(response.data.checkIns);
         }
-      } catch {
-        setError('Failed to load check-ins. Please try again.');
+      } catch (error) {
+        console.error('Failed to fetch check-ins:', error);
+        setCheckInsError('Failed to load check-ins.');
       } finally {
-        setIsLoading(false);
+        setIsLoadingCheckIns(false);
       }
     };
 
     fetchCheckIns();
   }, []);
 
+  // Helper: Format date as "Today", "Yesterday", or "MMM DD"
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time for comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+  };
+
+  // Helper: Group check-ins by date
+  const groupCheckInsByDate = (checkIns: CheckIn[]): Record<string, CheckIn[]> => {
+    const grouped: Record<string, CheckIn[]> = {};
+
+    checkIns.forEach((checkIn) => {
+      const dateLabel = formatDate(checkIn.timestamp);
+      if (!grouped[dateLabel]) {
+        grouped[dateLabel] = [];
+      }
+      grouped[dateLabel].push(checkIn);
+    });
+
+    return grouped;
+  };
+
+  // Helper: Get trend icon
+  const getTrendIcon = (trend: 'improving' | 'worsening' | 'stable'): string => {
+    if (trend === 'worsening') return '⬆️';
+    if (trend === 'improving') return '⬇️';
+    return '➡️';
+  };
+
+  // Helper: Get severity color
+  const getSeverityColor = (avgSeverity: number | null): string => {
+    if (avgSeverity === null) return 'text-gray-500';
+    if (avgSeverity >= 8) return 'text-red-600';
+    if (avgSeverity >= 4) return 'text-amber-600';
+    return 'text-emerald-600';
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const groupedCheckIns = groupCheckInsByDate(checkIns);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -71,146 +190,232 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Action Bar */}
-          <div className="mb-6 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">Your Check-ins</h2>
-            <Button onClick={() => navigate('/checkin')} variant="primary" size="small">
-              + New Check-in
-            </Button>
-          </div>
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Section A: Daily Momentum */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900">Daily Momentum</h2>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <p className="mt-2 text-gray-600">Loading check-ins...</p>
-            </div>
-          )}
+            {isLoadingMomentum && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="mt-2 text-gray-600">Loading...</p>
+              </div>
+            )}
 
-          {/* Error State */}
-          {error && <Alert type="error">{error}</Alert>}
+            {momentumError && <Alert type="error">{momentumError}</Alert>}
 
-          {/* Empty State */}
-          {!isLoading && !error && checkIns.length === 0 && (
-            <Card variant="default" className="p-12 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-900">No check-ins yet</h3>
-              <p className="mt-1 text-gray-500">
-                Get started by recording your first check-in.
-              </p>
-              <Button
-                onClick={() => navigate('/checkin')}
-                variant="primary"
-                size="small"
-                className="mt-6"
-              >
-                Create your first check-in
-              </Button>
-            </Card>
-          )}
+            {!isLoadingMomentum && !momentumError && statusData && streakData && (
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Daily Check-In CTA */}
+                <Card variant="default" className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Today&apos;s Check-In
+                  </h3>
 
-          {/* Check-ins List */}
-          {!isLoading && !error && checkIns.length > 0 && (
-            <div className="space-y-4">
-              {checkIns.map((checkIn) => (
-                <Card key={checkIn._id} variant="default">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm text-gray-500">
-                      {formatDate(checkIn.timestamp)}
-                    </span>
-                    {checkIn.flaggedForDoctor && (
-                      <Badge variant="warning">Flagged for Doctor</Badge>
-                    )}
-                  </div>
-
-                  {checkIn.rawTranscript && (
-                    <div className="mb-3">
-                      <p className="text-sm text-gray-700 italic">
-                        &ldquo;{checkIn.rawTranscript}&rdquo;
-                      </p>
+                  {statusData.today.isComplete ? (
+                    <Alert type="success">All caught up for today!</Alert>
+                  ) : (
+                    <div className="space-y-3">
+                      <Button
+                        onClick={() => navigate('/checkin')}
+                        variant="primary"
+                        size="medium"
+                        className="w-full"
+                      >
+                        Evening Check-In
+                      </Button>
+                      {statusData.today.nextSuggested && (
+                        <p className="text-sm text-gray-600 text-center">
+                          Next suggested: {new Date(statusData.today.nextSuggested).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      )}
                     </div>
                   )}
+                </Card>
 
+                {/* Streak Info */}
+                <Card variant="default" className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Your Progress
+                  </h3>
                   <div className="space-y-2">
-                    {/* Symptoms */}
-                    {Object.keys(checkIn.structured.symptoms).length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-1">
-                          Symptoms:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(checkIn.structured.symptoms).map(
-                            ([symptom, value]) => (
-                              <Badge key={symptom} variant="primary">
-                                {symptom}: {value.severity}
-                              </Badge>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-3xl font-bold text-indigo-600">
+                        {streakData.currentStreak}
+                      </span>
+                      <span className="text-2xl">🔥</span>
+                      <span className="text-lg text-gray-700">Day Streak</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {streakData.activeDays} active days
+                    </p>
+                  </div>
+                </Card>
+              </div>
+            )}
+          </section>
 
-                    {/* Activities */}
-                    {checkIn.structured.activities.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-1">
-                          Activities:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {checkIn.structured.activities.map((activity) => (
-                            <Badge key={activity} variant="success">
-                              {activity}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+          {/* Section B: Insights & Value */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900">Weekly Insights</h2>
 
-                    {/* Triggers */}
-                    {checkIn.structured.triggers.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-1">
-                          Triggers:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {checkIn.structured.triggers.map((trigger) => (
-                            <Badge key={trigger} variant="error">
-                              {trigger}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+            {isLoadingStats && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="mt-2 text-gray-600">Loading...</p>
+              </div>
+            )}
 
-                    {/* Notes */}
-                    {checkIn.structured.notes && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-1">
-                          Notes:
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {checkIn.structured.notes}
-                        </p>
-                      </div>
+            {statsError && <Alert type="error">{statsError}</Alert>}
+
+            {!isLoadingStats && !statsError && statsData && (
+              <div className="grid gap-4 md:grid-cols-3">
+                {/* Check-ins This Week */}
+                <Card variant="default" className="p-6">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                    Check-ins This Week
+                  </h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-gray-900">
+                      {statsData.checkInCount.current}
+                    </span>
+                    {statsData.checkInCount.change !== 0 && (
+                      <span className={`text-sm ${
+                        statsData.checkInCount.change > 0
+                          ? 'text-emerald-600'
+                          : 'text-red-600'
+                      }`}>
+                        {statsData.checkInCount.change > 0 ? '⬆️' : '⬇️'}{' '}
+                        {Math.abs(statsData.checkInCount.change)} vs last week
+                      </span>
                     )}
                   </div>
                 </Card>
-              ))}
+
+                {/* Top Symptoms */}
+                <Card variant="default" className="p-6">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    Top Symptoms
+                  </h3>
+                  <div className="space-y-2">
+                    {statsData.topSymptoms.slice(0, 3).map((symptom) => {
+                      const badgeVariant =
+                        symptom.trend === 'improving'
+                          ? 'success'
+                          : symptom.trend === 'worsening'
+                          ? 'error'
+                          : 'warning';
+
+                      return (
+                        <div key={symptom.name} className="flex items-center justify-between">
+                          <Badge variant={badgeVariant} size="small">
+                            {symptom.name}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {getTrendIcon(symptom.trend)} {symptom.avgSeverity?.toFixed(1) || 'N/A'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {statsData.topSymptoms.length === 0 && (
+                      <p className="text-sm text-gray-500">No symptoms recorded</p>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Average Severity */}
+                <Card variant="default" className="p-6">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                    Average Severity
+                  </h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-3xl font-bold ${getSeverityColor(statsData.averageSeverity.current)}`}>
+                      {statsData.averageSeverity.current.toFixed(1)}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {getTrendIcon(statsData.averageSeverity.trend)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {statsData.averageSeverity.trend === 'improving'
+                      ? 'Improving trend'
+                      : statsData.averageSeverity.trend === 'worsening'
+                      ? 'Worsening trend'
+                      : 'Stable trend'}
+                  </p>
+                </Card>
+              </div>
+            )}
+          </section>
+
+          {/* Section C: Timeline History */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Timeline</h2>
+              <Button onClick={() => navigate('/checkin')} variant="primary" size="small">
+                + New Check-in
+              </Button>
             </div>
-          )}
+
+            {isLoadingCheckIns && (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="mt-2 text-gray-600">Loading check-ins...</p>
+              </div>
+            )}
+
+            {checkInsError && <Alert type="error">{checkInsError}</Alert>}
+
+            {!isLoadingCheckIns && !checkInsError && checkIns.length === 0 && (
+              <Card variant="default" className="p-12 text-center">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No check-ins yet</h3>
+                <p className="mt-1 text-gray-500">
+                  Get started by recording your first check-in.
+                </p>
+                <Button
+                  onClick={() => navigate('/checkin')}
+                  variant="primary"
+                  size="small"
+                  className="mt-6"
+                >
+                  Create your first check-in
+                </Button>
+              </Card>
+            )}
+
+            {!isLoadingCheckIns && !checkInsError && checkIns.length > 0 && (
+              <div className="space-y-6">
+                {Object.entries(groupedCheckIns).map(([dateLabel, dateCheckIns]) => (
+                  <div key={dateLabel}>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+                      {dateLabel}
+                    </h3>
+                    <div className="space-y-2">
+                      {dateCheckIns.map((checkIn) => (
+                        <CheckInCard key={checkIn._id} checkIn={checkIn} mode="compact" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
     </div>

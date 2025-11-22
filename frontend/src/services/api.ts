@@ -103,6 +103,77 @@ export interface ErrorResponse {
   error: string;
 }
 
+// Daily Status Types
+export interface DailyStatusResponse {
+  success: boolean;
+  data: {
+    today: {
+      date: string;
+      scheduledTimes: string[];
+      completedLogs: Array<{
+        time: string;
+        checkInId: string;
+      }>;
+      nextSuggested: string | null;
+      isComplete: boolean;
+    };
+    stats: {
+      todayCount: number;
+      scheduledCount: number;
+    };
+  };
+}
+
+// Streak Types
+export interface StreakResponse {
+  success: boolean;
+  data: {
+    currentStreak: number;
+    longestStreak: number;
+    activeDays: number;
+    totalDays: number;
+    streakStartDate: string | null;
+    lastLogDate: string | null;
+  };
+}
+
+// Quick Stats Types
+export interface QuickStatsResponse {
+  success: boolean;
+  data: {
+    period: {
+      current: {
+        start: string;
+        end: string;
+        days: number;
+      };
+      previous: {
+        start: string;
+        end: string;
+        days: number;
+      };
+    };
+    checkInCount: {
+      current: number;
+      previous: number;
+      change: number;
+      percentChange: number;
+    };
+    topSymptoms: Array<{
+      name: string;
+      frequency: number;
+      avgSeverity: number | null;
+      trend: 'improving' | 'worsening' | 'stable';
+    }>;
+    averageSeverity: {
+      current: number;
+      previous: number;
+      change: number;
+      trend: 'improving' | 'worsening' | 'stable';
+    };
+  };
+}
+
 // Auth API
 export const authApi = {
   register: async (data: {
@@ -160,6 +231,26 @@ export const checkInsApi = {
     };
   }): Promise<CheckInResponse> => {
     const response = await apiClient.post<CheckInResponse>('/checkins/manual', data);
+    return response.data;
+  },
+
+  getStatus: async (): Promise<DailyStatusResponse> => {
+    const response = await apiClient.get<DailyStatusResponse>('/checkins/status');
+    return response.data;
+  },
+};
+
+// Analysis API
+export const analysisApi = {
+  getStreak: async (): Promise<StreakResponse> => {
+    const response = await apiClient.get<StreakResponse>('/analysis/streak');
+    return response.data;
+  },
+
+  getQuickStats: async (days: number = 7): Promise<QuickStatsResponse> => {
+    const response = await apiClient.get<QuickStatsResponse>('/analysis/quick-stats', {
+      params: { days },
+    });
     return response.data;
   },
 };

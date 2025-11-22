@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import CheckIn from '../models/CheckIn';
+import User from '../models/User';
 import { transcribeAudio } from '../services/transcriptionService';
 import { parseSymptoms } from '../services/parsingService';
 import { logger } from '../utils/logger';
@@ -311,6 +312,121 @@ export async function createManualCheckin(
     });
   } catch (error) {
     logger.error('Error creating manual check-in', { error });
+    next(error);
+  }
+}
+
+/**
+ * GET /api/checkins/status
+ * Returns daily check-in status based on user's notification schedule
+ */
+export async function getStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Get userId from authenticated user
+    const userId = (req.user as { id: string })!.id;
+
+    logger.info('Fetching check-in status', { userId });
+
+    // Fetch user to get notification times
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    // Get today's date boundaries (start and end of day in UTC)
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Fetch today's check-ins
+    const todayCheckIns = await CheckIn.find({
+      userId,
+      timestamp: { $gte: startOfDay, $lte: endOfDay },
+    })
+      .sort({ timestamp: 1 })
+      .select('timestamp')
+      .lean();
+
+    logger.info('Today\'s check-ins retrieved', {
+      userId,
+      count: todayCheckIns.length,
+    });
+
+    // Format today's date
+    const todayDate = now.toISOString().split('T')[0];
+
+    // Get scheduled times from user profile
+    const scheduledTimes = user.notificationTimes || [];
+
+    // Map check-ins to time windows (within 2 hours)
+    const completedLogs = todayCheckIns.map((checkIn) => {
+      const timestamp = new Date(checkIn.timestamp);
+      return {
+        time: timestamp.toTimeString().slice(0, 5), // HH:MM format
+        checkInId: checkIn._id.toString(),
+      };
+    });
+
+    // Determine next suggested time
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+    let nextSuggested: string | null = null;
+
+    // Find the next scheduled time after current time
+    for (const scheduledTime of scheduledTimes) {
+      if (scheduledTime > currentTime) {
+        nextSuggested = scheduledTime;
+        break;
+      }
+    }
+
+    // If all scheduled times have passed, suggest tomorrow's first time
+    if (!nextSuggested && scheduledTimes.length > 0) {
+      nextSuggested = scheduledTimes[0];
+    }
+
+    // Determine if user is complete for today
+    // User is complete if they have at least as many logs as scheduled times
+    // If no scheduled times, never mark as complete
+    const isComplete =
+      scheduledTimes.length > 0 && todayCheckIns.length >= scheduledTimes.length;
+
+    logger.info('Check-in status calculated', {
+      userId,
+      todayCount: todayCheckIns.length,
+      scheduledCount: scheduledTimes.length,
+      isComplete,
+      nextSuggested,
+    });
+
+    // Return response
+    res.status(200).json({
+      success: true,
+      data: {
+        today: {
+          date: todayDate,
+          scheduledTimes,
+          completedLogs,
+          nextSuggested,
+          isComplete,
+        },
+        stats: {
+          todayCount: todayCheckIns.length,
+          scheduledCount: scheduledTimes.length,
+        },
+      },
+    });
+  } catch (error) {
+    logger.error('Error fetching check-in status', { error });
     next(error);
   }
 }

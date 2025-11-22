@@ -1,12 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
-import { createVoiceCheckin, createManualCheckin, getCheckins } from '../checkinController';
+import {
+  createVoiceCheckin,
+  createManualCheckin,
+  getCheckins,
+  getStatus,
+} from '../checkinController';
 import CheckIn from '../../models/CheckIn';
+import User from '../../models/User';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { parseSymptoms } from '../../services/parsingService';
 import fs from 'fs/promises';
 
 // Mock dependencies
 jest.mock('../../models/CheckIn');
+jest.mock('../../models/User');
 jest.mock('../../services/transcriptionService');
 jest.mock('../../services/parsingService');
 jest.mock('fs/promises');
@@ -1260,6 +1267,334 @@ describe('CheckinController', () => {
 
         // Act
         await getCheckins(mockGetReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('getStatus', () => {
+    let mockStatusReq: Partial<Request>;
+
+    beforeEach(() => {
+      mockStatusReq = {
+        user: {
+          id: '507f1f77bcf86cd799439011',
+          username: 'testuser',
+          email: 'test@example.com',
+        },
+      };
+    });
+
+    describe('Success Cases', () => {
+      it('should return status with no check-ins today', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+        };
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(User.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+        expect(CheckIn.find).toHaveBeenCalledWith({
+          userId: '507f1f77bcf86cd799439011',
+          timestamp: expect.objectContaining({
+            $gte: expect.any(Date),
+            $lte: expect.any(Date),
+          }),
+        });
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        const response = (mockRes.json as jest.Mock).mock.calls[0][0];
+        expect(response).toMatchObject({
+          success: true,
+          data: {
+            today: {
+              date: expect.any(String),
+              scheduledTimes: ['08:00', '14:00', '20:00'],
+              completedLogs: [],
+              nextSuggested: expect.any(String), // Will depend on current time
+              isComplete: false,
+            },
+            stats: {
+              todayCount: 0,
+              scheduledCount: 3,
+            },
+          },
+        });
+      });
+
+      it('should return status with check-ins completed', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+        };
+
+        const mockCheckIns = [
+          {
+            _id: '507f191e810c19729de860ea',
+            timestamp: new Date('2025-11-22T08:15:00Z'),
+          },
+          {
+            _id: '507f191e810c19729de860eb',
+            timestamp: new Date('2025-11-22T14:30:00Z'),
+          },
+        ];
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue(mockCheckIns),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        const response = (mockRes.json as jest.Mock).mock.calls[0][0];
+        expect(response).toMatchObject({
+          success: true,
+          data: {
+            today: {
+              date: expect.any(String),
+              scheduledTimes: ['08:00', '14:00', '20:00'],
+              completedLogs: expect.arrayContaining([
+                expect.objectContaining({
+                  checkInId: '507f191e810c19729de860ea',
+                }),
+                expect.objectContaining({
+                  checkInId: '507f191e810c19729de860eb',
+                }),
+              ]),
+              nextSuggested: expect.any(String),
+              isComplete: false,
+            },
+            stats: {
+              todayCount: 2,
+              scheduledCount: 3,
+            },
+          },
+        });
+      });
+
+      it('should return status when all scheduled times completed', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+        };
+
+        const mockCheckIns = [
+          {
+            _id: '507f191e810c19729de860ea',
+            timestamp: new Date('2025-11-22T08:15:00Z'),
+          },
+          {
+            _id: '507f191e810c19729de860eb',
+            timestamp: new Date('2025-11-22T14:30:00Z'),
+          },
+          {
+            _id: '507f191e810c19729de860ec',
+            timestamp: new Date('2025-11-22T20:45:00Z'),
+          },
+        ];
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue(mockCheckIns),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        const response = (mockRes.json as jest.Mock).mock.calls[0][0];
+        expect(response).toMatchObject({
+          success: true,
+          data: {
+            today: {
+              date: expect.any(String),
+              scheduledTimes: ['08:00', '14:00', '20:00'],
+              completedLogs: expect.any(Array),
+              nextSuggested: expect.any(String), // Could be tomorrow's first time or null
+              isComplete: true,
+            },
+            stats: {
+              todayCount: 3,
+              scheduledCount: 3,
+            },
+          },
+        });
+        expect(response.data.today.completedLogs).toHaveLength(3);
+      });
+
+      it('should handle user with no notification times', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: [],
+        };
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue([]),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            today: {
+              date: expect.any(String), // Don't rely on exact date
+              scheduledTimes: [],
+              completedLogs: [],
+              nextSuggested: null,
+              isComplete: false,
+            },
+            stats: {
+              todayCount: 0,
+              scheduledCount: 0,
+            },
+          },
+        });
+      });
+
+      it('should handle more check-ins than scheduled times', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: ['08:00', '14:00'],
+        };
+
+        const mockCheckIns = [
+          {
+            _id: '507f191e810c19729de860ea',
+            timestamp: new Date('2025-11-22T08:15:00Z'),
+          },
+          {
+            _id: '507f191e810c19729de860eb',
+            timestamp: new Date('2025-11-22T14:30:00Z'),
+          },
+          {
+            _id: '507f191e810c19729de860ec',
+            timestamp: new Date('2025-11-22T16:00:00Z'),
+          },
+        ];
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockResolvedValue(mockCheckIns),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        const response = (mockRes.json as jest.Mock).mock.calls[0][0];
+        expect(response).toMatchObject({
+          success: true,
+          data: {
+            today: {
+              isComplete: true,
+            },
+            stats: {
+              todayCount: 3,
+              scheduledCount: 2,
+            },
+          },
+        });
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should return 404 if user not found', async () => {
+        // Arrange
+        (User.findById as jest.Mock).mockResolvedValue(null);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockRes.status).toHaveBeenCalledWith(404);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'User not found',
+        });
+      });
+
+      it('should handle database errors', async () => {
+        // Arrange
+        const dbError = new Error('Database connection failed');
+        (User.findById as jest.Mock).mockRejectedValue(dbError);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
+
+        // Assert
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+
+      it('should handle check-in query errors', async () => {
+        // Arrange
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+        };
+
+        (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+        const dbError = new Error('CheckIn query failed');
+        const mockQuery = {
+          sort: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          lean: jest.fn().mockRejectedValue(dbError),
+        };
+
+        (CheckIn.find as jest.Mock).mockReturnValue(mockQuery);
+
+        // Act
+        await getStatus(mockStatusReq as Request, mockRes as Response, mockNext);
 
         // Assert
         expect(mockNext).toHaveBeenCalledWith(dbError);

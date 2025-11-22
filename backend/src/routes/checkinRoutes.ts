@@ -6,6 +6,7 @@ import {
   createVoiceCheckin,
   createManualCheckin,
   getCheckins,
+  getStatus,
 } from '../controllers/checkinController';
 import { manualCheckinSchema } from '../utils/validation';
 
@@ -19,6 +20,13 @@ const router = Router();
  * flaggedForDoctor, limit, offset, sortBy, sortOrder
  */
 router.get('/', authenticate, getCheckins);
+
+/**
+ * GET /api/checkins/status
+ * Get daily check-in status based on user's notification schedule
+ * Requires authentication - returns authenticated user's status
+ */
+router.get('/status', authenticate, getStatus);
 
 /**
  * POST /api/checkins

@@ -91,7 +91,7 @@ describe('CheckinController', () => {
           language: 'en',
           duration: 5.2,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
         (CheckIn as any).mockImplementation(() => mockCheckIn);
 
         // Act
@@ -138,7 +138,7 @@ describe('CheckinController', () => {
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
         (CheckIn as any).mockImplementation(() => mockCheckIn);
 
         // Act
@@ -219,9 +219,7 @@ describe('CheckinController', () => {
         });
 
         const parsingError = new Error('Parsing failed');
-        (parseSymptoms as jest.Mock).mockImplementation(() => {
-          throw parsingError;
-        });
+        (parseSymptoms as jest.Mock).mockRejectedValue(parsingError);
 
         // Act
         await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
@@ -247,7 +245,7 @@ describe('CheckinController', () => {
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
 
         const dbError = new Error('Database connection failed');
         const mockCheckIn = {
@@ -286,7 +284,7 @@ describe('CheckinController', () => {
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
         (CheckIn as any).mockImplementation(() => mockCheckIn);
         (fs.unlink as jest.Mock).mockRejectedValue(new Error('File not found'));
 
@@ -338,7 +336,7 @@ describe('CheckinController', () => {
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
         (CheckIn as any).mockImplementation(() => mockCheckIn);
 
         // Act
@@ -378,7 +376,7 @@ describe('CheckinController', () => {
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockReturnValue(mockParsed);
+        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
         (CheckIn as any).mockImplementation(() => mockCheckIn);
 
         // Act

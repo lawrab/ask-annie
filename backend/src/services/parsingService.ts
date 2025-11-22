@@ -1,3 +1,4 @@
+import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 import { SymptomValue } from '../models/CheckIn';
 
@@ -11,315 +12,162 @@ export interface ParsedSymptoms {
   notes: string;
 }
 
-/**
- * Convert categorical severity to numeric 1-10 scale
- * @internal - Exported for testing
- */
-export function categoricalToNumeric(category: string): number {
-  const severityMap: { [key: string]: number } = {
-    // Low severity (1-3) - good/minimal symptoms
-    good: 1,
-    great: 1,
-    fine: 2,
-    excellent: 1,
-    normal: 2,
-    strong: 1,
-    high: 2, // for energy level (high energy = good = low severity)
-    rested: 2, // for activity level (well rested = good = low severity)
-    // Medium severity (4-7)
-    moderate: 5,
-    okay: 5,
-    ok: 5,
-    fair: 5,
-    middling: 5,
-    medium: 5,
-    light: 4,
-    // High severity (8-10) - bad/intense symptoms
-    bad: 10,
-    terrible: 10,
-    awful: 10,
-    poor: 8,
-    weak: 8,
-    horrible: 10,
-    low: 9, // for energy level (low energy = bad = high severity)
-    tired: 8,
-    exhausted: 9,
-    drained: 9,
-  };
+// Lazy initialization to support testing
+let openaiClient: OpenAI | null = null;
 
-  return severityMap[category.toLowerCase()] || 5; // Default to middle if unknown
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
 }
 
-/**
- * Common symptom patterns with their possible values
- */
-const SYMPTOM_PATTERNS = {
-  // Hand-related symptoms
-  hand_grip: {
-    keywords: ['hand grip', 'grip', 'hands', 'hand strength', 'gripping'],
-    values: {
-      bad: ['bad', 'terrible', 'awful', 'poor', 'weak', 'horrible'],
-      moderate: ['moderate', 'okay', 'ok', 'fair', 'middling', 'so-so'],
-      good: ['good', 'great', 'strong', 'fine', 'excellent', 'normal'],
+const EXTRACTION_TOOL = {
+  type: 'function' as const,
+  function: {
+    name: 'extract_symptoms',
+    description: 'Extract structured symptom data from patient check-in text',
+    parameters: {
+      type: 'object',
+      properties: {
+        symptoms: {
+          type: 'array',
+          description: 'List of symptoms explicitly mentioned',
+          items: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string',
+                description: "Symptom name in lowercase with underscores (e.g., 'headache', 'lower_back_pain', 'nausea')",
+              },
+              severity: {
+                type: 'number',
+                minimum: 1,
+                maximum: 10,
+                description:
+                  "Severity on 1-10 scale. Extract from context: 'mild'=2-3, 'moderate'=5-6, 'severe'=8-9, or explicit numbers like '6 out of 10'.",
+              },
+              location: {
+                type: 'string',
+                description: "Body location if mentioned (e.g., 'temples', 'lower back')",
+              },
+              notes: {
+                type: 'string',
+                description: 'Additional context about this symptom',
+              },
+            },
+            required: ['name', 'severity'],
+          },
+        },
+        activities: {
+          type: 'array',
+          items: { type: 'string' },
+          description: "List of activities mentioned (e.g., 'working', 'walking', 'exercising')",
+        },
+        triggers: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            "List of potential triggers mentioned (e.g., 'stress', 'lack of sleep', 'screen time')",
+        },
+      },
+      required: ['symptoms', 'activities', 'triggers'],
     },
-  },
-
-  // Pain level (1-10 scale)
-  pain_level: {
-    keywords: ['pain', 'hurt', 'ache', 'aching', 'sore', 'discomfort'],
-    numeric: true,
-  },
-
-  // Energy level
-  energy: {
-    keywords: ['energy', 'tired', 'fatigue', 'exhausted', 'energetic'],
-    values: {
-      low: ['low', 'tired', 'exhausted', 'drained', 'wiped', 'sleepy'],
-      medium: ['medium', 'moderate', 'okay', 'ok', 'average'],
-      high: ['high', 'energetic', 'good', 'great', 'peppy', 'alert'],
-    },
-  },
-
-  // Raynaud's events
-  raynauds_event: {
-    keywords: ['raynaud', 'raynauds', 'fingers white', 'fingers blue', 'cold fingers'],
-    boolean: true,
-  },
-
-  // Activity level
-  activity_level: {
-    keywords: [
-      'activity',
-      'active',
-      'movement',
-      'exercise',
-      'exertion',
-      'rested',
-      'rest',
-      'light',
-      'intense',
-      'workout',
-    ],
-    values: {
-      rested: ['rested', 'rest', 'relaxed', 'inactive', 'sedentary'],
-      light: ['light', 'gentle', 'easy', 'minimal'],
-      normal: ['normal', 'moderate', 'regular', 'usual'],
-      high: ['high', 'intense', 'strenuous', 'vigorous', 'heavy'],
-    },
-  },
-
-  // Additional common symptoms
-  brain_fog: {
-    keywords: ['brain fog', 'foggy', 'confused', 'fuzzy', 'clarity', 'mental'],
-    boolean: true,
-  },
-
-  tingling_feet: {
-    keywords: [
-      'tingling feet',
-      'feet tingling',
-      'numb feet',
-      'feet numb',
-      'feet are tingling',
-      'my feet are tingling',
-    ],
-    boolean: true,
-  },
-
-  neck_stiffness: {
-    keywords: [
-      'neck stiff',
-      'stiff neck',
-      'neck pain',
-      'neck ache',
-      'neck is stiff',
-      'neck is really stiff',
-    ],
-    boolean: true,
   },
 };
 
 /**
- * Common activities to detect
+ * Parse transcript into structured symptom data using GPT-4o-mini
  */
-const ACTIVITY_KEYWORDS = [
-  'walking',
-  'walk',
-  'running',
-  'run',
-  'exercise',
-  'workout',
-  'yoga',
-  'swimming',
-  'housework',
-  'cleaning',
-  'cooking',
-  'gardening',
-  'work',
-  'working',
-  'resting',
-  'sleeping',
-  'reading',
-  'writing',
-  'typing',
-  'driving',
-  'shopping',
-];
+export async function parseSymptoms(transcript: string): Promise<ParsedSymptoms> {
+  try {
+    logger.info('Parsing transcript with GPT-4o-mini', {
+      transcriptLength: transcript.length,
+    });
 
-/**
- * Common triggers to detect
- */
-const TRIGGER_KEYWORDS = [
-  'stress',
-  'stressed',
-  'anxiety',
-  'anxious',
-  'cold',
-  'heat',
-  'weather',
-  'sleep',
-  'lack of sleep',
-  'insomnia',
-  'food',
-  'alcohol',
-  'caffeine',
-  'medication',
-  'hormones',
-  'period',
-  'menstruation',
-];
+    const openai = getOpenAIClient();
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a medical data extraction assistant. Extract symptoms, activities, and triggers from patient check-in text.
 
-/**
- * Extract numeric value from text (for pain levels, etc.)
- */
-function extractNumericValue(text: string, context: string): number | null {
-  // Look for patterns like "pain 7", "7 out of 10", "pain around 5", "around 3 out of 10"
-  const patterns = [
-    /(\d+)\s*(?:out of|\/)\s*10/i,
-    /(?:level|around|about|roughly)?\s*(\d+)(?:\s*(?:out of|\/)\s*10)?/i,
-  ];
+IMPORTANT: You MUST extract all three fields - symptoms, activities, and triggers. Even if some are empty, include them.
 
-  const lowerText = text.toLowerCase();
-  const contextIndex = lowerText.indexOf(context.toLowerCase());
+Symptom Extraction Rules:
+- Extract ALL symptoms explicitly mentioned (e.g., "headache", "nausea", "fatigue", "pain")
+- Ignore negations like "no pain" or "I don't have"
+- Map severity words to numbers: mild=2-3, moderate=5-6, severe=8-9, terrible=10
+- Extract numeric severities exactly: "6 out of 10" → severity: 6
+- Extract body locations when mentioned (e.g., "temples", "lower back")
+- Use lowercase with underscores for symptom names (e.g., "lower_back_pain", "headache", "nausea")
 
-  if (contextIndex === -1) return null;
+Example:
+Input: "moderate headache, 6 out of 10, in my temples. Mild nausea, maybe a 3"
+Output: {
+  "symptoms": [
+    {"name": "headache", "severity": 6, "location": "temples"},
+    {"name": "nausea", "severity": 3}
+  ],
+  "activities": [],
+  "triggers": []
+}`,
+        },
+        {
+          role: 'user',
+          content: transcript,
+        },
+      ],
+      tools: [EXTRACTION_TOOL],
+      tool_choice: { type: 'function', function: { name: 'extract_symptoms' } },
+    });
 
-  // Search in a window around the keyword (wider window to catch "around 3 out of 10")
-  const windowStart = Math.max(0, contextIndex - 30);
-  const windowEnd = Math.min(text.length, contextIndex + context.length + 40);
-  const window = text.substring(windowStart, windowEnd);
+    const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+    if (!toolCall || toolCall.type !== 'function' || !toolCall.function?.arguments) {
+      throw new Error('No function call in response');
+    }
 
-  for (const pattern of patterns) {
-    const match = window.match(pattern);
-    if (match) {
-      const value = parseInt(match[1], 10);
-      if (value >= 0 && value <= 10) {
-        return value;
+    const parsed = JSON.parse(toolCall.function.arguments);
+
+    // Convert array format to object format
+    const symptoms: { [key: string]: SymptomValue } = {};
+    if (Array.isArray(parsed.symptoms)) {
+      for (const symptom of parsed.symptoms) {
+        const symptomValue: SymptomValue = { severity: symptom.severity };
+        if (symptom.location) symptomValue.location = symptom.location;
+        if (symptom.notes) symptomValue.notes = symptom.notes;
+        symptoms[symptom.name] = symptomValue;
       }
     }
+
+    logger.info('Parsing complete', {
+      symptomCount: Object.keys(symptoms).length,
+      activityCount: (parsed.activities || []).length,
+      triggerCount: (parsed.triggers || []).length,
+    });
+
+    return {
+      symptoms,
+      activities: parsed.activities || [],
+      triggers: parsed.triggers || [],
+      notes: transcript, // Preserve original
+    };
+  } catch (error) {
+    logger.error('GPT parsing failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    // Fail gracefully with empty extraction
+    return {
+      symptoms: {},
+      activities: [],
+      triggers: [],
+      notes: transcript,
+    };
   }
-
-  return null;
-}
-
-/**
- * Check if text contains any of the keywords
- */
-function containsKeyword(text: string, keywords: string[]): boolean {
-  const lowerText = text.toLowerCase();
-  return keywords.some((keyword) => lowerText.includes(keyword.toLowerCase()));
-}
-
-/**
- * Extract value from text based on value keywords
- */
-function extractValue(text: string, valueMap: { [key: string]: string[] }): string | null {
-  const lowerText = text.toLowerCase();
-
-  for (const [value, keywords] of Object.entries(valueMap)) {
-    if (containsKeyword(lowerText, keywords)) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Parse transcript into structured symptom data
- */
-export function parseSymptoms(transcript: string): ParsedSymptoms {
-  const symptoms: { [key: string]: SymptomValue } = {};
-  const activities: string[] = [];
-  const triggers: string[] = [];
-
-  logger.info('Parsing transcript', { transcriptLength: transcript.length });
-
-  // Extract known symptoms
-  for (const [symptomKey, config] of Object.entries(SYMPTOM_PATTERNS)) {
-    // Check if any keywords are present
-    if (!containsKeyword(transcript, config.keywords)) {
-      continue;
-    }
-
-    // Extract value based on type
-    if ('numeric' in config && config.numeric) {
-      // Extract numeric value (already 1-10 scale)
-      const numericValue = extractNumericValue(transcript, config.keywords[0]);
-      if (numericValue !== null) {
-        symptoms[symptomKey] = { severity: numericValue };
-        logger.debug('Extracted numeric symptom', { symptomKey, severity: numericValue });
-      }
-    } else if ('boolean' in config && config.boolean) {
-      // Boolean symptom - presence indicates moderate-high severity (7)
-      symptoms[symptomKey] = { severity: 7 };
-      logger.debug('Extracted boolean symptom', { symptomKey, severity: 7 });
-    } else if ('values' in config && config.values) {
-      // Extract categorical value and convert to numeric
-      const category = extractValue(transcript, config.values);
-      if (category) {
-        const severity = categoricalToNumeric(category);
-        symptoms[symptomKey] = { severity };
-        logger.debug('Extracted categorical symptom', {
-          symptomKey,
-          category,
-          severity,
-        });
-      }
-    }
-  }
-
-  // Extract activities
-  for (const activity of ACTIVITY_KEYWORDS) {
-    if (containsKeyword(transcript, [activity])) {
-      activities.push(activity);
-      logger.debug('Detected activity', { activity });
-    }
-  }
-
-  // Extract triggers
-  for (const trigger of TRIGGER_KEYWORDS) {
-    if (containsKeyword(transcript, [trigger])) {
-      triggers.push(trigger);
-      logger.debug('Detected trigger', { trigger });
-    }
-  }
-
-  // Store original transcript as notes
-  const notes = transcript.trim();
-
-  logger.info('Parsing complete', {
-    symptomCount: Object.keys(symptoms).length,
-    activityCount: activities.length,
-    triggerCount: triggers.length,
-  });
-
-  return {
-    symptoms,
-    activities,
-    triggers,
-    notes,
-  };
 }
 
 /**

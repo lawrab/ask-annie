@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getSymptomsAnalysis, getSymptomTrend } from '../controllers/analysisController';
+import { getSymptomsAnalysis, getSymptomTrend, getStreak } from '../controllers/analysisController';
 
 const router = Router();
 
@@ -21,5 +21,12 @@ router.get('/symptoms', getSymptomsAnalysis);
  * Query params: days (default: 14, max: 365)
  */
 router.get('/trends/:symptom', getSymptomTrend);
+
+/**
+ * GET /api/analysis/streak
+ * Get streak statistics for the authenticated user
+ * Returns current streak, longest streak, active days, and total days
+ */
+router.get('/streak', getStreak);
 
 export default router;

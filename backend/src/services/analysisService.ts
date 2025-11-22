@@ -322,3 +322,104 @@ export async function analyzeTrendForSymptom(
     },
   };
 }
+
+/**
+ * Streak analysis result interface
+ */
+export interface StreakAnalysis {
+  currentStreak: number;
+  longestStreak: number;
+  activeDays: number;
+  totalDays: number;
+  streakStartDate: string | null;
+  lastLogDate: string | null;
+}
+
+/**
+ * Calculate streak statistics for a user
+ */
+export async function calculateStreak(
+  userId: string | Types.ObjectId
+): Promise<StreakAnalysis> {
+  // Fetch all check-ins for the user
+  const checkIns = await CheckIn.find({ userId }).sort({ timestamp: 1 }).select('timestamp').lean();
+
+  if (checkIns.length === 0) {
+    return {
+      currentStreak: 0,
+      longestStreak: 0,
+      activeDays: 0,
+      totalDays: 0,
+      streakStartDate: null,
+      lastLogDate: null,
+    };
+  }
+
+  // Extract unique dates (YYYY-MM-DD format)
+  const uniqueDates = new Set<string>();
+  checkIns.forEach((checkIn) => {
+    const dateKey = new Date(checkIn.timestamp).toISOString().split('T')[0];
+    uniqueDates.add(dateKey);
+  });
+
+  const sortedDates = Array.from(uniqueDates).sort();
+  const activeDays = sortedDates.length;
+
+  // Calculate total days from first to last check-in
+  const firstDate = new Date(sortedDates[0]);
+  const lastDate = new Date(sortedDates[sortedDates.length - 1]);
+  const totalDays =
+    Math.floor((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Calculate current streak (start from yesterday to give grace period)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  let currentStreak = 0;
+  let streakStartDate: string | null = null;
+  let checkDate = yesterday;
+
+  // Work backwards from yesterday
+  while (true) {
+    const dateKey = checkDate.toISOString().split('T')[0];
+    if (sortedDates.includes(dateKey)) {
+      currentStreak++;
+      streakStartDate = dateKey;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  // Calculate longest streak
+  let longestStreak = 0;
+  let tempStreak = 1;
+
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prevDate = new Date(sortedDates[i - 1]);
+    const currDate = new Date(sortedDates[i]);
+    const daysDiff =
+      Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysDiff === 1) {
+      // Consecutive days
+      tempStreak++;
+    } else {
+      // Streak broken
+      longestStreak = Math.max(longestStreak, tempStreak);
+      tempStreak = 1;
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak);
+
+  return {
+    currentStreak,
+    longestStreak,
+    activeDays,
+    totalDays,
+    streakStartDate,
+    lastLogDate: sortedDates[sortedDates.length - 1],
+  };
+}

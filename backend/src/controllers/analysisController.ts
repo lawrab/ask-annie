@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { analyzeSymptomsForUser, analyzeTrendForSymptom } from '../services/analysisService';
+import {
+  analyzeSymptomsForUser,
+  analyzeTrendForSymptom,
+  calculateStreak,
+} from '../services/analysisService';
 import { logger } from '../utils/logger';
 
 /**
@@ -100,6 +104,41 @@ export async function getSymptomTrend(
     });
   } catch (error) {
     logger.error('Error fetching symptom trend', { error });
+    next(error);
+  }
+}
+
+/**
+ * GET /api/analysis/streak
+ * Returns streak statistics for the authenticated user
+ */
+export async function getStreak(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Get userId from authenticated user
+    const userId = (req.user as { id: string })!.id;
+
+    logger.info('Fetching streak statistics', { userId });
+
+    // Calculate streak
+    const streak = await calculateStreak(userId);
+
+    logger.info('Streak calculation completed', {
+      userId,
+      currentStreak: streak.currentStreak,
+      longestStreak: streak.longestStreak,
+      activeDays: streak.activeDays,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: streak,
+    });
+  } catch (error) {
+    logger.error('Error fetching streak statistics', { error });
     next(error);
   }
 }

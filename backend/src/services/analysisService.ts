@@ -142,6 +142,11 @@ export async function analyzeSymptomsForUser(
   checkIns.forEach((checkIn: ICheckIn) => {
     const symptoms = checkIn.structured.symptoms;
 
+    // Skip if symptoms is null or undefined
+    if (!symptoms || typeof symptoms !== 'object') {
+      return;
+    }
+
     // Convert Map to entries if needed
     if (symptoms instanceof Map) {
       symptoms.forEach((value, key) => {
@@ -233,6 +238,11 @@ function calculateStandardDeviation(values: number[], mean: number): number {
  */
 function getSymptomValue(checkIn: ICheckIn, symptomName: string): unknown {
   const symptoms = checkIn.structured.symptoms;
+
+  // Return undefined if symptoms is null or undefined
+  if (!symptoms || typeof symptoms !== 'object') {
+    return undefined;
+  }
 
   if (symptoms instanceof Map) {
     return symptoms.get(symptomName);
@@ -518,6 +528,12 @@ export async function calculateQuickStats(
   const currentSymptomMap = new Map<string, number[]>();
   currentCheckIns.forEach((checkIn) => {
     const symptoms = checkIn.structured.symptoms;
+
+    // Skip if symptoms is null or undefined
+    if (!symptoms || typeof symptoms !== 'object') {
+      return;
+    }
+
     const entries = symptoms instanceof Map ? symptoms.entries() : Object.entries(symptoms);
 
     for (const [key, value] of entries) {
@@ -534,6 +550,12 @@ export async function calculateQuickStats(
   const previousSymptomMap = new Map<string, number[]>();
   previousCheckIns.forEach((checkIn) => {
     const symptoms = checkIn.structured.symptoms;
+
+    // Skip if symptoms is null or undefined
+    if (!symptoms || typeof symptoms !== 'object') {
+      return;
+    }
+
     const entries = symptoms instanceof Map ? symptoms.entries() : Object.entries(symptoms);
 
     for (const [key, value] of entries) {

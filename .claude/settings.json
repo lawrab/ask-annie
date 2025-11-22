@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PostToolUse": {
+      "Write": ".claude/hooks/post-write.sh"
+    },
+    "Stop": [
+      ".claude/hooks/docs-reminder.sh",
+      ".claude/hooks/progress-check.sh"
+    ]
+  }
+}

@@ -1,11 +1,30 @@
 {
   "hooks": {
-    "PostToolUse": {
-      "Write": ".claude/hooks/post-write.sh"
-    },
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-write.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
-      ".claude/hooks/docs-reminder.sh",
-      ".claude/hooks/progress-check.sh"
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/docs-reminder.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/wave-progress.sh"
+          }
+        ]
+      }
     ]
   }
 }

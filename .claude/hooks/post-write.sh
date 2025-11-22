@@ -1,29 +1,25 @@
 #!/usr/bin/env bash
-# Post-write hook - Reminds about test coverage after file changes
+set -euo pipefail
 
-set -e
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-# Get the file that was written from the first argument
-WRITTEN_FILE="$1"
+FILE_PATH="${1:-unknown}"
 
-# Only check for source files
-if [[ "$WRITTEN_FILE" =~ \.(ts|tsx|js|jsx)$ ]] && [[ ! "$WRITTEN_FILE" =~ \.test\. ]] && [[ ! "$WRITTEN_FILE" =~ \.stories\. ]]; then
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📝 File Updated: $WRITTEN_FILE"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "🧪 Test Coverage Reminder:"
-    echo "  • Maintain 95%+ coverage requirement"
-    echo "  • Update or add tests for changes"
-    echo "  • Run: npm run test:backend (99.08% coverage)"
-    echo "  • Run: npm run test:frontend (270 tests)"
-    echo ""
-    echo "📚 If adding new features, consider updating:"
-    echo "  • CHANGELOG.md (Unreleased section)"
-    echo "  • API documentation if endpoints changed"
-    echo "  • Storybook stories for UI components"
-    echo ""
+echo -e "${YELLOW}File written: $FILE_PATH${NC}"
+
+if [[ "$FILE_PATH" == *"backend/src"* ]]; then
+    echo -e "${GREEN}Backend file modified${NC}"
+    echo "  -> Remember to update tests and check coverage"
 fi
 
-exit 0
+if [[ "$FILE_PATH" == *"frontend/src/components"* ]]; then
+    echo -e "${GREEN}Component modified${NC}"
+    echo "  -> Remember to add/update Storybook story and tests"
+fi
+
+if [[ "$FILE_PATH" == *"docs/API"* ]]; then
+    echo -e "${GREEN}API docs modified${NC}"
+    echo "  -> Remember to update CHANGELOG.md"
+fi

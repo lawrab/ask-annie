@@ -1,36 +1,28 @@
 ---
-description: Weekly sync - Update context files, CHANGELOG, and README
+name: weekly-sync
+description: Run weekly documentation and context sync
 ---
 
-Perform a comprehensive weekly synchronization of project documentation:
+Please perform a weekly project sync:
 
-1. **Update Context Files** (agents/context/):
-   - current-state.md: Update progress, active issues, and metrics
-   - Review architecture-decisions.md for any new ADRs needed
-   - Update common-patterns.md if new patterns emerged
+1. Update agents/context/current-state.md:
+   - List this week's completed work
+   - Update active issues
+   - Note any blockers
+   - Update metrics (test coverage, component count)
 
-2. **Update CHANGELOG.md**:
-   - Review recent commits (last 7 days)
-   - Add any completed features or bug fixes to Unreleased section
-   - Ensure format follows Keep a Changelog standard
+2. Review and update CHANGELOG.md:
+   - Add entries for completed features
+   - Verify version numbers
 
-3. **Update README.md**:
-   - Sync project status with current progress
-   - Update test coverage metrics
-   - Update feature list if new capabilities were added
-   - Verify all progress markers are accurate
+3. Update README.md:
+   - Change completed items to checkmark
+   - Update progress percentages
+   - Verify roadmap accuracy
 
-4. **Check Active Issues**:
-   - Review open issues and pull requests
-   - Calculate completion percentage for current milestone
-   - Update roadmap section
+4. Scan for orphaned references:
+   - Check all issue numbers are valid
+   - Verify no broken doc links
+   - Update any stale examples
 
-5. **Verify Current Metrics**:
-   - Run `npm run test:backend` to get latest coverage
-   - Run `npm run test:frontend` to get test count
-   - Count UI components in frontend/src/components
-
-After updates, provide a summary of:
-- What changed in the past week
-- Current milestone status
-- Any action items or blockers
+5. Create a summary of changes made

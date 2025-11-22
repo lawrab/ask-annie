@@ -306,6 +306,47 @@ Toggle whether a check-in is flagged for doctor review.
 
 ---
 
+## Check-In Status (Wave 3)
+
+### Get Daily Check-In Status
+
+Get daily check-in completion status with grace period logic.
+
+**Endpoint**: `GET /checkins/status`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2025-11-22",
+    "scheduledTimes": ["09:00", "14:00", "21:00"],
+    "completedLogs": [
+      {
+        "time": "09:15",
+        "checkInId": "507f1f77bcf86cd799439011"
+      },
+      {
+        "time": "14:30",
+        "checkInId": "507f1f77bcf86cd799439012"
+      }
+    ],
+    "nextSuggested": "21:00",
+    "isComplete": false
+  }
+}
+```
+
+**Notes**:
+- `scheduledTimes` comes from user notification preferences
+- `completedLogs` shows check-ins completed today with their times
+- `nextSuggested` indicates the next recommended check-in time
+- `isComplete` is true when user has logged >= scheduled times for the day
+
+---
+
 ## Analysis & Trends
 
 ### Get All Symptoms
@@ -387,6 +428,99 @@ Get time-series data for a specific symptom.
   }
 }
 ```
+
+---
+
+### Get Streak Statistics (Wave 3)
+
+Get gamification metrics with supportive design.
+
+**Endpoint**: `GET /analysis/streak`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "currentStreak": 7,
+    "longestStreak": 14,
+    "activeDays": 45,
+    "totalDays": 60,
+    "streakStartDate": "2025-11-15",
+    "lastLogDate": "2025-11-21"
+  }
+}
+```
+
+**Notes**:
+- Current streak has 1-day grace period (starts from yesterday)
+- User has until end of today to maintain streak
+- Active days = unique dates with check-ins
+- Total days = span from first to last check-in
+
+---
+
+### Get Quick Stats Analytics (Wave 3)
+
+Get week-over-week comparison analytics with trend analysis.
+
+**Endpoint**: `GET /analysis/quick-stats`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query Parameters**:
+- `days` (optional): Time period (default: 7, max: 90)
+  - Common values: 7 (week), 14 (2 weeks), 30 (month)
+
+**Example**: `/analysis/quick-stats?days=7`
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "period": {
+      "current": {
+        "start": "2025-11-15",
+        "end": "2025-11-21",
+        "days": 7
+      },
+      "previous": {
+        "start": "2025-11-08",
+        "end": "2025-11-14",
+        "days": 7
+      }
+    },
+    "checkInCount": {
+      "current": 15,
+      "previous": 12,
+      "change": 3,
+      "percentChange": 25.0
+    },
+    "topSymptoms": [
+      {
+        "name": "headache",
+        "frequency": 12,
+        "avgSeverity": 6.5,
+        "trend": "improving"
+      }
+    ],
+    "averageSeverity": {
+      "current": 5.8,
+      "previous": 6.5,
+      "change": -0.7,
+      "trend": "improving"
+    }
+  }
+}
+```
+
+**Notes**:
+- Trends: "improving" (>10% decrease in severity), "worsening" (>10% increase), "stable" (within ±10%)
+- Lower severity is better
+- Top symptoms limited to 5 most frequent
 
 ---
 
@@ -660,6 +794,11 @@ Future versions will be accessible via `/api/v2`, etc. We maintain backwards com
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2024-01-25
+**Document Version**: 1.1
+**Last Updated**: 2025-11-22
 **API Changelog**: See `CHANGELOG.md` for version history
+
+## Version History
+
+- **v1.1** (2025-11-22): Added Wave 3 endpoints (check-in status, streak, quick stats)
+- **v1.0** (2024-01-25): Initial API documentation

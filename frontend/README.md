@@ -4,22 +4,26 @@ React TypeScript frontend for the Ask Annie symptom tracking application.
 
 ## Status
 
-**Version**: 0.1.0 - MVP Infrastructure Complete
+**Version**: 0.1.0 MVP + Wave 2B + Wave 3 Complete
 
 Implemented features:
 - ✅ JWT-based authentication (login/register)
 - ✅ Protected routing with session restoration
-- ✅ Dashboard with check-ins display
+- ✅ Enhanced dashboard with three-section layout (Wave 3)
+- ✅ Symptom trends page with interactive charts (Wave 3)
+- ✅ Voice recording interface with Web Audio API
+- ✅ Manual check-in form with validation
+- ✅ Complete design system with 12 UI components (Wave 2B)
+- ✅ Storybook documentation with 100+ stories
 - ✅ API client with Axios interceptors
 - ✅ Form validation with React Hook Form + Zod
 - ✅ State management with Zustand
-- ✅ 63 passing tests with Vitest
+- ✅ 468 passing tests with Vitest (485 total, 17 skipped)
 
 Coming next:
-- 📋 Voice recording interface (Issue #11)
-- 📋 Manual check-in form (Issue #11)
-- 📋 Symptom trends and charts
-- 📋 Doctor summary generation
+- 📋 Doctor summary generation (Issue #20)
+- 📋 Settings page (Issue #28)
+- 📋 Daily check-in notifications (Issue #13)
 
 ## Tech Stack
 
@@ -30,9 +34,11 @@ Coming next:
 - React Hook Form 7.54.2 + Zod 3.24.1 for forms
 - Axios 1.7.9 for API communication
 - Tailwind CSS 3.4.17 for styling
+- Storybook 10 for component documentation
 - Vitest 3.0.4 for testing
-- Recharts for data visualization (planned)
-- Web Audio API for voice recording (planned)
+- Recharts 2.15.0 for data visualization
+- Web Audio API for voice recording
+- Headless UI 2.2.0 for accessible overlays
 
 ## Project Structure
 
@@ -120,23 +126,46 @@ npm run lint:fix
 ### Pages (Implemented)
 - `/login` - Authentication page with email/password validation
 - `/register` - User registration with username/email/password
-- `/dashboard` - Main dashboard displaying check-ins timeline
-- `/checkin` - Check-in page (placeholder for Issue #11)
+- `/dashboard` - Enhanced dashboard with Daily Momentum, Weekly Insights, Timeline History (Wave 3)
+- `/checkin` - Check-in page with voice/manual toggle
+- `/trends` - Symptom trends visualization with interactive charts (Wave 3)
+- `/design-system` - Component library documentation
 - `/` - Redirects to dashboard
 
 ### Pages (Planned)
-- `/trends` - Symptom trends and charts
 - `/doctor-summary` - Doctor report generation
 - `/settings` - User settings and preferences
 
 ### Components (Implemented)
+
+**Design System (Wave 2B)**:
+- `Alert` - Contextual alerts with variants
+- `Badge` - Status and category badges
+- `Button` - Primary, secondary, danger buttons
+- `Card` - Container component
+- `Checkbox` - Accessible checkbox input
+- `ConfirmDialog` - Confirmation modal with Headless UI
+- `Divider` - Visual separator
+- `Input` - Text input with validation states
+- `Modal` - Accessible modal dialog
+- `Radio` - Radio button input
+- `RadioGroup` - Radio button group
+- `TextArea` - Multi-line text input
+
+**Dashboard Components (Wave 3)**:
+- `CheckInCard` - Check-in display with progressive disclosure
+- `InsightCard` - Data-driven insights with severity color coding
+- `QuickStatsCard` - Metric comparisons with trend indicators
+
+**Chart Components (Wave 3)**:
+- `SymptomChart` - Recharts line chart for symptom severity over time
+
+**Other Components**:
 - `ProtectedRoute` - Route guard with session restoration
+- `VoiceRecorder` - Voice recording interface with Web Audio API
+- `ManualCheckInForm` - Form for manual check-in entry
 
 ### Components (Planned)
-- `VoiceRecorder` - Voice recording interface
-- `SymptomChart` - Visualization for symptom trends
-- `CheckInCard` - Display single check-in
-- `SymptomBadge` - Display individual symptom
 - `NotificationPermission` - Request notification access
 
 ## Styling

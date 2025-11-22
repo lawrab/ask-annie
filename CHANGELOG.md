@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Wave 3 Frontend Dashboard & Analysis (Issues #18, #19, #21)
+  - Trends page with interactive symptom visualization (Issue #19, PR #95)
+    - SymptomChart component with Recharts line chart for severity over time
+    - InsightCard component for data-driven insights with severity-based color coding
+    - QuickStatsCard component for metric comparisons with week-over-week trends
+    - Symptom selector and time range selector (7/14/30/90 days)
+    - Statistics cards showing average, min/max, days present, and trend direction
+    - Full API integration with `/api/analysis/symptoms` and `/api/analysis/trends/:symptom`
+    - 137 comprehensive tests added (20 SymptomChart, 23 InsightCard, 25 QuickStatsCard, 67 TrendsPage)
+  - Dashboard redesign with three-section layout (Issue #18, PR #94)
+    - Daily Momentum section with check-in status and streak display
+    - Weekly Insights section with quick stats cards
+    - Timeline History section with CheckInCard integration
+    - Independent loading/error states per section
+    - Responsive grid layouts with mobile support
+    - 28 comprehensive tests
+  - CheckInCard component with progressive disclosure (Issue #21, PR #93, merged)
+    - Compact/expanded modes for timeline display
+    - Severity visualization with red/amber/green color coding
+    - WCAG AA compliant accessibility
+    - 42 comprehensive tests
+  - Frontend test suite expanded to 468 passing tests, 17 skipped (485 total)
 - Wave 3 Backend Analytics & Engagement (Issues #87-90)
   - Symptom data standardization with SymptomValue interface for numeric severity tracking
   - Daily check-in status endpoint (GET /api/checkins/status) with grace period logic
@@ -40,17 +62,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored all existing pages to use design system components
 - Updated symptom storage format from mixed types to standardized SymptomValue objects
 - Improved test coverage from 98.51% to 99.08% (backend)
+- DashboardPage completely redesigned with Wave 3 API integration
+
+### Fixed
+- Vitest configuration to prevent watch mode and process leaks in CI and agent workflows
+  - Added `watch: false` and `pool: 'forks'` to `vite.config.ts`
+  - Tests now exit cleanly after completion (~3 seconds)
 
 ### Planned Features
-- Enhanced dashboard with timeline view (Issue #18)
-- Symptom trends page with charts (Issue #19)
-- Reusable CheckInCard component (Issue #21)
 - Doctor summary generation (Issue #20)
 - Daily check-in notifications (Issue #13)
 - PDF export functionality
 - Toast notification system (Issue #71)
 - Accessibility audit (Issue #70)
 - End-to-end voice flow testing (Issue #8)
+- Settings page (Issue #28)
+- Mobile-optimized PWA
 
 ## [0.1.0] - 2024-01-25
 

@@ -2,7 +2,7 @@
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
-> **📦 Project Status**: v0.1.0 MVP + Wave 2B + Wave 3 Backend Complete - Backend API fully functional (99.08% coverage, 332 tests) with analytics endpoints. Frontend includes authentication, routing, dashboard, complete check-in functionality (270 tests), and comprehensive design system with 12 accessible UI components documented in Storybook. See roadmap below for progress.
+> **📦 Project Status**: v0.1.0 MVP + Wave 2B + Wave 3 Complete - Backend API fully functional (99.08% coverage, 332 tests) with analytics endpoints. Frontend includes authentication, routing, enhanced dashboard, trends visualization, complete check-in functionality (468 tests), and comprehensive design system with 12 accessible UI components documented in Storybook. See roadmap below for progress.
 
 Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
@@ -158,11 +158,11 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ Service layer architecture with reusable analytics functions
 - ✅ 80+ new test cases added (99.08% coverage, 332 total tests)
 
-### Frontend (Wave 3) - Dashboard & Analysis
-- 📋 Enhanced dashboard with timeline view (Issue #18)
-- 📋 Symptom trends page with charts (Issue #19)
+### Frontend (Wave 3) - Dashboard & Analysis Complete ✅
+- ✅ Enhanced dashboard with three-section layout (Issue #18, PR #94)
+- ✅ Symptom trends page with interactive charts (Issue #19, PR #95)
+- ✅ Reusable CheckInCard component (Issue #21, PR #93 merged)
 - 📋 Doctor summary generation (Issue #20)
-- 📋 Reusable CheckInCard component (Issue #21)
 
 ### Frontend (Wave 4) - Settings & Polish
 - 📋 Settings page (Issue #28)

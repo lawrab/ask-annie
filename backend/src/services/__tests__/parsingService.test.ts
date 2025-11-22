@@ -1,282 +1,531 @@
-import { parseSymptoms, calculateConfidence, categoricalToNumeric } from '../parsingService';
+import { parseSymptoms, calculateConfidence } from '../parsingService';
+
+// Mock OpenAI module - must be done before any imports
+const mockCreate = jest.fn();
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: mockCreate,
+      },
+    },
+  }));
+});
 
 describe('ParsingService', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    mockCreate.mockReset();
+  });
+
   describe('parseSymptoms', () => {
-    describe('Hand Grip Detection', () => {
-      it('should detect bad hand grip', () => {
-        const result = parseSymptoms('My hand grip was really bad today');
+    describe('Successful Parsing', () => {
+      it('should extract symptoms with severity and location', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'headache',
+                            severity: 6,
+                            location: 'temples',
+                          },
+                        ],
+                        activities: [],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
+        const result = await parseSymptoms('I have a headache in my temples, about 6 out of 10');
+
+        expect(result.symptoms.headache).toEqual({
+          severity: 6,
+          location: 'temples',
+        });
       });
 
-      it('should detect moderate hand grip', () => {
-        const result = parseSymptoms('Hands feel okay, moderate grip');
+      it('should extract multiple symptoms with varying severities', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'headache',
+                            severity: 6,
+                            location: 'temples',
+                          },
+                          {
+                            name: 'nausea',
+                            severity: 3,
+                          },
+                          {
+                            name: 'fatigue',
+                            severity: 5,
+                          },
+                        ],
+                        activities: ['working'],
+                        triggers: ['dehydration', 'screen time'],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.symptoms.hand_grip).toEqual({ severity: 5 });
+        const transcript =
+          "Today I'm experiencing a moderate headache, probably a 6 out of 10, mostly in my temples. I also have some mild nausea, maybe a 3. I've been working on the computer for about 4 hours and I'm feeling pretty fatigued. I think the headache was triggered by not drinking enough water and too much screen time. I did take a short walk outside which helped a little.";
+
+        const result = await parseSymptoms(transcript);
+
+        expect(result.symptoms.headache).toEqual({
+          severity: 6,
+          location: 'temples',
+        });
+        expect(result.symptoms.nausea).toEqual({
+          severity: 3,
+        });
+        expect(result.symptoms.fatigue).toEqual({
+          severity: 5,
+        });
+        expect(result.activities).toContain('working');
+        expect(result.triggers).toContain('dehydration');
+        expect(result.triggers).toContain('screen time');
+        expect(result.notes).toBe(transcript);
       });
 
-      it('should detect good hand grip', () => {
-        const result = parseSymptoms('Hand strength is great today');
+      it('should extract activities', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: {},
+                        activities: ['walking', 'yoga', 'cooking'],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.symptoms.hand_grip).toEqual({ severity: 1 });
-      });
-
-      it('should handle multiple grip descriptors', () => {
-        const result = parseSymptoms('My grip was terrible and weak');
-
-        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
-      });
-    });
-
-    describe('Pain Level Detection', () => {
-      it('should extract numeric pain level', () => {
-        const result = parseSymptoms('Pain level around 7 today');
-
-        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
-      });
-
-      it('should extract pain with "out of 10" format', () => {
-        const result = parseSymptoms('My pain is 8 out of 10');
-
-        expect(result.symptoms.pain_level).toEqual({ severity: 8 });
-      });
-
-      it('should extract pain with slash format', () => {
-        const result = parseSymptoms('Pain about 5/10');
-
-        expect(result.symptoms.pain_level).toEqual({ severity: 5 });
-      });
-
-      it('should not extract pain levels outside 0-10 range', () => {
-        const result = parseSymptoms('Pain is 15 today');
-
-        expect(result.symptoms.pain_level).toBeUndefined();
-      });
-
-      it('should detect pain keyword without numeric value', () => {
-        const result = parseSymptoms('I have some pain but it is manageable');
-
-        // Should not add pain_level without a number
-        expect(result.symptoms.pain_level).toBeUndefined();
-      });
-    });
-
-    describe('Energy Level Detection', () => {
-      it('should detect low energy', () => {
-        const result = parseSymptoms('Feeling really tired and drained');
-
-        expect(result.symptoms.energy).toEqual({ severity: 9 });
-      });
-
-      it('should detect medium energy', () => {
-        const result = parseSymptoms('Energy is moderate today');
-
-        expect(result.symptoms.energy).toEqual({ severity: 5 });
-      });
-
-      it('should detect high energy', () => {
-        const result = parseSymptoms('Very energetic and alert');
-
-        expect(result.symptoms.energy).toEqual({ severity: 2 });
-      });
-    });
-
-    describe('Boolean Symptoms Detection', () => {
-      it('should detect Raynauds event', () => {
-        const result = parseSymptoms('Had a raynauds episode today');
-
-        expect(result.symptoms.raynauds_event).toEqual({ severity: 7 });
-      });
-
-      it('should detect brain fog', () => {
-        const result = parseSymptoms('Experiencing brain fog and confusion');
-
-        expect(result.symptoms.brain_fog).toEqual({ severity: 7 });
-      });
-
-      it('should detect tingling feet', () => {
-        const result = parseSymptoms('My feet are tingling again');
-
-        expect(result.symptoms.tingling_feet).toEqual({ severity: 7 });
-      });
-
-      it('should detect neck stiffness', () => {
-        const result = parseSymptoms('Neck is really stiff today');
-
-        expect(result.symptoms.neck_stiffness).toEqual({ severity: 7 });
-      });
-    });
-
-    describe('Activity Level Detection', () => {
-      it('should detect rested activity level', () => {
-        const result = parseSymptoms('Mostly rested today');
-
-        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
-      });
-
-      it('should detect light activity level', () => {
-        const result = parseSymptoms('Did some light exercise');
-
-        expect(result.symptoms.activity_level).toEqual({ severity: 4 });
-      });
-
-      it('should detect normal activity level', () => {
-        const result = parseSymptoms('Normal activity today');
-
-        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
-      });
-
-      it('should detect high activity level', () => {
-        const result = parseSymptoms('Very intense workout today');
-
-        expect(result.symptoms.activity_level).toEqual({ severity: 2 });
-      });
-    });
-
-    describe('Activities Detection', () => {
-      it('should detect single activity', () => {
-        const result = parseSymptoms('Went walking today');
+        const result = await parseSymptoms(
+          'Today I went walking, did yoga, and spent time cooking'
+        );
 
         expect(result.activities).toContain('walking');
-      });
-
-      it('should detect multiple activities', () => {
-        const result = parseSymptoms('Did some housework, cooking, and reading');
-
-        expect(result.activities).toContain('housework');
-        expect(result.activities).toContain('cooking');
-        expect(result.activities).toContain('reading');
-      });
-
-      it('should detect exercise-related activities', () => {
-        const result = parseSymptoms('Went for a run and did yoga');
-
-        expect(result.activities).toContain('run');
         expect(result.activities).toContain('yoga');
+        expect(result.activities).toContain('cooking');
       });
 
-      it('should return empty array when no activities mentioned', () => {
-        const result = parseSymptoms('Just resting at home');
+      it('should extract triggers', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: {},
+                        activities: [],
+                        triggers: ['stress', 'lack of sleep', 'caffeine'],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.activities).toHaveLength(1); // 'resting' is an activity
-        expect(result.activities).toContain('resting');
+        const result = await parseSymptoms(
+          'I was very stressed today, had lack of sleep, and too much caffeine'
+        );
+
+        expect(result.triggers).toContain('stress');
+        expect(result.triggers).toContain('lack of sleep');
+        expect(result.triggers).toContain('caffeine');
+      });
+
+      it('should preserve original transcript as notes', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: {},
+                        activities: [],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+        const transcript = 'This is my original transcript';
+        const result = await parseSymptoms(transcript);
+
+        expect(result.notes).toBe(transcript);
+      });
+
+      it('should handle symptoms with additional notes', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'lower_back_pain',
+                            severity: 7,
+                            location: 'lower back',
+                            notes: 'Sharp pain when bending',
+                          },
+                        ],
+                        activities: [],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+        const result = await parseSymptoms('Sharp pain in lower back when bending, about 7/10');
+
+        expect(result.symptoms.lower_back_pain).toEqual({
+          severity: 7,
+          location: 'lower back',
+          notes: 'Sharp pain when bending',
+        });
       });
     });
 
-    describe('Triggers Detection', () => {
-      it('should detect stress trigger', () => {
-        const result = parseSymptoms('Very stressed today');
+    describe('Error Handling', () => {
+      it('should fail gracefully when OpenAI API throws error', async () => {
+        mockCreate.mockRejectedValueOnce(new Error('API Error'));
 
-        expect(result.triggers).toContain('stressed');
+        const transcript = 'Test transcript';
+        const result = await parseSymptoms(transcript);
+
+        expect(result.symptoms).toEqual({});
+        expect(result.activities).toEqual([]);
+        expect(result.triggers).toEqual([]);
+        expect(result.notes).toBe(transcript);
       });
 
-      it('should detect multiple triggers', () => {
-        const result = parseSymptoms('Cold weather and lack of sleep');
+      it('should fail gracefully when no tool call in response', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: undefined,
+              },
+            },
+          ],
+        });
 
-        expect(result.triggers).toContain('cold');
-        expect(result.triggers).toContain('weather');
-        expect(result.triggers).toContain('lack of sleep');
+        const transcript = 'Test transcript';
+        const result = await parseSymptoms(transcript);
+
+        expect(result.symptoms).toEqual({});
+        expect(result.activities).toEqual([]);
+        expect(result.triggers).toEqual([]);
+        expect(result.notes).toBe(transcript);
       });
 
-      it('should detect food and caffeine triggers', () => {
-        const result = parseSymptoms('Had too much caffeine and food');
+      it('should fail gracefully when function arguments are missing', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: undefined,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.triggers).toContain('caffeine');
-        expect(result.triggers).toContain('food');
+        const transcript = 'Test transcript';
+        const result = await parseSymptoms(transcript);
+
+        expect(result.symptoms).toEqual({});
+        expect(result.activities).toEqual([]);
+        expect(result.triggers).toEqual([]);
+        expect(result.notes).toBe(transcript);
       });
 
-      it('should return empty array when no triggers mentioned', () => {
-        const result = parseSymptoms('Everything was fine today');
+      it('should fail gracefully when JSON parsing fails', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: 'invalid json',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
+        const transcript = 'Test transcript';
+        const result = await parseSymptoms(transcript);
+
+        expect(result.symptoms).toEqual({});
+        expect(result.activities).toEqual([]);
+        expect(result.triggers).toEqual([]);
+        expect(result.notes).toBe(transcript);
+      });
+
+      it('should handle partial data from GPT response', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'headache',
+                            severity: 5,
+                          },
+                        ],
+                        // Missing activities and triggers
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+        const result = await parseSymptoms('I have a headache');
+
+        expect(result.symptoms.headache).toEqual({ severity: 5 });
+        expect(result.activities).toEqual([]);
         expect(result.triggers).toEqual([]);
       });
     });
 
-    describe('Notes Extraction', () => {
-      it('should store original transcript as notes', () => {
-        const transcript = 'My hands felt really bad today, pain around 7';
-        const result = parseSymptoms(transcript);
+    describe('Issue #105 Test Case', () => {
+      it('should correctly parse the complex example from Issue #105', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'headache',
+                            severity: 6,
+                            location: 'temples',
+                            notes: 'moderate intensity',
+                          },
+                          {
+                            name: 'nausea',
+                            severity: 3,
+                            notes: 'mild',
+                          },
+                          {
+                            name: 'fatigue',
+                            severity: 5,
+                          },
+                        ],
+                        activities: ['working on computer', 'walking'],
+                        triggers: ['dehydration', 'screen time'],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
+        const transcript =
+          "Today I'm experiencing a moderate headache, probably a 6 out of 10, mostly in my temples. I also have some mild nausea, maybe a 3. I've been working on the computer for about 4 hours and I'm feeling pretty fatigued. I think the headache was triggered by not drinking enough water and too much screen time. I did take a short walk outside which helped a little.";
+
+        const result = await parseSymptoms(transcript);
+
+        // Verify headache extraction
+        expect(result.symptoms.headache).toBeDefined();
+        expect(result.symptoms.headache.severity).toBe(6);
+        expect(result.symptoms.headache.location).toBe('temples');
+
+        // Verify nausea extraction
+        expect(result.symptoms.nausea).toBeDefined();
+        expect(result.symptoms.nausea.severity).toBe(3);
+
+        // Verify fatigue extraction (estimated ~5 for "pretty fatigued")
+        expect(result.symptoms.fatigue).toBeDefined();
+        expect(result.symptoms.fatigue.severity).toBeGreaterThanOrEqual(4);
+        expect(result.symptoms.fatigue.severity).toBeLessThanOrEqual(6);
+
+        // Verify activities
+        expect(result.activities.length).toBeGreaterThan(0);
+
+        // Verify triggers
+        expect(result.triggers.length).toBeGreaterThan(0);
+
+        // Verify original preserved
         expect(result.notes).toBe(transcript);
-      });
-
-      it('should trim whitespace from notes', () => {
-        const result = parseSymptoms('  Test transcript  ');
-
-        expect(result.notes).toBe('Test transcript');
       });
     });
 
-    describe('Complex Scenarios', () => {
-      it('should parse complex transcript with multiple symptoms', () => {
-        const transcript =
-          'My hands felt really bad today, pain around 7, did some light housework but feeling exhausted';
+    describe('Real-world Scenarios', () => {
+      it('should handle empty transcript', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: {},
+                        activities: [],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        const result = parseSymptoms(transcript);
+        const result = await parseSymptoms('');
 
-        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
-        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
-        expect(result.symptoms.activity_level).toEqual({ severity: 4 });
-        expect(result.symptoms.energy).toEqual({ severity: 9 });
-        expect(result.activities).toContain('housework');
+        expect(result.symptoms).toEqual({});
+        expect(result.activities).toEqual([]);
+        expect(result.triggers).toEqual([]);
       });
 
-      it('should handle transcript with no symptoms', () => {
-        const result = parseSymptoms('Nothing special to report');
+      it('should handle transcript with no symptoms', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: {},
+                        activities: ['resting'],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+        const result = await parseSymptoms('Feeling great today, just resting');
 
         expect(Object.keys(result.symptoms)).toHaveLength(0);
-        expect(result.activities).toHaveLength(0);
-        expect(result.triggers).toHaveLength(0);
+        expect(result.activities).toContain('resting');
       });
 
-      it('should be case insensitive', () => {
-        const result = parseSymptoms('PAIN LEVEL 8 AND VERY TIRED');
+      it('should handle medical terminology', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'migraine',
+                            severity: 8,
+                            location: 'left hemisphere',
+                            notes: 'with aura',
+                          },
+                        ],
+                        activities: [],
+                        triggers: ['photophobia'],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-        expect(result.symptoms.pain_level).toEqual({ severity: 8 });
-        expect(result.symptoms.energy).toEqual({ severity: 9 });
-      });
-
-      it('should handle various phrase structures', () => {
-        const result = parseSymptoms(
-          'Today my grip in my hands was terrible, pain around 3 out of 10'
+        const result = await parseSymptoms(
+          'Migraine with aura, left hemisphere, severity 8, photophobia'
         );
 
-        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
-        expect(result.symptoms.pain_level).toEqual({ severity: 3 });
-      });
-    });
-
-    describe('Real-world Examples', () => {
-      it('should parse example from issue description', () => {
-        const transcript =
-          'My hands felt really bad today, pain around 7, did some light housework';
-
-        const result = parseSymptoms(transcript);
-
-        expect(result.symptoms.hand_grip).toEqual({ severity: 10 });
-        expect(result.symptoms.pain_level).toEqual({ severity: 7 });
-        expect(result.activities).toContain('housework');
-        expect(result.notes).toBe(transcript);
-      });
-
-      it('should handle good day scenario', () => {
-        const transcript = 'Feeling great today, hands are strong, went for a walk';
-
-        const result = parseSymptoms(transcript);
-
-        expect(result.symptoms.hand_grip).toEqual({ severity: 1 });
-        expect(result.activities).toContain('walk');
-      });
-
-      it('should handle multiple symptom scenario', () => {
-        const transcript = 'Had a Raynauds event, fingers white, brain fog, pain 6, very stressed';
-
-        const result = parseSymptoms(transcript);
-
-        expect(result.symptoms.raynauds_event).toEqual({ severity: 7 });
-        expect(result.symptoms.brain_fog).toEqual({ severity: 7 });
-        expect(result.symptoms.pain_level).toEqual({ severity: 6 });
-        expect(result.triggers).toContain('stressed');
+        expect(result.symptoms.migraine).toBeDefined();
+        expect(result.symptoms.migraine.severity).toBe(8);
+        expect(result.triggers).toContain('photophobia');
       });
     });
   });
@@ -414,45 +663,6 @@ describe('ParsingService', () => {
       const confidence = calculateConfidence(parsed);
 
       expect(confidence).toBe(20); // Capped at 20 for triggers
-    });
-  });
-
-  describe('categoricalToNumeric', () => {
-    it('should convert low severity categories', () => {
-      expect(categoricalToNumeric('good')).toBe(1);
-      expect(categoricalToNumeric('great')).toBe(1);
-      expect(categoricalToNumeric('excellent')).toBe(1);
-      expect(categoricalToNumeric('fine')).toBe(2);
-      expect(categoricalToNumeric('normal')).toBe(2);
-    });
-
-    it('should convert medium severity categories', () => {
-      expect(categoricalToNumeric('moderate')).toBe(5);
-      expect(categoricalToNumeric('okay')).toBe(5);
-      expect(categoricalToNumeric('fair')).toBe(5);
-      expect(categoricalToNumeric('light')).toBe(4);
-    });
-
-    it('should convert high severity categories', () => {
-      expect(categoricalToNumeric('bad')).toBe(10);
-      expect(categoricalToNumeric('terrible')).toBe(10);
-      expect(categoricalToNumeric('awful')).toBe(10);
-      expect(categoricalToNumeric('poor')).toBe(8);
-      expect(categoricalToNumeric('tired')).toBe(8);
-      expect(categoricalToNumeric('exhausted')).toBe(9);
-    });
-
-    it('should be case insensitive', () => {
-      expect(categoricalToNumeric('GOOD')).toBe(1);
-      expect(categoricalToNumeric('Bad')).toBe(10);
-      expect(categoricalToNumeric('MoDeRaTe')).toBe(5);
-    });
-
-    it('should return default value for unknown categories', () => {
-      expect(categoricalToNumeric('unknown')).toBe(5);
-      expect(categoricalToNumeric('weird')).toBe(5);
-      expect(categoricalToNumeric('xyz')).toBe(5);
-      expect(categoricalToNumeric('')).toBe(5);
     });
   });
 });

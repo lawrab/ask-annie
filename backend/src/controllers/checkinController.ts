@@ -48,7 +48,7 @@ export async function createVoiceCheckin(
 
     // Step 2: Parse symptoms from transcript
     logger.info('Starting symptom parsing');
-    const parsed = parseSymptoms(rawTranscript);
+    const parsed = await parseSymptoms(rawTranscript);
 
     logger.info('Symptom parsing completed', {
       symptomCount: Object.keys(parsed.symptoms).length,

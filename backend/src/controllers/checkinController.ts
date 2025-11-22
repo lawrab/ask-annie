@@ -320,11 +320,7 @@ export async function createManualCheckin(
  * GET /api/checkins/status
  * Returns daily check-in status based on user's notification schedule
  */
-export async function getStatus(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function getStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // Get userId from authenticated user
     const userId = (req.user as { id: string })!.id;
@@ -357,7 +353,7 @@ export async function getStatus(
       .select('timestamp')
       .lean();
 
-    logger.info('Today\'s check-ins retrieved', {
+    logger.info("Today's check-ins retrieved", {
       userId,
       count: todayCheckIns.length,
     });
@@ -397,8 +393,7 @@ export async function getStatus(
     // Determine if user is complete for today
     // User is complete if they have at least as many logs as scheduled times
     // If no scheduled times, never mark as complete
-    const isComplete =
-      scheduledTimes.length > 0 && todayCheckIns.length >= scheduledTimes.length;
+    const isComplete = scheduledTimes.length > 0 && todayCheckIns.length >= scheduledTimes.length;
 
     logger.info('Check-in status calculated', {
       userId,

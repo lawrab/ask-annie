@@ -338,9 +338,7 @@ export interface StreakAnalysis {
 /**
  * Calculate streak statistics for a user
  */
-export async function calculateStreak(
-  userId: string | Types.ObjectId
-): Promise<StreakAnalysis> {
+export async function calculateStreak(userId: string | Types.ObjectId): Promise<StreakAnalysis> {
   // Fetch all check-ins for the user
   const checkIns = await CheckIn.find({ userId }).sort({ timestamp: 1 }).select('timestamp').lean();
 
@@ -379,7 +377,7 @@ export async function calculateStreak(
 
   let currentStreak = 0;
   let streakStartDate: string | null = null;
-  let checkDate = yesterday;
+  const checkDate = yesterday;
 
   // Work backwards from yesterday
   while (true) {
@@ -400,8 +398,7 @@ export async function calculateStreak(
   for (let i = 1; i < sortedDates.length; i++) {
     const prevDate = new Date(sortedDates[i - 1]);
     const currDate = new Date(sortedDates[i]);
-    const daysDiff =
-      Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysDiff === 1) {
       // Consecutive days
@@ -607,8 +604,7 @@ export async function calculateQuickStats(
       ? Math.round((previousTotalSeverity / previousSeverityCount) * 100) / 100
       : 0;
 
-  const severityChange =
-    Math.round((currentAvgSeverity - previousAvgSeverity) * 100) / 100;
+  const severityChange = Math.round((currentAvgSeverity - previousAvgSeverity) * 100) / 100;
 
   let severityTrend: 'improving' | 'worsening' | 'stable' = 'stable';
   if (previousAvgSeverity > 0) {

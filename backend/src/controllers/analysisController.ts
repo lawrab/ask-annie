@@ -113,11 +113,7 @@ export async function getSymptomTrend(
  * GET /api/analysis/streak
  * Returns streak statistics for the authenticated user
  */
-export async function getStreak(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function getStreak(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // Get userId from authenticated user
     const userId = (req.user as { id: string })!.id;

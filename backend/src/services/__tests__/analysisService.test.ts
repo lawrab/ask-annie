@@ -289,6 +289,84 @@ describe('Analysis Service', () => {
         expect.arrayContaining(['pain', 'nausea'])
       );
     });
+
+    it('should skip check-ins with null symptoms', async () => {
+      mockFind([
+        {
+          structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: { pain: 5 }, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(2);
+      expect(result.symptoms).toHaveLength(1);
+      expect(result.symptoms[0].name).toBe('pain');
+      expect(result.symptoms[0].count).toBe(1);
+    });
+
+    it('should skip check-ins with undefined symptoms', async () => {
+      mockFind([
+        {
+          structured: { symptoms: undefined, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: { pain: 7 }, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(2);
+      expect(result.symptoms).toHaveLength(1);
+      expect(result.symptoms[0].name).toBe('pain');
+      expect(result.symptoms[0].count).toBe(1);
+    });
+
+    it('should handle all check-ins with null symptoms', async () => {
+      mockFind([
+        {
+          structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(2);
+      expect(result.symptoms).toHaveLength(0);
+    });
+
+    it('should handle mix of null, undefined, and valid symptoms', async () => {
+      mockFind([
+        {
+          structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: undefined, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: { pain: 5 }, activities: [], triggers: [], notes: '' },
+        },
+        {
+          structured: { symptoms: { pain: 7, nausea: 3 }, activities: [], triggers: [], notes: '' },
+        },
+      ]);
+
+      const result = await analyzeSymptomsForUser(userId);
+
+      expect(result.totalCheckins).toBe(4);
+      expect(result.symptoms).toHaveLength(2);
+      expect(result.symptoms[0].name).toBe('pain');
+      expect(result.symptoms[0].count).toBe(2);
+      expect(result.symptoms[1].name).toBe('nausea');
+      expect(result.symptoms[1].count).toBe(1);
+    });
   });
 
   describe('analyzeTrendForSymptom', () => {
@@ -562,6 +640,104 @@ describe('Analysis Service', () => {
 
       expect(result).not.toBeNull();
       expect(result!.dataPoints[0].value).toBe(6.67); // (5 + 7 + 8) / 3 = 6.666...
+    });
+
+    it('should handle check-ins with null symptoms', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 5 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(1);
+      expect(result!.dataPoints[0].date).toBe('2024-01-02');
+      expect(result!.dataPoints[0].value).toBe(5);
+    });
+
+    it('should handle check-ins with undefined symptoms', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: undefined, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(1);
+      expect(result!.dataPoints[0].date).toBe('2024-01-02');
+      expect(result!.dataPoints[0].value).toBe(7);
+    });
+
+    it('should return null when all check-ins have null symptoms', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle mix of null, undefined, and valid symptoms', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn(async () => [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: null, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: undefined, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain_level: 3 }, activities: [], triggers: [], notes: '' },
+          },
+          {
+            timestamp: new Date('2024-01-04T10:00:00Z'),
+            structured: { symptoms: { pain_level: 7 }, activities: [], triggers: [], notes: '' },
+          },
+        ]),
+      });
+
+      const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
+
+      expect(result).not.toBeNull();
+      expect(result!.dataPoints).toHaveLength(2);
+      expect(result!.dataPoints[0].date).toBe('2024-01-03');
+      expect(result!.dataPoints[1].date).toBe('2024-01-04');
+      expect(result!.statistics.average).toBe(5); // (3 + 7) / 2
     });
   });
 
@@ -1012,6 +1188,195 @@ describe('Analysis Service', () => {
       const result = await calculateQuickStats(userId, 7);
 
       expect(result.checkInCount.percentChange).toBe(0);
+    });
+
+    it('should handle null symptoms in current period', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: null } },
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 7 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(3);
+      expect(result.topSymptoms).toHaveLength(1);
+      expect(result.topSymptoms[0].name).toBe('headache');
+      expect(result.topSymptoms[0].frequency).toBe(2);
+      expect(result.topSymptoms[0].avgSeverity).toBe(6); // (5 + 7) / 2
+    });
+
+    it('should handle undefined symptoms in current period', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: undefined } },
+        { structured: { symptoms: { fatigue: 8 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(2);
+      expect(result.topSymptoms).toHaveLength(1);
+      expect(result.topSymptoms[0].name).toBe('fatigue');
+      expect(result.topSymptoms[0].frequency).toBe(1);
+    });
+
+    it('should handle null symptoms in previous period', async () => {
+      let callCount = 0;
+      const currentCheckIns = [{ structured: { symptoms: { headache: 6 } } }];
+      const previousCheckIns = [
+        { structured: { symptoms: null } },
+        { structured: { symptoms: { headache: 9 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].trend).toBe('improving'); // 6 < 9, severity decreased >10%
+      expect(result.averageSeverity.current).toBe(6);
+      expect(result.averageSeverity.previous).toBe(9);
+    });
+
+    it('should handle undefined symptoms in previous period', async () => {
+      let callCount = 0;
+      const currentCheckIns = [{ structured: { symptoms: { headache: 8 } } }];
+      const previousCheckIns = [
+        { structured: { symptoms: undefined } },
+        { structured: { symptoms: { headache: 5 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].trend).toBe('worsening'); // 8 > 5, severity increased >10%
+      expect(result.averageSeverity.current).toBe(8);
+      expect(result.averageSeverity.previous).toBe(5);
+    });
+
+    it('should handle mix of null and valid symptoms in both periods', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: null } },
+        { structured: { symptoms: { headache: 5, fatigue: 6 } } },
+        { structured: { symptoms: undefined } },
+        { structured: { symptoms: { headache: 7 } } },
+      ];
+      const previousCheckIns = [
+        { structured: { symptoms: { headache: 10 } } },
+        { structured: { symptoms: null } },
+        { structured: { symptoms: { fatigue: 8 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(4);
+      expect(result.checkInCount.previous).toBe(3);
+      expect(result.topSymptoms).toHaveLength(2);
+      expect(result.topSymptoms[0].name).toBe('headache');
+      expect(result.topSymptoms[0].frequency).toBe(2);
+      expect(result.topSymptoms[0].avgSeverity).toBe(6); // (5 + 7) / 2
+      expect(result.topSymptoms[1].name).toBe('fatigue');
+      expect(result.topSymptoms[1].frequency).toBe(1);
+    });
+
+    it('should handle all check-ins with null symptoms in current period', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: null } },
+        { structured: { symptoms: undefined } },
+      ];
+      const previousCheckIns = [{ structured: { symptoms: { headache: 5 } } }];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(2);
+      expect(result.topSymptoms).toHaveLength(0);
+      expect(result.averageSeverity.current).toBe(0);
+      expect(result.averageSeverity.previous).toBe(5);
+    });
+
+    it('should handle all check-ins with null symptoms in both periods', async () => {
+      let callCount = 0;
+      const currentCheckIns = [{ structured: { symptoms: null } }];
+      const previousCheckIns = [{ structured: { symptoms: undefined } }];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(1);
+      expect(result.checkInCount.previous).toBe(1);
+      expect(result.topSymptoms).toHaveLength(0);
+      expect(result.averageSeverity.current).toBe(0);
+      expect(result.averageSeverity.previous).toBe(0);
+      expect(result.averageSeverity.trend).toBe('stable');
     });
   });
 });

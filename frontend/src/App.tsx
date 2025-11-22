@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { useAuthStore } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -8,6 +10,13 @@ import TrendsPage from './pages/TrendsPage';
 import DesignSystemPage from './pages/DesignSystemPage';
 
 function App() {
+  const restoreSession = useAuthStore((state) => state.restoreSession);
+
+  // Restore session from localStorage on app mount (before routes render)
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
+
   return (
     <Router>
       <Routes>

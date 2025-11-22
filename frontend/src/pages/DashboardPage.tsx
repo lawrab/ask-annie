@@ -181,9 +181,14 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold">Ask Annie</h1>
               <p className="text-indigo-100">Welcome, {user?.username}!</p>
             </div>
-            <Button onClick={handleLogout} variant="secondary" size="small">
-              Logout
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={() => navigate('/trends')} variant="secondary" size="small">
+                Trends
+              </Button>
+              <Button onClick={handleLogout} variant="secondary" size="small">
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>

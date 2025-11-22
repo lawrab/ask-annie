@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { analyzeSymptomsForUser, analyzeTrendForSymptom } from '../services/analysisService';
+import {
+  analyzeSymptomsForUser,
+  analyzeTrendForSymptom,
+  calculateStreak,
+  calculateQuickStats,
+} from '../services/analysisService';
 import { logger } from '../utils/logger';
 
 /**
@@ -100,6 +105,88 @@ export async function getSymptomTrend(
     });
   } catch (error) {
     logger.error('Error fetching symptom trend', { error });
+    next(error);
+  }
+}
+
+/**
+ * GET /api/analysis/streak
+ * Returns streak statistics for the authenticated user
+ */
+export async function getStreak(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    // Get userId from authenticated user
+    const userId = (req.user as { id: string })!.id;
+
+    logger.info('Fetching streak statistics', { userId });
+
+    // Calculate streak
+    const streak = await calculateStreak(userId);
+
+    logger.info('Streak calculation completed', {
+      userId,
+      currentStreak: streak.currentStreak,
+      longestStreak: streak.longestStreak,
+      activeDays: streak.activeDays,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: streak,
+    });
+  } catch (error) {
+    logger.error('Error fetching streak statistics', { error });
+    next(error);
+  }
+}
+
+/**
+ * Get quick statistics for week-over-week comparison
+ */
+export async function getQuickStats(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = (req.user as { id: string })!.id;
+
+    // Parse and validate days parameter
+    const daysParam = req.query.days as string | undefined;
+    let days = 7; // Default
+
+    if (daysParam) {
+      const parsedDays = parseInt(daysParam, 10);
+
+      if (isNaN(parsedDays) || parsedDays <= 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Days parameter must be a positive integer',
+        });
+        return;
+      }
+
+      if (parsedDays > 90) {
+        res.status(400).json({
+          success: false,
+          error: 'Days parameter cannot exceed 90',
+        });
+        return;
+      }
+
+      days = parsedDays;
+    }
+
+    logger.info('Fetching quick stats', { userId, days });
+
+    const stats = await calculateQuickStats(userId, days);
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    logger.error('Error fetching quick stats', { error });
     next(error);
   }
 }

@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/authStore';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
+import logo from '../assets/logo.svg';
 
 const registerSchema = z.object({
   username: z
@@ -56,6 +57,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <img
+            src={logo}
+            alt="Ask Annie Logo"
+            className="mx-auto h-16 w-auto"
+          />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Create your account
           </h2>

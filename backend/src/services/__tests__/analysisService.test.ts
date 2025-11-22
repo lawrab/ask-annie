@@ -4,6 +4,8 @@ import CheckIn from '../../models/CheckIn';
 import {
   analyzeSymptomsForUser,
   analyzeTrendForSymptom,
+  calculateStreak,
+  calculateQuickStats,
   SymptomValueType,
 } from '../analysisService';
 
@@ -560,6 +562,456 @@ describe('Analysis Service', () => {
 
       expect(result).not.toBeNull();
       expect(result!.dataPoints[0].value).toBe(6.67); // (5 + 7 + 8) / 3 = 6.666...
+    });
+  });
+
+  describe('calculateStreak', () => {
+    it('should return zero stats for user with no check-ins', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => []),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.currentStreak).toBe(0);
+      expect(result.longestStreak).toBe(0);
+      expect(result.activeDays).toBe(0);
+      expect(result.totalDays).toBe(0);
+      expect(result.streakStartDate).toBeNull();
+      expect(result.lastLogDate).toBeNull();
+    });
+
+    it('should calculate current streak with grace period (yesterday)', async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(12, 0, 0, 0);
+
+      const twoDaysAgo = new Date(yesterday);
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 1);
+
+      const threeDaysAgo = new Date(twoDaysAgo);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 1);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: threeDaysAgo },
+          { timestamp: twoDaysAgo },
+          { timestamp: yesterday },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.currentStreak).toBe(3);
+      expect(result.activeDays).toBe(3);
+      expect(result.streakStartDate).toBe(threeDaysAgo.toISOString().split('T')[0]);
+    });
+
+    it('should handle broken streaks correctly', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: new Date('2024-01-01T12:00:00Z') },
+          { timestamp: new Date('2024-01-02T12:00:00Z') },
+          { timestamp: new Date('2024-01-03T12:00:00Z') },
+          // Gap here (01-04 missing)
+          { timestamp: new Date('2024-01-05T12:00:00Z') },
+          { timestamp: new Date('2024-01-06T12:00:00Z') },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.longestStreak).toBe(3); // The first streak of 3 consecutive days
+      expect(result.activeDays).toBe(5); // Total unique days
+    });
+
+    it('should count current streak as 0 if last log was 2+ days ago', async () => {
+      const fiveDaysAgo = new Date();
+      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+      fiveDaysAgo.setHours(12, 0, 0, 0);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [{ timestamp: fiveDaysAgo }]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.currentStreak).toBe(0);
+      expect(result.activeDays).toBe(1);
+      expect(result.lastLogDate).toBe(fiveDaysAgo.toISOString().split('T')[0]);
+    });
+
+    it('should handle multiple logs on same day correctly', async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: new Date(yesterday.setHours(8, 0, 0, 0)) },
+          { timestamp: new Date(yesterday.setHours(14, 0, 0, 0)) },
+          { timestamp: new Date(yesterday.setHours(20, 0, 0, 0)) },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.activeDays).toBe(1); // Should only count as 1 unique day
+      expect(result.currentStreak).toBe(1);
+    });
+
+    it('should calculate total days from first to last check-in', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: new Date('2024-01-01T12:00:00Z') },
+          { timestamp: new Date('2024-01-10T12:00:00Z') },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.totalDays).toBe(10); // 10 days from Jan 1 to Jan 10 inclusive
+      expect(result.activeDays).toBe(2); // Only logged on 2 days
+    });
+
+    it('should calculate longest streak across entire history', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: new Date('2024-01-01T12:00:00Z') },
+          { timestamp: new Date('2024-01-02T12:00:00Z') },
+          // Gap
+          { timestamp: new Date('2024-01-05T12:00:00Z') },
+          { timestamp: new Date('2024-01-06T12:00:00Z') },
+          { timestamp: new Date('2024-01-07T12:00:00Z') },
+          { timestamp: new Date('2024-01-08T12:00:00Z') },
+          { timestamp: new Date('2024-01-09T12:00:00Z') },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.longestStreak).toBe(5); // Days 5-9 is the longest streak
+    });
+
+    it('should handle single check-in correctly', async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(12, 0, 0, 0);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [{ timestamp: yesterday }]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.currentStreak).toBe(1);
+      expect(result.longestStreak).toBe(1);
+      expect(result.activeDays).toBe(1);
+      expect(result.totalDays).toBe(1);
+    });
+
+    it('should return last log date correctly', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn(async () => [
+          { timestamp: new Date('2024-01-01T12:00:00Z') },
+          { timestamp: new Date('2024-01-05T12:00:00Z') },
+          { timestamp: new Date('2024-01-10T12:00:00Z') },
+        ]),
+      });
+
+      const result = await calculateStreak(userId);
+
+      expect(result.lastLogDate).toBe('2024-01-10');
+    });
+  });
+
+  describe('calculateQuickStats', () => {
+    it('should return empty stats for user with no check-ins', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockResolvedValue([]);
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(0);
+      expect(result.checkInCount.previous).toBe(0);
+      expect(result.checkInCount.change).toBe(0);
+      expect(result.checkInCount.percentChange).toBe(0);
+      expect(result.topSymptoms).toEqual([]);
+      expect(result.averageSeverity.current).toBe(0);
+      expect(result.averageSeverity.previous).toBe(0);
+      expect(result.period.current.days).toBe(7);
+      expect(result.period.previous.days).toBe(7);
+    });
+
+    it('should calculate check-in count and percentage change correctly', async () => {
+      let callCount = 0;
+      const currentPeriodCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 6 } } },
+        { structured: { symptoms: { headache: 7 } } },
+      ];
+      const previousPeriodCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 6 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        // First call is for current period, second for previous
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentPeriodCheckIns);
+        } else {
+          return Promise.resolve(previousPeriodCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.current).toBe(3);
+      expect(result.checkInCount.previous).toBe(2);
+      expect(result.checkInCount.change).toBe(1);
+      expect(result.checkInCount.percentChange).toBe(50.0);
+    });
+
+    it('should calculate top symptoms by frequency', async () => {
+      let callCount = 0;
+      const currentPeriodCheckIns = [
+        { structured: { symptoms: { headache: 8, fatigue: 5 } } },
+        { structured: { symptoms: { headache: 7, nausea: 3 } } },
+        { structured: { symptoms: { headache: 9, fatigue: 6, nausea: 4 } } },
+        { structured: { symptoms: { fatigue: 7 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentPeriodCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms).toHaveLength(3);
+      expect(result.topSymptoms[0].name).toBe('headache');
+      expect(result.topSymptoms[0].frequency).toBe(3);
+      expect(result.topSymptoms[1].name).toBe('fatigue');
+      expect(result.topSymptoms[1].frequency).toBe(3);
+      expect(result.topSymptoms[2].name).toBe('nausea');
+      expect(result.topSymptoms[2].frequency).toBe(2);
+    });
+
+    it('should calculate average severity for symptoms', async () => {
+      let callCount = 0;
+      const currentPeriodCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 7 } } },
+        { structured: { symptoms: { headache: 9 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentPeriodCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].avgSeverity).toBe(7); // (5 + 7 + 9) / 3 = 7
+      expect(result.averageSeverity.current).toBe(7);
+    });
+
+    it('should determine "improving" trend when severity decreases >10%', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: { headache: 4 } } },
+        { structured: { symptoms: { headache: 5 } } },
+      ];
+
+      const previousCheckIns = [
+        { structured: { symptoms: { headache: 8 } } },
+        { structured: { symptoms: { headache: 10 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].trend).toBe('improving');
+      expect(result.averageSeverity.trend).toBe('improving');
+    });
+
+    it('should determine "worsening" trend when severity increases >10%', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: { headache: 9 } } },
+        { structured: { symptoms: { headache: 10 } } },
+      ];
+
+      const previousCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 4 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].trend).toBe('worsening');
+      expect(result.averageSeverity.trend).toBe('worsening');
+    });
+
+    it('should determine "stable" trend when change is within ±10%', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 6 } } },
+      ];
+
+      const previousCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 5 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve(previousCheckIns);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms[0].trend).toBe('stable');
+    });
+
+    it('should return max 5 top symptoms', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: { s1: 5, s2: 5, s3: 5, s4: 5, s5: 5, s6: 5, s7: 5 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms).toHaveLength(5);
+    });
+
+    it('should handle custom days parameter', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockResolvedValue([]);
+
+      const result = await calculateQuickStats(userId, 14);
+
+      expect(result.period.current.days).toBe(14);
+      expect(result.period.previous.days).toBe(14);
+    });
+
+    it('should handle symptoms stored as Map objects', async () => {
+      let callCount = 0;
+      const symptomsMap = new Map<string, number>();
+      symptomsMap.set('headache', 7);
+      symptomsMap.set('fatigue', 5);
+
+      const currentCheckIns = [{ structured: { symptoms: symptomsMap } }];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.topSymptoms.length).toBeGreaterThan(0);
+      expect(result.topSymptoms.some((s) => s.name === 'headache')).toBe(true);
+    });
+
+    it('should handle 0% change when previous count is 0', async () => {
+      let callCount = 0;
+      const currentCheckIns = [
+        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: 6 } } },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.find as any).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(currentCheckIns);
+        } else {
+          return Promise.resolve([]);
+        }
+      });
+
+      const result = await calculateQuickStats(userId, 7);
+
+      expect(result.checkInCount.percentChange).toBe(0);
     });
   });
 });

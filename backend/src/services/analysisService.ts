@@ -143,7 +143,7 @@ export async function analyzeSymptomsForUser(
     const symptoms = checkIn.structured.symptoms;
 
     // Skip if symptoms is null or undefined
-    if (!symptoms || (typeof symptoms !== 'object')) {
+    if (!symptoms || typeof symptoms !== 'object') {
       return;
     }
 
@@ -240,7 +240,7 @@ function getSymptomValue(checkIn: ICheckIn, symptomName: string): unknown {
   const symptoms = checkIn.structured.symptoms;
 
   // Return undefined if symptoms is null or undefined
-  if (!symptoms || (typeof symptoms !== 'object')) {
+  if (!symptoms || typeof symptoms !== 'object') {
     return undefined;
   }
 
@@ -530,7 +530,7 @@ export async function calculateQuickStats(
     const symptoms = checkIn.structured.symptoms;
 
     // Skip if symptoms is null or undefined
-    if (!symptoms || (typeof symptoms !== 'object')) {
+    if (!symptoms || typeof symptoms !== 'object') {
       return;
     }
 
@@ -552,7 +552,7 @@ export async function calculateQuickStats(
     const symptoms = checkIn.structured.symptoms;
 
     // Skip if symptoms is null or undefined
-    if (!symptoms || (typeof symptoms !== 'object')) {
+    if (!symptoms || typeof symptoms !== 'object') {
       return;
     }
 

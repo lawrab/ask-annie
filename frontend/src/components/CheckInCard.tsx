@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Badge, Button, ConfirmDialog } from './ui';
-import { CheckIn } from '../services/api';
+import { CheckIn, SymptomValue } from '../services/api';
 import { cn } from '../utils/cn';
 import type { BadgeProps } from './ui/Badge';
 
@@ -89,7 +89,7 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
   const shouldShowExpanded = mode === 'expanded' || isExpanded;
 
   // Get top 3 symptoms for compact mode
-  const symptoms = Object.entries(checkIn.structured.symptoms);
+  const symptoms = Object.entries(checkIn.structured.symptoms) as [string, SymptomValue][];
   const topSymptoms = symptoms.slice(0, 3);
 
   // Truncate notes for compact mode

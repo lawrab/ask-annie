@@ -291,9 +291,9 @@ describe('Validation Schemas', () => {
         const validData = {
           structured: {
             symptoms: {
-              headache: 'severe',
-              fatigue: 7,
-              dizzy: true,
+              headache: { severity: 7, location: 'temples', notes: 'throbbing' },
+              fatigue: { severity: 5 },
+              dizzy: { severity: 3, notes: 'mild spinning sensation' },
             },
             activities: ['walking', 'reading'],
             triggers: ['stress', 'lack of sleep'],
@@ -308,7 +308,7 @@ describe('Validation Schemas', () => {
       it('should accept empty arrays for activities and triggers', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             triggers: [],
             notes: '',
@@ -322,7 +322,7 @@ describe('Validation Schemas', () => {
       it('should accept empty notes', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             triggers: [],
             notes: '',
@@ -333,12 +333,12 @@ describe('Validation Schemas', () => {
         expect(error).toBeUndefined();
       });
 
-      it('should accept symptoms with string values', () => {
+      it('should accept symptoms with only severity', () => {
         const data = {
           structured: {
             symptoms: {
-              mood: 'good',
-              energy: 'low',
+              pain: { severity: 7 },
+              headache: { severity: 5 },
             },
             activities: [],
             triggers: [],
@@ -350,12 +350,11 @@ describe('Validation Schemas', () => {
         expect(error).toBeUndefined();
       });
 
-      it('should accept symptoms with number values', () => {
+      it('should accept symptoms with severity and location', () => {
         const data = {
           structured: {
             symptoms: {
-              pain: 7,
-              temperature: 98.6,
+              pain: { severity: 8, location: 'lower back' },
             },
             activities: [],
             triggers: [],
@@ -367,12 +366,11 @@ describe('Validation Schemas', () => {
         expect(error).toBeUndefined();
       });
 
-      it('should accept symptoms with boolean values', () => {
+      it('should accept symptoms with severity and notes', () => {
         const data = {
           structured: {
             symptoms: {
-              nausea: true,
-              dizzy: false,
+              nausea: { severity: 6, notes: 'worse after eating' },
             },
             activities: [],
             triggers: [],
@@ -384,17 +382,49 @@ describe('Validation Schemas', () => {
         expect(error).toBeUndefined();
       });
 
-      it('should accept mixed symptom value types', () => {
+      it('should accept symptoms with all fields', () => {
         const data = {
           structured: {
             symptoms: {
-              pain: 8,
-              mood: 'bad',
-              dizzy: true,
+              pain: { severity: 8, location: 'lower back', notes: 'sharp, shooting pain' },
+              headache: { severity: 5, location: 'temples' },
+              fatigue: { severity: 7, notes: 'exhausted' },
             },
             activities: ['exercise'],
             triggers: ['weather'],
             notes: 'Bad day overall',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeUndefined();
+      });
+
+      it('should accept severity at minimum (1)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              pain: { severity: 1 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeUndefined();
+      });
+
+      it('should accept severity at maximum (10)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              pain: { severity: 10 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
           },
         };
 
@@ -429,7 +459,7 @@ describe('Validation Schemas', () => {
       it('should reject missing activities', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             triggers: [],
             notes: '',
           },
@@ -443,7 +473,7 @@ describe('Validation Schemas', () => {
       it('should reject missing triggers', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             notes: '',
           },
@@ -457,7 +487,7 @@ describe('Validation Schemas', () => {
       it('should reject missing notes', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             triggers: [],
           },
@@ -466,6 +496,103 @@ describe('Validation Schemas', () => {
         const { error } = manualCheckinSchema.validate(data);
         expect(error).toBeDefined();
         expect(error?.message).toContain('notes');
+      });
+
+      it('should reject symptom value without severity', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { location: 'temples' }, // Missing severity
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+        expect(error?.message).toContain('severity');
+      });
+
+      it('should reject severity below minimum (1)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { severity: 0 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject severity above maximum (10)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { severity: 11 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject non-numeric severity', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { severity: 'severe' },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject non-string location', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { severity: 5, location: 123 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject non-string notes in symptom', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: { severity: 5, notes: 123 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
       });
 
       it('should reject invalid symptom value type (array)', () => {
@@ -484,11 +611,43 @@ describe('Validation Schemas', () => {
         expect(error).toBeDefined();
       });
 
-      it('should reject invalid symptom value type (object)', () => {
+      it('should reject invalid symptom value type (string)', () => {
         const data = {
           structured: {
             symptoms: {
-              headache: { level: 'severe' }, // Objects not allowed
+              headache: 'severe', // Strings not allowed (must be object)
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject invalid symptom value type (number)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: 5, // Numbers not allowed (must be object)
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+        };
+
+        const { error } = manualCheckinSchema.validate(data);
+        expect(error).toBeDefined();
+      });
+
+      it('should reject invalid symptom value type (boolean)', () => {
+        const data = {
+          structured: {
+            symptoms: {
+              headache: true, // Booleans not allowed (must be object)
             },
             activities: [],
             triggers: [],
@@ -503,7 +662,7 @@ describe('Validation Schemas', () => {
       it('should reject non-array activities', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: 'walking', // Should be array
             triggers: [],
             notes: '',
@@ -517,7 +676,7 @@ describe('Validation Schemas', () => {
       it('should reject non-array triggers', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             triggers: 'stress', // Should be array
             notes: '',
@@ -531,7 +690,7 @@ describe('Validation Schemas', () => {
       it('should reject non-string activity items', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: ['walking', 123], // Numbers not allowed
             triggers: [],
             notes: '',
@@ -545,7 +704,7 @@ describe('Validation Schemas', () => {
       it('should reject non-string trigger items', () => {
         const data = {
           structured: {
-            symptoms: { headache: 5 },
+            symptoms: { headache: { severity: 5 } },
             activities: [],
             triggers: ['stress', true], // Booleans not allowed
             notes: '',

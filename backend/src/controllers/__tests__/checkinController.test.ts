@@ -69,8 +69,8 @@ describe('CheckinController', () => {
         const mockTranscript = 'My hands felt really bad today, pain around 7';
         const mockParsed = {
           symptoms: {
-            hand_grip: 'bad',
-            pain_level: 7,
+            hand_grip: { severity: 8, notes: 'felt really bad' },
+            pain_level: { severity: 7 },
           },
           activities: [],
           triggers: [],
@@ -408,8 +408,8 @@ describe('CheckinController', () => {
         // Arrange
         const mockStructured = {
           symptoms: {
-            hand_grip: 'moderate',
-            pain_level: 5,
+            hand_grip: { severity: 6, notes: 'moderate difficulty' },
+            pain_level: { severity: 5 },
           },
           activities: ['walking'],
           triggers: [],
@@ -510,17 +510,17 @@ describe('CheckinController', () => {
         );
       });
 
-      it('should handle various symptom value types', async () => {
+      it('should handle various symptom configurations', async () => {
         // Arrange
         const mockStructured = {
           symptoms: {
-            hand_grip: 'good', // string
-            pain_level: 3, // number
-            raynauds_event: true, // boolean
+            hand_grip: { severity: 7, notes: 'good grip strength' },
+            pain_level: { severity: 3 },
+            raynauds_event: { severity: 5, location: 'fingers', notes: 'cold-triggered' },
           },
           activities: [],
           triggers: [],
-          notes: 'Mixed types',
+          notes: 'Multiple symptom types',
         };
 
         mockReq = {
@@ -556,9 +556,9 @@ describe('CheckinController', () => {
               checkIn: expect.objectContaining({
                 structured: expect.objectContaining({
                   symptoms: {
-                    hand_grip: 'good',
-                    pain_level: 3,
-                    raynauds_event: true,
+                    hand_grip: { severity: 7, notes: 'good grip strength' },
+                    pain_level: { severity: 3 },
+                    raynauds_event: { severity: 5, location: 'fingers', notes: 'cold-triggered' },
                   },
                 }),
               }),
@@ -572,7 +572,7 @@ describe('CheckinController', () => {
         mockReq = {
           body: {
             structured: {
-              symptoms: { energy: 'low' },
+              symptoms: { energy: { severity: 3, notes: 'low energy' } },
               // Missing activities, triggers, notes
             },
           },
@@ -588,7 +588,7 @@ describe('CheckinController', () => {
           timestamp: new Date(),
           rawTranscript: 'manual entry',
           structured: {
-            symptoms: { energy: 'low' },
+            symptoms: { energy: { severity: 3, notes: 'low energy' } },
             activities: [],
             triggers: [],
             notes: '',
@@ -667,7 +667,7 @@ describe('CheckinController', () => {
       it('should handle database save errors', async () => {
         // Arrange
         const mockStructured = {
-          symptoms: { energy: 'medium' },
+          symptoms: { energy: { severity: 5, notes: 'medium energy' } },
           activities: [],
           triggers: [],
           notes: 'Test',
@@ -736,13 +736,13 @@ describe('CheckinController', () => {
         // Arrange
         const mockStructured = {
           symptoms: {
-            hand_grip: 'bad',
-            pain_level: 8,
-            energy: 'low',
-            brain_fog: true,
-            raynauds_event: true,
-            tingling_feet: false,
-            activity_level: 'light',
+            hand_grip: { severity: 8, notes: 'very weak grip' },
+            pain_level: { severity: 8, location: 'hands and wrists' },
+            energy: { severity: 3, notes: 'very low energy' },
+            brain_fog: { severity: 7, notes: 'difficulty concentrating' },
+            raynauds_event: { severity: 6, location: 'fingers', notes: 'color changes' },
+            tingling_feet: { severity: 2, notes: 'minimal' },
+            activity_level: { severity: 4, notes: 'light activity only' },
           },
           activities: ['walking', 'housework', 'rest'],
           triggers: ['stress', 'cold', 'caffeine'],
@@ -813,7 +813,7 @@ describe('CheckinController', () => {
             timestamp: new Date('2024-01-02T12:00:00Z'),
             rawTranscript: 'manual entry',
             structured: {
-              symptoms: { pain_level: 5 },
+              symptoms: { pain_level: { severity: 5 } },
               activities: ['walking'],
               triggers: [],
               notes: '',
@@ -826,7 +826,7 @@ describe('CheckinController', () => {
             timestamp: new Date('2024-01-01T12:00:00Z'),
             rawTranscript: 'My hands hurt',
             structured: {
-              symptoms: { hand_grip: 'bad' },
+              symptoms: { hand_grip: { severity: 8, notes: 'very painful' } },
               activities: [],
               triggers: [],
               notes: 'My hands hurt',

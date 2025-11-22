@@ -164,6 +164,23 @@ export default function DashboardPage() {
     return 'text-emerald-600';
   };
 
+  // Helper: Format time string (HH:MM) to 12-hour format
+  const formatTime = (timeString: string | null): string => {
+    if (!timeString) return 'N/A';
+
+    // Parse HH:MM format
+    const match = timeString.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return timeString; // Return as-is if invalid format
+
+    const hours = parseInt(match[1], 10);
+    const minutes = match[2];
+
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+
+    return `${displayHours}:${minutes} ${period}`;
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -231,10 +248,7 @@ export default function DashboardPage() {
                       </Button>
                       {statusData.today.nextSuggested && (
                         <p className="text-sm text-gray-600 text-center">
-                          Next suggested: {new Date(statusData.today.nextSuggested).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
+                          Next suggested: {formatTime(statusData.today.nextSuggested)}
                         </p>
                       )}
                     </div>

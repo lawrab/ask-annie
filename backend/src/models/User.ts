@@ -59,12 +59,9 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Indexes for efficient lookups
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
-
 /**
  * User model
+ * Note: Indexes for email and username are automatically created via unique: true
  */
 const User = mongoose.model<IUser>('User', userSchema);
 

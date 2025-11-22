@@ -67,7 +67,7 @@ describe('DashboardPage', () => {
         date: '2024-01-15',
         scheduledTimes: ['08:00', '20:00'],
         completedLogs: [],
-        nextSuggested: '2024-01-15T20:00:00.000Z',
+        nextSuggested: '20:00',
         isComplete: false,
       },
       stats: {

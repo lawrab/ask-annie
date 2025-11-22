@@ -135,7 +135,9 @@ describe('ParsingService', () => {
           ],
         });
 
-        const result = await parseSymptoms('Today I went walking, did yoga, and spent time cooking');
+        const result = await parseSymptoms(
+          'Today I went walking, did yoga, and spent time cooking'
+        );
 
         expect(result.activities).toContain('walking');
         expect(result.activities).toContain('yoga');
@@ -517,7 +519,9 @@ describe('ParsingService', () => {
           ],
         });
 
-        const result = await parseSymptoms('Migraine with aura, left hemisphere, severity 8, photophobia');
+        const result = await parseSymptoms(
+          'Migraine with aura, left hemisphere, severity 8, photophobia'
+        );
 
         expect(result.symptoms.migraine).toBeDefined();
         expect(result.symptoms.migraine.severity).toBe(8);

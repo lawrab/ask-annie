@@ -40,7 +40,8 @@ const EXTRACTION_TOOL = {
             properties: {
               name: {
                 type: 'string',
-                description: "Symptom name in lowercase with underscores (e.g., 'headache', 'lower_back_pain', 'nausea')",
+                description:
+                  "Symptom name in lowercase with underscores (e.g., 'headache', 'lower_back_pain', 'nausea')",
               },
               severity: {
                 type: 'number',

@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getSymptomsAnalysis, getSymptomTrend, getStreak } from '../controllers/analysisController';
+import {
+  getSymptomsAnalysis,
+  getSymptomTrend,
+  getStreak,
+  getQuickStats,
+} from '../controllers/analysisController';
 
 const router = Router();
 
@@ -28,5 +33,12 @@ router.get('/trends/:symptom', getSymptomTrend);
  * Returns current streak, longest streak, active days, and total days
  */
 router.get('/streak', getStreak);
+
+/**
+ * GET /api/analysis/quick-stats
+ * Get quick statistics for week-over-week comparison
+ * Query params: days (default: 7, max: 90)
+ */
+router.get('/quick-stats', getQuickStats);
 
 export default router;

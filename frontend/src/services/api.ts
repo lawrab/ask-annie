@@ -174,6 +174,39 @@ export interface QuickStatsResponse {
   };
 }
 
+// Symptoms Analysis Types
+export interface SymptomsAnalysisResponse {
+  success: boolean;
+  data: Array<{
+    name: string;
+    count: number;
+    averageSeverity: number;
+  }>;
+}
+
+// Symptom Trend Types
+export interface SymptomTrendResponse {
+  success: boolean;
+  data: {
+    symptom: string;
+    dateRange: {
+      start: string;
+      end: string;
+    };
+    dataPoints: Array<{
+      date: string;
+      value: number;
+    }>;
+    statistics: {
+      average: number;
+      min: number;
+      max: number;
+      median: number;
+      standardDeviation: number;
+    };
+  };
+}
+
 // Auth API
 export const authApi = {
   register: async (data: {
@@ -251,6 +284,19 @@ export const analysisApi = {
     const response = await apiClient.get<QuickStatsResponse>('/analysis/quick-stats', {
       params: { days },
     });
+    return response.data;
+  },
+
+  getSymptomsAnalysis: async (): Promise<SymptomsAnalysisResponse> => {
+    const response = await apiClient.get<SymptomsAnalysisResponse>('/analysis/symptoms');
+    return response.data;
+  },
+
+  getSymptomTrend: async (symptom: string, days: number = 7): Promise<SymptomTrendResponse> => {
+    const response = await apiClient.get<SymptomTrendResponse>(
+      `/analysis/trends/${encodeURIComponent(symptom)}`,
+      { params: { days } }
+    );
     return response.data;
   },
 };

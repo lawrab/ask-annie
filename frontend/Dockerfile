@@ -3,19 +3,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy only frontend package files (avoid workspace root package.json)
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy frontend source code
+COPY frontend/ ./
 
-# Vite will read these from environment variables during build
-# Railway sets these as environment variables in the service settings
-
-# Build the application
+# Build the application (runs frontend's build script, not workspace root)
 RUN npm run build
 
 # Production stage - serve with Node.js serve

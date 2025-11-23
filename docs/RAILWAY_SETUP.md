@@ -42,13 +42,17 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
    MONGODB_URI=${{MongoDB.MONGO_URL}}
    JWT_SECRET=<GENERATE_STRONG_SECRET>
    ALLOWED_ORIGINS=https://${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
-   WHISPER_MODEL_SIZE=base
-   WHISPER_DEVICE=cpu
+   OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
    LOG_LEVEL=info
    MAX_FILE_SIZE=10485760
    RATE_LIMIT_WINDOW_MS=900000
    RATE_LIMIT_MAX_REQUESTS=100
    ```
+
+   **Note on Transcription Service**:
+   - Set `OPENAI_API_KEY` to use OpenAI Whisper API (recommended for production)
+   - If `OPENAI_API_KEY` is not set, app will try to use local faster-whisper-server (development only)
+   - Get your API key from: https://platform.openai.com/api-keys
 
 5. **Configure deployment triggers**:
    - Go to service **Settings** → **Triggers**

@@ -193,8 +193,9 @@ Deploy Python transcription service separately:
 | `JWT_SECRET` | Yes | - | Secret for JWT signing |
 | `JWT_EXPIRES_IN` | No | 7d | Token expiry duration |
 | `ALLOWED_ORIGINS` | Yes | - | Comma-separated CORS origins |
-| `WHISPER_MODEL_SIZE` | No | base | Whisper model: tiny/base/small/medium/large |
-| `WHISPER_DEVICE` | No | cpu | Processing device: cpu/cuda |
+| `OPENAI_API_KEY` | Recommended | - | OpenAI API key for Whisper transcription (production) |
+| `WHISPER_URL` | No | http://localhost:8000/v1/audio/transcriptions | faster-whisper server URL (dev only) |
+| `WHISPER_MODEL` | No | Systran/faster-distil-whisper-small.en | faster-whisper model (dev only) |
 | `MAX_FILE_SIZE` | No | 10485760 | Max upload size (bytes) |
 | `RATE_LIMIT_WINDOW_MS` | No | 900000 | Rate limit window (15 min) |
 | `RATE_LIMIT_MAX_REQUESTS` | No | 100 | Max requests per window |

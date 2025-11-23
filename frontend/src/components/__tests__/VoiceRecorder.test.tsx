@@ -8,9 +8,15 @@ class MockMediaRecorder {
   ondataavailable: ((event: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
   state: string = 'inactive';
+  mimeType: string;
 
-  constructor() {
-    // Initialize
+  constructor(stream: MediaStream, options?: { mimeType?: string }) {
+    this.mimeType = options?.mimeType || 'audio/webm';
+  }
+
+  static isTypeSupported(mimeType: string): boolean {
+    // Simulate browser support for different MIME types
+    return ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].includes(mimeType);
   }
 
   start() {
@@ -20,7 +26,7 @@ class MockMediaRecorder {
   stop() {
     this.state = 'inactive';
     if (this.ondataavailable) {
-      this.ondataavailable({ data: new Blob(['test'], { type: 'audio/webm' }) });
+      this.ondataavailable({ data: new Blob(['test'], { type: this.mimeType }) });
     }
     if (this.onstop) {
       this.onstop();
@@ -35,6 +41,153 @@ class MockMediaRecorder {
     this.state = 'recording';
   }
 }
+
+// Tests for MIME type detection - not skipped
+describe('VoiceRecorder - MIME Type Detection', () => {
+  let mockGetUserMedia: ReturnType<typeof vi.fn>;
+  let mockCreateObjectURL: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    // Mock getUserMedia
+    mockGetUserMedia = vi.fn().mockResolvedValue({
+      getTracks: vi.fn().mockReturnValue([
+        {
+          stop: vi.fn(),
+        },
+      ]),
+    });
+
+    Object.defineProperty(global.navigator, 'mediaDevices', {
+      writable: true,
+      value: {
+        getUserMedia: mockGetUserMedia,
+      },
+    });
+
+    // Mock MediaRecorder
+    global.MediaRecorder = MockMediaRecorder as unknown as typeof MediaRecorder;
+
+    // Mock URL.createObjectURL
+    mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url');
+    global.URL.createObjectURL = mockCreateObjectURL;
+
+    // Use real timers for these tests (fake timers cause issues with waitFor)
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should use audio/webm;codecs=opus when supported', async () => {
+    const user = userEvent.setup({ delay: null });
+    const mockOnRecordingComplete = vi.fn();
+
+    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+
+    const startButton = screen.getByRole('button', { name: /start recording/i });
+    await user.click(startButton);
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Recording')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    const stopButton = screen.getByRole('button', { name: /stop/i });
+    await user.click(stopButton);
+
+    await waitFor(
+      () => {
+        expect(mockOnRecordingComplete).toHaveBeenCalled();
+      },
+      { timeout: 10000 }
+    );
+
+    const capturedBlob = mockOnRecordingComplete.mock.calls[0][0] as Blob;
+    expect(capturedBlob.type).toBe('audio/webm;codecs=opus');
+  }, 15000);
+
+  it('should fall back to audio/mp4 when webm not supported', async () => {
+    const user = userEvent.setup({ delay: null });
+    const mockOnRecordingComplete = vi.fn();
+
+    // Mock isTypeSupported to return false for webm formats
+    const originalIsTypeSupported = MockMediaRecorder.isTypeSupported;
+    MockMediaRecorder.isTypeSupported = vi.fn((mimeType: string) => {
+      if (mimeType.includes('webm')) return false;
+      if (mimeType === 'audio/mp4') return true;
+      return false;
+    });
+
+    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+
+    const startButton = screen.getByRole('button', { name: /start recording/i });
+    await user.click(startButton);
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Recording')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    const stopButton = screen.getByRole('button', { name: /stop/i });
+    await user.click(stopButton);
+
+    await waitFor(
+      () => {
+        expect(mockOnRecordingComplete).toHaveBeenCalled();
+      },
+      { timeout: 10000 }
+    );
+
+    const capturedBlob = mockOnRecordingComplete.mock.calls[0][0] as Blob;
+    expect(capturedBlob.type).toBe('audio/mp4');
+
+    // Restore original
+    MockMediaRecorder.isTypeSupported = originalIsTypeSupported;
+  }, 15000);
+
+  it('should use default audio/webm when no MIME types supported', async () => {
+    const user = userEvent.setup({ delay: null });
+    const mockOnRecordingComplete = vi.fn();
+
+    // Mock isTypeSupported to return false for all formats
+    const originalIsTypeSupported = MockMediaRecorder.isTypeSupported;
+    MockMediaRecorder.isTypeSupported = vi.fn(() => false);
+
+    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+
+    const startButton = screen.getByRole('button', { name: /start recording/i });
+    await user.click(startButton);
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Recording')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    const stopButton = screen.getByRole('button', { name: /stop/i });
+    await user.click(stopButton);
+
+    await waitFor(
+      () => {
+        expect(mockOnRecordingComplete).toHaveBeenCalled();
+      },
+      { timeout: 10000 }
+    );
+
+    const capturedBlob = mockOnRecordingComplete.mock.calls[0][0] as Blob;
+    // Should fall back to default
+    expect(capturedBlob.type).toBe('audio/webm');
+
+    // Restore original
+    MockMediaRecorder.isTypeSupported = originalIsTypeSupported;
+  }, 15000);
+});
 
 // TODO: Fix Web Audio API mocking - MediaRecorder and getUserMedia are difficult to mock in jsdom
 describe.skip('VoiceRecorder', () => {

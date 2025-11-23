@@ -22,6 +22,7 @@ export default function VoiceRecorder({
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   useEffect(() => {
     return () => {
@@ -41,7 +42,26 @@ export default function VoiceRecorder({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const mediaRecorder = new MediaRecorder(stream);
+      // Detect supported MIME type (iOS Safari needs audio/mp4)
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+      ];
+
+      let supportedMimeType = 'audio/webm'; // default fallback
+      for (const mimeType of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          supportedMimeType = mimeType;
+          break;
+        }
+      }
+      mimeTypeRef.current = supportedMimeType;
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: supportedMimeType,
+      });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -52,7 +72,9 @@ export default function VoiceRecorder({
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(chunksRef.current, {
+          type: mimeTypeRef.current,
+        });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
         onRecordingComplete(audioBlob);

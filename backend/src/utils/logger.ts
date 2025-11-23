@@ -14,14 +14,12 @@ export const logger = winston.createLogger({
   transports: [
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' }),
+    // Always log to console so Railway/container platforms can capture logs
+    new winston.transports.Console({
+      format:
+        process.env.NODE_ENV !== 'production'
+          ? winston.format.combine(winston.format.colorize(), winston.format.simple())
+          : winston.format.json(), // JSON format in production for structured logging
+    }),
   ],
 });
-
-// If not in production, log to console with colourised output
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
-    })
-  );
-}

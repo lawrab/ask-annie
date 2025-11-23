@@ -137,7 +137,9 @@ Output: {
     const symptoms: { [key: string]: SymptomValue } = {};
     if (Array.isArray(parsed.symptoms)) {
       for (const symptom of parsed.symptoms) {
-        const symptomValue: SymptomValue = { severity: symptom.severity };
+        // Clamp severity to valid range [1, 10] in case GPT returns invalid values
+        const clampedSeverity = Math.min(10, Math.max(1, symptom.severity));
+        const symptomValue: SymptomValue = { severity: clampedSeverity };
         if (symptom.location) symptomValue.location = symptom.location;
         if (symptom.notes) symptomValue.notes = symptom.notes;
         symptoms[symptom.name] = symptomValue;

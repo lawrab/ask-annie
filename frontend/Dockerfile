@@ -12,6 +12,22 @@ RUN npm install --production=false
 # Copy frontend source code
 COPY frontend/ ./
 
+# Build arguments - Railway passes environment variables as build args
+ARG VITE_API_URL
+ARG VITE_ENV=production
+ARG VITE_APP_NAME="Ask Annie"
+ARG VITE_APP_VERSION="0.2.0-alpha"
+ARG VITE_ENABLE_VOICE_RECORDING=true
+ARG VITE_ENABLE_NOTIFICATIONS=true
+
+# Make them available as environment variables for the build
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_ENV=${VITE_ENV}
+ENV VITE_APP_NAME=${VITE_APP_NAME}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
+ENV VITE_ENABLE_VOICE_RECORDING=${VITE_ENABLE_VOICE_RECORDING}
+ENV VITE_ENABLE_NOTIFICATIONS=${VITE_ENABLE_NOTIFICATIONS}
+
 # Build the application (runs frontend's build script, not workspace root)
 RUN npm run build
 

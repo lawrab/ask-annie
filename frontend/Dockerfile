@@ -3,11 +3,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy only frontend package files (avoid workspace root package.json)
+# Copy only frontend package files
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use install instead of ci since no lock file in subdirectory)
+RUN npm install --production=false
 
 # Copy frontend source code
 COPY frontend/ ./

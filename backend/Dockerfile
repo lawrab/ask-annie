@@ -3,11 +3,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy only backend package files (avoid workspace root package.json)
+# Copy only backend package files
 COPY backend/package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci
+# Install ALL dependencies (use install instead of ci since no lock file in subdirectory)
+RUN npm install --production=false
 
 # Copy backend source code
 COPY backend/ ./
@@ -21,8 +21,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files and install production dependencies
-COPY package*.json ./
-RUN npm ci --only=production
+COPY backend/package*.json ./
+RUN npm install --production
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist

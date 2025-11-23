@@ -1,6 +1,6 @@
 {
   "name": "ask-annie-backend",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha",
   "description": "Backend API for Ask Annie symptom tracking application",
   "main": "dist/server.js",
   "scripts": {

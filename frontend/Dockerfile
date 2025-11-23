@@ -12,13 +12,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for Vite
-ARG VITE_API_URL
-ARG VITE_ENV=production
-ARG VITE_APP_NAME="Ask Annie"
-ARG VITE_APP_VERSION="0.2.0-alpha"
-ARG VITE_ENABLE_VOICE_RECORDING=true
-ARG VITE_ENABLE_NOTIFICATIONS=true
+# Vite will read these from environment variables during build
+# Railway sets these as environment variables in the service settings
 
 # Build the application
 RUN npm run build

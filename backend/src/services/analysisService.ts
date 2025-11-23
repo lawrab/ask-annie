@@ -537,11 +537,19 @@ export async function calculateQuickStats(
     const entries = symptoms instanceof Map ? symptoms.entries() : Object.entries(symptoms);
 
     for (const [key, value] of entries) {
-      if (typeof value === 'number' && !isNaN(value)) {
+      let severity: number | null = null;
+
+      // Handle SymptomValue object format: { severity: number, location?: string, notes?: string }
+      if (value && typeof value === 'object' && 'severity' in value) {
+        severity = (value as { severity: number }).severity;
+      }
+
+      // Only process valid numeric severities
+      if (typeof severity === 'number' && !isNaN(severity)) {
         if (!currentSymptomMap.has(key)) {
           currentSymptomMap.set(key, []);
         }
-        currentSymptomMap.get(key)!.push(value);
+        currentSymptomMap.get(key)!.push(severity);
       }
     }
   });
@@ -559,11 +567,19 @@ export async function calculateQuickStats(
     const entries = symptoms instanceof Map ? symptoms.entries() : Object.entries(symptoms);
 
     for (const [key, value] of entries) {
-      if (typeof value === 'number' && !isNaN(value)) {
+      let severity: number | null = null;
+
+      // Handle SymptomValue object format: { severity: number, location?: string, notes?: string }
+      if (value && typeof value === 'object' && 'severity' in value) {
+        severity = (value as { severity: number }).severity;
+      }
+
+      // Only process valid numeric severities
+      if (typeof severity === 'number' && !isNaN(severity)) {
         if (!previousSymptomMap.has(key)) {
           previousSymptomMap.set(key, []);
         }
-        previousSymptomMap.get(key)!.push(value);
+        previousSymptomMap.get(key)!.push(severity);
       }
     }
   });

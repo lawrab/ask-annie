@@ -62,6 +62,7 @@
             firefox
             playwright-driver.browsers
             playwright-mcp-wrapper
+            mongodb-tools
           ];
 
           shellHook = ''

@@ -948,13 +948,13 @@ describe('Analysis Service', () => {
     it('should calculate check-in count and percentage change correctly', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 6 } } },
-        { structured: { symptoms: { headache: 7 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 6 } } } },
+        { structured: { symptoms: { headache: { severity: 7 } } } },
       ];
       const previousPeriodCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 6 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 6 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -979,10 +979,18 @@ describe('Analysis Service', () => {
     it('should calculate top symptoms by frequency', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: 8, fatigue: 5 } } },
-        { structured: { symptoms: { headache: 7, nausea: 3 } } },
-        { structured: { symptoms: { headache: 9, fatigue: 6, nausea: 4 } } },
-        { structured: { symptoms: { fatigue: 7 } } },
+        { structured: { symptoms: { headache: { severity: 8 }, fatigue: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 7 }, nausea: { severity: 3 } } } },
+        {
+          structured: {
+            symptoms: {
+              headache: { severity: 9 },
+              fatigue: { severity: 6 },
+              nausea: { severity: 4 },
+            },
+          },
+        },
+        { structured: { symptoms: { fatigue: { severity: 7 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1009,9 +1017,9 @@ describe('Analysis Service', () => {
     it('should calculate average severity for symptoms', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 7 } } },
-        { structured: { symptoms: { headache: 9 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 7 } } } },
+        { structured: { symptoms: { headache: { severity: 9 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1033,13 +1041,13 @@ describe('Analysis Service', () => {
     it('should determine "improving" trend when severity decreases >10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: 4 } } },
-        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: { severity: 4 } } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: 8 } } },
-        { structured: { symptoms: { headache: 10 } } },
+        { structured: { symptoms: { headache: { severity: 8 } } } },
+        { structured: { symptoms: { headache: { severity: 10 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1061,13 +1069,13 @@ describe('Analysis Service', () => {
     it('should determine "worsening" trend when severity increases >10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: 9 } } },
-        { structured: { symptoms: { headache: 10 } } },
+        { structured: { symptoms: { headache: { severity: 9 } } } },
+        { structured: { symptoms: { headache: { severity: 10 } } } },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 4 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 4 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1089,13 +1097,13 @@ describe('Analysis Service', () => {
     it('should determine "stable" trend when change is within ±10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 6 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 6 } } } },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1116,7 +1124,19 @@ describe('Analysis Service', () => {
     it('should return max 5 top symptoms', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { s1: 5, s2: 5, s3: 5, s4: 5, s5: 5, s6: 5, s7: 5 } } },
+        {
+          structured: {
+            symptoms: {
+              s1: { severity: 5 },
+              s2: { severity: 5 },
+              s3: { severity: 5 },
+              s4: { severity: 5 },
+              s5: { severity: 5 },
+              s6: { severity: 5 },
+              s7: { severity: 5 },
+            },
+          },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1146,9 +1166,9 @@ describe('Analysis Service', () => {
 
     it('should handle symptoms stored as Map objects', async () => {
       let callCount = 0;
-      const symptomsMap = new Map<string, number>();
-      symptomsMap.set('headache', 7);
-      symptomsMap.set('fatigue', 5);
+      const symptomsMap = new Map<string, { severity: number }>();
+      symptomsMap.set('headache', { severity: 7 });
+      symptomsMap.set('fatigue', { severity: 5 });
 
       const currentCheckIns = [{ structured: { symptoms: symptomsMap } }];
 
@@ -1171,8 +1191,8 @@ describe('Analysis Service', () => {
     it('should handle 0% change when previous count is 0', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 6 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 6 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1194,8 +1214,8 @@ describe('Analysis Service', () => {
       let callCount = 0;
       const currentCheckIns = [
         { structured: { symptoms: null } },
-        { structured: { symptoms: { headache: 5 } } },
-        { structured: { symptoms: { headache: 7 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
+        { structured: { symptoms: { headache: { severity: 7 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1221,7 +1241,7 @@ describe('Analysis Service', () => {
       let callCount = 0;
       const currentCheckIns = [
         { structured: { symptoms: undefined } },
-        { structured: { symptoms: { fatigue: 8 } } },
+        { structured: { symptoms: { fatigue: { severity: 8 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1244,10 +1264,10 @@ describe('Analysis Service', () => {
 
     it('should handle null symptoms in previous period', async () => {
       let callCount = 0;
-      const currentCheckIns = [{ structured: { symptoms: { headache: 6 } } }];
+      const currentCheckIns = [{ structured: { symptoms: { headache: { severity: 6 } } } }];
       const previousCheckIns = [
         { structured: { symptoms: null } },
-        { structured: { symptoms: { headache: 9 } } },
+        { structured: { symptoms: { headache: { severity: 9 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1269,10 +1289,10 @@ describe('Analysis Service', () => {
 
     it('should handle undefined symptoms in previous period', async () => {
       let callCount = 0;
-      const currentCheckIns = [{ structured: { symptoms: { headache: 8 } } }];
+      const currentCheckIns = [{ structured: { symptoms: { headache: { severity: 8 } } } }];
       const previousCheckIns = [
         { structured: { symptoms: undefined } },
-        { structured: { symptoms: { headache: 5 } } },
+        { structured: { symptoms: { headache: { severity: 5 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1296,14 +1316,14 @@ describe('Analysis Service', () => {
       let callCount = 0;
       const currentCheckIns = [
         { structured: { symptoms: null } },
-        { structured: { symptoms: { headache: 5, fatigue: 6 } } },
+        { structured: { symptoms: { headache: { severity: 5 }, fatigue: { severity: 6 } } } },
         { structured: { symptoms: undefined } },
-        { structured: { symptoms: { headache: 7 } } },
+        { structured: { symptoms: { headache: { severity: 7 } } } },
       ];
       const previousCheckIns = [
-        { structured: { symptoms: { headache: 10 } } },
+        { structured: { symptoms: { headache: { severity: 10 } } } },
         { structured: { symptoms: null } },
-        { structured: { symptoms: { fatigue: 8 } } },
+        { structured: { symptoms: { fatigue: { severity: 8 } } } },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1334,7 +1354,7 @@ describe('Analysis Service', () => {
         { structured: { symptoms: null } },
         { structured: { symptoms: undefined } },
       ];
-      const previousCheckIns = [{ structured: { symptoms: { headache: 5 } } }];
+      const previousCheckIns = [{ structured: { symptoms: { headache: { severity: 5 } } } }];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {

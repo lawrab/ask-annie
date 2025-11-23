@@ -981,7 +981,15 @@ describe('Analysis Service', () => {
       const currentPeriodCheckIns = [
         { structured: { symptoms: { headache: { severity: 8 }, fatigue: { severity: 5 } } } },
         { structured: { symptoms: { headache: { severity: 7 }, nausea: { severity: 3 } } } },
-        { structured: { symptoms: { headache: { severity: 9 }, fatigue: { severity: 6 }, nausea: { severity: 4 } } } },
+        {
+          structured: {
+            symptoms: {
+              headache: { severity: 9 },
+              fatigue: { severity: 6 },
+              nausea: { severity: 4 },
+            },
+          },
+        },
         { structured: { symptoms: { fatigue: { severity: 7 } } } },
       ];
 
@@ -1116,7 +1124,19 @@ describe('Analysis Service', () => {
     it('should return max 5 top symptoms', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { s1: { severity: 5 }, s2: { severity: 5 }, s3: { severity: 5 }, s4: { severity: 5 }, s5: { severity: 5 }, s6: { severity: 5 }, s7: { severity: 5 } } } },
+        {
+          structured: {
+            symptoms: {
+              s1: { severity: 5 },
+              s2: { severity: 5 },
+              s3: { severity: 5 },
+              s4: { severity: 5 },
+              s5: { severity: 5 },
+              s6: { severity: 5 },
+              s7: { severity: 5 },
+            },
+          },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

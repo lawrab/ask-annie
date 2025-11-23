@@ -1,6 +1,6 @@
 {
   "name": "ask-annie",
-  "version": "1.0.0",
+  "version": "0.2.0-alpha",
   "description": "Your daily health companion. Track symptoms, spot patterns, empower your health.",
   "private": true,
   "workspaces": [

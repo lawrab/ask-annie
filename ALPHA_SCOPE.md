@@ -1,8 +1,8 @@
 # Ask Annie - Alpha Release Scope
 
 **Version:** 0.2.0-alpha
-**Target Date:** TBD
-**Status:** Planning
+**Release Date:** November 22, 2025
+**Status:** Released
 
 ---
 

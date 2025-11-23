@@ -240,6 +240,59 @@ describe('ParsingService', () => {
           notes: 'Sharp pain when bending',
         });
       });
+
+      it('should clamp severity values outside valid range [1-10]', async () => {
+        mockCreate.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    type: 'function',
+                    function: {
+                      arguments: JSON.stringify({
+                        symptoms: [
+                          {
+                            name: 'migraine',
+                            severity: 0, // Invalid: below minimum
+                          },
+                          {
+                            name: 'fatigue',
+                            severity: 15, // Invalid: above maximum
+                          },
+                          {
+                            name: 'nausea',
+                            severity: 5, // Valid: within range
+                          },
+                        ],
+                        activities: [],
+                        triggers: [],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+        const result = await parseSymptoms('migraine severity 0, fatigue 15, nausea 5');
+
+        // Severity 0 should be clamped to 1
+        expect(result.symptoms.migraine).toEqual({
+          severity: 1,
+        });
+
+        // Severity 15 should be clamped to 10
+        expect(result.symptoms.fatigue).toEqual({
+          severity: 10,
+        });
+
+        // Severity 5 should remain unchanged
+        expect(result.symptoms.nausea).toEqual({
+          severity: 5,
+        });
+      });
     });
 
     describe('Error Handling', () => {

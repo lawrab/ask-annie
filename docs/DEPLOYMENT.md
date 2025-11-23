@@ -110,19 +110,16 @@ Railway provides managed MongoDB instances:
 
 ### Backend Service Configuration
 
-**Build Command**:
-```bash
-cd backend && npm install && npm run build
-```
+> **Note**: Backend uses Dockerfile for builds. See `backend/Dockerfile` for build configuration.
 
-**Start Command**:
-```bash
-cd backend && npm start
-```
+**Root Directory**: `backend` (must be set in Railway Settings → Source)
+
+**Builder**: Dockerfile (automatically detected)
 
 **Health Check**:
 - Path: `/health`
 - Expected status: `200`
+- Configured in `backend/railway.json`
 
 **Resources** (adjust as needed):
 - Memory: 512MB (minimum)
@@ -130,19 +127,16 @@ cd backend && npm start
 
 ### Frontend Service Configuration
 
-**Build Command**:
-```bash
-cd frontend && npm install && npm run build
-```
+> **Note**: Frontend uses Dockerfile for builds. See `frontend/Dockerfile` for build configuration.
 
-**Start Command**:
-```bash
-npm install -g serve && serve -s frontend/dist -p $PORT
-```
+**Root Directory**: `frontend` (must be set in Railway Settings → Source)
 
-Or use Railway's static hosting:
-- Root directory: `frontend/dist`
-- No start command needed
+**Builder**: Dockerfile (automatically detected)
+
+**Build Arguments** (configured in Dockerfile):
+- `VITE_API_URL` - Backend API URL
+- `VITE_ENV` - Environment (production)
+- Other Vite environment variables
 
 **Resources**:
 - Memory: 256MB

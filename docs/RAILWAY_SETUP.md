@@ -2,6 +2,8 @@
 
 Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 
+> **⚠️ Important**: This project uses **Dockerfile-based builds** (not Nixpacks). Railway will automatically detect the Dockerfiles in `backend/` and `frontend/` directories. Ensure the **Root Directory** is set correctly for each service.
+
 ## Prerequisites
 
 - [x] GitHub repository with Ask Annie code
@@ -31,9 +33,9 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 2. Select `lawrab/ask-annie` repository
 3. **Configure service**:
    - Service name: `backend`
-   - Root directory: `backend`
-   - Build command: `npm install && npm run build`
-   - Start command: `npm start`
+   - **Root directory**: `backend` ⚠️ **CRITICAL - Must be set in Settings → Source**
+   - **Builder**: Dockerfile (auto-detected from `backend/Dockerfile`)
+   - Build and start commands are defined in the Dockerfile
 
 4. **Set environment variables**:
    ```env
@@ -71,9 +73,9 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 2. Select `lawrab/ask-annie` repository
 3. **Configure service**:
    - Service name: `frontend`
-   - Root directory: `frontend`
-   - Build command: `npm install && npm run build`
-   - Start command: `npx serve -s dist -p $PORT`
+   - **Root directory**: `frontend` ⚠️ **CRITICAL - Must be set in Settings → Source**
+   - **Builder**: Dockerfile (auto-detected from `frontend/Dockerfile`)
+   - Build and start commands are defined in the Dockerfile
 
 4. **Set environment variables**:
    ```env

@@ -4,6 +4,34 @@ This guide covers deploying Ask Annie to Railway (recommended) and other platfor
 
 ---
 
+## Deployment Strategy
+
+Ask Annie uses **tag-based deployments** to Railway:
+
+- ✅ **Production Only**: Single production environment
+- ✅ **Deploy on Git Tags**: Only git tags trigger deployments (e.g., `v0.2.0-alpha`)
+- ✅ **Railway Built-in CD**: Railway automatically deploys when tags are pushed
+- ✅ **CI Checks in PRs**: All quality checks run in pull requests before merge
+
+### Quick Deploy
+
+```bash
+# 1. Ensure main branch is ready
+git checkout main
+git pull
+
+# 2. Create and push tag
+git tag -a v0.2.0-alpha -m "Release v0.2.0-alpha"
+git push origin v0.2.0-alpha
+
+# 3. Railway deploys automatically
+# Monitor at: https://railway.app/dashboard
+```
+
+See [RELEASE_PROCESS.md](./RELEASE_PROCESS.md) for detailed release procedures.
+
+---
+
 ## Quick Start (Railway)
 
 Railway provides the simplest deployment path with automatic CI/CD from GitHub.
@@ -165,8 +193,9 @@ Deploy Python transcription service separately:
 | `JWT_SECRET` | Yes | - | Secret for JWT signing |
 | `JWT_EXPIRES_IN` | No | 7d | Token expiry duration |
 | `ALLOWED_ORIGINS` | Yes | - | Comma-separated CORS origins |
-| `WHISPER_MODEL_SIZE` | No | base | Whisper model: tiny/base/small/medium/large |
-| `WHISPER_DEVICE` | No | cpu | Processing device: cpu/cuda |
+| `OPENAI_API_KEY` | Recommended | - | OpenAI API key for Whisper transcription (production) |
+| `WHISPER_URL` | No | http://localhost:8000/v1/audio/transcriptions | faster-whisper server URL (dev only) |
+| `WHISPER_MODEL` | No | Systran/faster-distil-whisper-small.en | faster-whisper model (dev only) |
 | `MAX_FILE_SIZE` | No | 10485760 | Max upload size (bytes) |
 | `RATE_LIMIT_WINDOW_MS` | No | 900000 | Rate limit window (15 min) |
 | `RATE_LIMIT_MAX_REQUESTS` | No | 100 | Max requests per window |
@@ -210,14 +239,16 @@ ALLOWED_ORIGINS=https://ask-annie.com,https://www.ask-annie.com
 
 ## CI/CD Pipeline
 
-Railway automatically deploys on Git push:
+### Tag-Based Deployment Flow
 
 ```
-Developer pushes to GitHub
+Developer creates git tag (e.g., v0.2.0-alpha)
+    ↓
+Tag pushed to GitHub
     ↓
 Railway webhook triggered
     ↓
-Pull latest code
+Pull tagged code
     ↓
 Run build commands
     ↓
@@ -228,11 +259,21 @@ Zero-downtime deployment
 Old instances terminated
 ```
 
+**Configuration**: Railway services are configured to deploy only on git tags through Railway dashboard settings.
+
+### Pull Request CI (Automated)
+
+All quality checks run in PRs before merge:
+- ✅ TypeScript compilation
+- ✅ ESLint checks
+- ✅ Test suites (330 backend + 466 frontend)
+- ✅ Build verification
+
 ### Manual Deployment
 
 To trigger manual deployment:
 1. Railway dashboard → Service → "Deploy"
-2. Select commit/branch to deploy
+2. Select tag to deploy
 
 ### Deployment Rollback
 
@@ -240,6 +281,11 @@ Railway keeps deployment history:
 1. Dashboard → Service → "Deployments"
 2. Find previous successful deployment
 3. Click "Redeploy"
+
+Or redeploy previous tag:
+```bash
+git push origin v0.1.0 --force
+```
 
 ---
 

@@ -296,8 +296,9 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
+      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream);
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { transcribeAudio: transcribeWithOpenAI } = require('../transcriptionService');
 
       const result = await transcribeWithOpenAI(testAudioPath);
@@ -331,11 +332,14 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
+      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream);
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { transcribeAudio: transcribeWithOpenAI } = require('../transcriptionService');
 
-      await expect(transcribeWithOpenAI(testAudioPath)).rejects.toThrow('OpenAI transcription failed');
+      await expect(transcribeWithOpenAI(testAudioPath)).rejects.toThrow(
+        'OpenAI transcription failed'
+      );
     });
 
     it('should pass language parameter to OpenAI API', async () => {
@@ -362,8 +366,9 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
+      jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream);
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { transcribeAudio: transcribeWithOpenAI } = require('../transcriptionService');
 
       await transcribeWithOpenAI(testAudioPath, 'es');
@@ -390,6 +395,7 @@ describe('TranscriptionService', () => {
         }));
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { checkWhisperHealth: checkOpenAIHealth } = require('../transcriptionService');
 
       const result = await checkOpenAIHealth();

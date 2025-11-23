@@ -62,10 +62,11 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
    - **Enable** "Deploy on git tags"
    - Pattern: `v*` (deploys on any tag starting with 'v')
 
-6. **Set up health check**:
+6. **Set up health check** (optional - auto-detected from Dockerfile):
    - Go to **Settings** → **Health Check**
    - Path: `/health`
    - Timeout: 100 seconds
+   - Note: The backend Dockerfile includes a HEALTHCHECK instruction
 
 ### 4. Create Frontend Service
 

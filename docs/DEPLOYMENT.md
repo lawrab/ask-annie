@@ -119,7 +119,7 @@ Railway provides managed MongoDB instances:
 **Health Check**:
 - Path: `/health`
 - Expected status: `200`
-- Configured in `backend/railway.json`
+- Built into the Dockerfile with HEALTHCHECK instruction
 
 **Resources** (adjust as needed):
 - Memory: 512MB (minimum)

@@ -31,6 +31,10 @@ COPY --from=builder /app/dist ./dist
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
+# Create logs directory and set ownership before switching users
+RUN mkdir -p /app/logs && \
+    chown -R nodejs:nodejs /app
+
 USER nodejs
 
 # Expose port (Railway will set PORT env var)

@@ -77,6 +77,7 @@ describe('CheckInPage', () => {
       const state = {
         user: mockUser,
         token: 'mock-token',
+        isLoading: false,
         isAuthenticated: () => true,
         login: vi.fn(),
         register: vi.fn(),

@@ -6,7 +6,13 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const isLoading = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
+
+  // Wait for session restoration to complete before checking authentication
+  if (isLoading) {
+    return null; // Or a loading spinner if desired
+  }
 
   if (!isAuthenticated) {
     // Redirect to login if not authenticated

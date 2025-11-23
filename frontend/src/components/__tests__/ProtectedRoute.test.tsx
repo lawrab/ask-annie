@@ -12,6 +12,7 @@ vi.mock('../../stores/authStore', () => ({
 interface MockAuthState {
   user: null;
   token: null;
+  isLoading: boolean;
   isAuthenticated: () => boolean;
   login: () => Promise<void>;
   register: () => Promise<void>;
@@ -32,6 +33,7 @@ describe('ProtectedRoute', () => {
         const mockState: MockAuthState = {
           user: null,
           token: null,
+          isLoading: false,
           isAuthenticated: () => true,
           login: vi.fn().mockResolvedValue(undefined),
           register: vi.fn().mockResolvedValue(undefined),
@@ -67,6 +69,7 @@ describe('ProtectedRoute', () => {
         const mockState: MockAuthState = {
           user: null,
           token: null,
+          isLoading: false,
           isAuthenticated: () => false,
           login: vi.fn().mockResolvedValue(undefined),
           register: vi.fn().mockResolvedValue(undefined),

@@ -4,6 +4,7 @@ import { authApi, User } from '../services/api';
 interface AuthState {
   user: User | null;
   token: string | null;
+  isLoading: boolean;
   isAuthenticated: () => boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
@@ -14,6 +15,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
+  isLoading: true, // Start as loading until session restoration completes
 
   isAuthenticated: () => {
     return !!get().token && !!get().user;
@@ -26,7 +28,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, token } = response.data;
 
       // Store in state
-      set({ user, token });
+      set({ user, token, isLoading: false });
 
       // Persist to localStorage
       localStorage.setItem('token', token);
@@ -41,7 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, token } = response.data;
 
       // Store in state
-      set({ user, token });
+      set({ user, token, isLoading: false });
 
       // Persist to localStorage
       localStorage.setItem('token', token);
@@ -70,12 +72,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (token && userJson) {
       try {
         const user = JSON.parse(userJson) as User;
-        set({ user, token });
+        set({ user, token, isLoading: false });
       } catch {
         // Invalid user data, clear everything
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        set({ isLoading: false });
       }
+    } else {
+      // No session to restore
+      set({ isLoading: false });
     }
   },
 }));

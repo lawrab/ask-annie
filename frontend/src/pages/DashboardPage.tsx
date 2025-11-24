@@ -277,6 +277,62 @@ export default function DashboardPage() {
             )}
           </section>
 
+          {/* Latest Check-In Comparison Section */}
+          {!isLoadingStats && !statsError && statsData?.latestCheckIn && (
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-gray-900">Latest Check-In vs. Your Averages</h2>
+              <Card variant="default" className="p-6">
+                <div className="space-y-4">
+                  {statsData.latestCheckIn.symptoms.map((symptom) => {
+                    const capitalizedName = symptom.name.charAt(0).toUpperCase() + symptom.name.slice(1);
+
+                    // Determine indicator based on trend
+                    let indicator = '';
+                    let indicatorColor = '';
+                    let trendText = '';
+
+                    if (symptom.trend === 'above') {
+                      indicator = '↑';
+                      indicatorColor = 'text-red-600';
+                      trendText = 'Above usual';
+                    } else if (symptom.trend === 'below') {
+                      indicator = '↓';
+                      indicatorColor = 'text-green-600';
+                      trendText = 'Below usual';
+                    } else {
+                      indicator = '≈';
+                      indicatorColor = 'text-gray-600';
+                      trendText = 'Normal';
+                    }
+
+                    return (
+                      <div key={symptom.name} className="border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
+                        <h3 className="text-base font-semibold text-gray-900 mb-2">
+                          {capitalizedName}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-gray-700">
+                              <span className="font-medium">Current:</span> {symptom.latestValue}
+                            </span>
+                            <span className="text-gray-500">|</span>
+                            <span className="text-gray-700">
+                              <span className="font-medium">Avg:</span> {symptom.averageValue.toFixed(1)}
+                            </span>
+                          </div>
+                          <div className={`flex items-center gap-1.5 text-sm font-medium ${indicatorColor}`}>
+                            <span className="text-lg" aria-hidden="true">{indicator}</span>
+                            <span>{trendText}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </section>
+          )}
+
           {/* Section B: Insights & Value */}
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-900">Weekly Insights</h2>

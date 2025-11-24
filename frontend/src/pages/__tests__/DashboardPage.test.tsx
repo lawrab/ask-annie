@@ -145,6 +145,65 @@ describe('DashboardPage', () => {
     },
   };
 
+  // Mock data with latest check-in
+  const mockQuickStatsDataWithLatestCheckIn: QuickStatsResponse = {
+    success: true,
+    data: {
+      period: {
+        current: {
+          start: '2024-01-08',
+          end: '2024-01-15',
+          days: 7,
+        },
+        previous: {
+          start: '2024-01-01',
+          end: '2024-01-07',
+          days: 7,
+        },
+      },
+      checkInCount: {
+        current: 14,
+        previous: 10,
+        change: 4,
+        percentChange: 40,
+      },
+      topSymptoms: [
+        { name: 'headache', frequency: 8, avgSeverity: 6.5, trend: 'worsening' },
+        { name: 'fatigue', frequency: 6, avgSeverity: 5.0, trend: 'stable' },
+        { name: 'nausea', frequency: 4, avgSeverity: 3.5, trend: 'improving' },
+      ],
+      averageSeverity: {
+        current: 5.5,
+        previous: 6.0,
+        change: -0.5,
+        trend: 'improving',
+      },
+      latestCheckIn: {
+        timestamp: new Date('2024-01-15T14:30:00.000Z'),
+        symptoms: [
+          {
+            name: 'headache',
+            latestValue: 7,
+            averageValue: 5.2,
+            trend: 'above' as const,
+          },
+          {
+            name: 'fatigue',
+            latestValue: 8,
+            averageValue: 6.8,
+            trend: 'above' as const,
+          },
+          {
+            name: 'joint pain',
+            latestValue: 4,
+            averageValue: 4.5,
+            trend: 'equal' as const,
+          },
+        ],
+      },
+    },
+  };
+
   // Mock data for Section C: Timeline History
   const mockCheckIns: CheckIn[] = [
     {
@@ -592,6 +651,291 @@ describe('DashboardPage', () => {
       await waitFor(() => {
         expect(screen.getByText('No symptoms recorded')).toBeInTheDocument();
       });
+    });
+  });
+
+  // ============================================================================
+  // Latest Check-In Comparison Tests
+  // ============================================================================
+
+  describe('Latest Check-In Comparison Section', () => {
+    it('does not display section when latestCheckIn is not present', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsData);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Weekly Insights')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText('Latest Check-In vs. Your Averages')).not.toBeInTheDocument();
+    });
+
+    it('displays section when latestCheckIn data exists', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Latest Check-In vs. Your Averages')).toBeInTheDocument();
+      });
+    });
+
+    it('displays all symptoms with capitalized names', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Headache')).toBeInTheDocument();
+        expect(screen.getByText('Fatigue')).toBeInTheDocument();
+        expect(screen.getByText('Joint pain')).toBeInTheDocument();
+      });
+    });
+
+    it('displays current and average values correctly', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Latest Check-In vs. Your Averages')).toBeInTheDocument();
+      });
+
+      // Verify all "Current:" labels are present
+      const currentLabels = screen.getAllByText('Current:');
+      expect(currentLabels).toHaveLength(3); // One for each symptom
+
+      // Verify all "Avg:" labels are present
+      const avgLabels = screen.getAllByText('Avg:');
+      expect(avgLabels).toHaveLength(3); // One for each symptom
+
+      // Verify the specific values using text content matching
+      expect(screen.getByText((_content, element) => {
+        return element?.textContent === 'Avg: 5.2';
+      })).toBeInTheDocument();
+
+      expect(screen.getByText((_content, element) => {
+        return element?.textContent === 'Avg: 6.8';
+      })).toBeInTheDocument();
+
+      expect(screen.getByText((_content, element) => {
+        return element?.textContent === 'Avg: 4.5';
+      })).toBeInTheDocument();
+    });
+
+    it('displays "Above usual" indicator for above trend', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        const aboveUsualElements = screen.getAllByText('Above usual');
+        expect(aboveUsualElements).toHaveLength(2); // headache and fatigue
+      });
+    });
+
+    it('displays "Normal" indicator for equal trend', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Normal')).toBeInTheDocument(); // joint pain
+      });
+    });
+
+    it('displays "Below usual" indicator for below trend', async () => {
+      const statsWithBelowTrend: QuickStatsResponse = {
+        ...mockQuickStatsDataWithLatestCheckIn,
+        data: {
+          ...mockQuickStatsDataWithLatestCheckIn.data,
+          latestCheckIn: {
+            timestamp: new Date('2024-01-15T14:30:00.000Z'),
+            symptoms: [
+              {
+                name: 'nausea',
+                latestValue: 2,
+                averageValue: 5.5,
+                trend: 'below' as const,
+              },
+            ],
+          },
+        },
+      };
+
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(statsWithBelowTrend);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Below usual')).toBeInTheDocument();
+      });
+    });
+
+    it('uses correct color classes for trend indicators', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Latest Check-In vs. Your Averages')).toBeInTheDocument();
+      });
+
+      // Check that trend indicators have proper color classes
+      const aboveElements = screen.getAllByText('Above usual');
+      aboveElements.forEach((element) => {
+        expect(element.parentElement).toHaveClass('text-red-600');
+      });
+
+      const normalElement = screen.getByText('Normal');
+      expect(normalElement.parentElement).toHaveClass('text-gray-600');
+    });
+
+    it('displays indicators with aria-hidden for screen readers', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockResolvedValue(mockQuickStatsDataWithLatestCheckIn);
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      const { container } = render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Latest Check-In vs. Your Averages')).toBeInTheDocument();
+      });
+
+      // Check for aria-hidden attribute on indicator symbols
+      const indicators = container.querySelectorAll('[aria-hidden="true"]');
+      expect(indicators.length).toBeGreaterThan(0);
+    });
+
+    it('does not display section when statsData is loading', () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.queryByText('Latest Check-In vs. Your Averages')).not.toBeInTheDocument();
+    });
+
+    it('does not display section when stats API fails', async () => {
+      vi.mocked(checkInsApi.getStatus).mockResolvedValue(mockStatusData);
+      vi.mocked(analysisApi.getStreak).mockResolvedValue(mockStreakData);
+      vi.mocked(analysisApi.getQuickStats).mockRejectedValue(new Error('Stats failed'));
+      vi.mocked(checkInsApi.getAll).mockResolvedValue({
+        success: true,
+        data: { checkIns: [], pagination: { total: 0, limit: 20, offset: 0, hasMore: false } },
+      });
+
+      render(
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText('Latest Check-In vs. Your Averages')).not.toBeInTheDocument();
     });
   });
 

@@ -471,6 +471,24 @@ export interface AverageSeverityComparison {
 }
 
 /**
+ * Latest check-in symptom comparison interface
+ */
+export interface LatestSymptomComparison {
+  name: string;
+  latestValue: number;
+  averageValue: number;
+  trend: 'above' | 'below' | 'equal';
+}
+
+/**
+ * Latest check-in data interface
+ */
+export interface LatestCheckInData {
+  timestamp: Date;
+  symptoms: LatestSymptomComparison[];
+}
+
+/**
  * Quick stats analysis interface
  */
 export interface QuickStats {
@@ -481,6 +499,7 @@ export interface QuickStats {
   checkInCount: CheckInCountComparison;
   topSymptoms: TopSymptom[];
   averageSeverity: AverageSeverityComparison;
+  latestCheckIn?: LatestCheckInData;
 }
 
 /**
@@ -654,6 +673,70 @@ export async function calculateQuickStats(
     }
   }
 
+  // Calculate latest check-in comparison if check-ins exist
+  let latestCheckIn: LatestCheckInData | undefined = undefined;
+
+  if (currentCheckIns.length > 0) {
+    // Sort by timestamp descending to get the latest check-in
+    const sortedCheckIns = [...currentCheckIns].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    );
+    const latestCheckInDoc = sortedCheckIns[0];
+    const latestSymptoms = latestCheckInDoc.structured.symptoms;
+
+    // Skip if symptoms is null or undefined
+    if (latestSymptoms && typeof latestSymptoms === 'object') {
+      const latestSymptomComparisons: LatestSymptomComparison[] = [];
+      const entries =
+        latestSymptoms instanceof Map ? latestSymptoms.entries() : Object.entries(latestSymptoms);
+
+      for (const [symptomName, value] of entries) {
+        let latestSeverity: number | null = null;
+
+        // Handle SymptomValue object format
+        if (value && typeof value === 'object' && 'severity' in value) {
+          latestSeverity = (value as { severity: number }).severity;
+        }
+
+        // Only process valid numeric severities
+        if (typeof latestSeverity === 'number' && !isNaN(latestSeverity)) {
+          // Calculate average for this specific symptom over the current period
+          const symptomValues = currentSymptomMap.get(symptomName);
+          if (symptomValues && symptomValues.length > 0) {
+            const averageValue =
+              Math.round((symptomValues.reduce((a, b) => a + b, 0) / symptomValues.length) * 10) /
+              10;
+
+            // Determine trend: compare latest value to average
+            let trend: 'above' | 'below' | 'equal' = 'equal';
+            const difference = latestSeverity - averageValue;
+
+            if (difference > 0.5) {
+              trend = 'above';
+            } else if (difference < -0.5) {
+              trend = 'below';
+            }
+
+            latestSymptomComparisons.push({
+              name: symptomName,
+              latestValue: latestSeverity,
+              averageValue,
+              trend,
+            });
+          }
+        }
+      }
+
+      // Only include latestCheckIn if we have symptom comparisons
+      if (latestSymptomComparisons.length > 0) {
+        latestCheckIn = {
+          timestamp: latestCheckInDoc.timestamp,
+          symptoms: latestSymptomComparisons,
+        };
+      }
+    }
+  }
+
   return {
     period: {
       current: {
@@ -680,5 +763,6 @@ export async function calculateQuickStats(
       change: severityChange,
       trend: severityTrend,
     },
+    latestCheckIn,
   };
 }

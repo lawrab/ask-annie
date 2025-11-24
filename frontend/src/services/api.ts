@@ -137,6 +137,19 @@ export interface StreakResponse {
   };
 }
 
+// Latest Check-In Comparison Types
+export interface LatestSymptomComparison {
+  name: string;
+  latestValue: number;
+  averageValue: number;
+  trend: 'above' | 'below' | 'equal';
+}
+
+export interface LatestCheckInData {
+  timestamp: Date;
+  symptoms: LatestSymptomComparison[];
+}
+
 // Quick Stats Types
 export interface QuickStatsResponse {
   success: boolean;
@@ -171,6 +184,7 @@ export interface QuickStatsResponse {
       change: number;
       trend: 'improving' | 'worsening' | 'stable';
     };
+    latestCheckIn?: LatestCheckInData;
   };
 }
 

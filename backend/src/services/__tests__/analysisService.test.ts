@@ -948,13 +948,28 @@ describe('Analysis Service', () => {
     it('should calculate check-in count and percentage change correctly', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 6 } } } },
-        { structured: { symptoms: { headache: { severity: 7 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 6 } } },
+        },
+        {
+          timestamp: new Date('2024-01-03T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 7 } } },
+        },
       ];
       const previousPeriodCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 6 } } } },
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2023-12-26T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 6 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -979,9 +994,16 @@ describe('Analysis Service', () => {
     it('should calculate top symptoms by frequency', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: { severity: 8 }, fatigue: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 7 }, nausea: { severity: 3 } } } },
         {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 8 }, fatigue: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 7 }, nausea: { severity: 3 } } },
+        },
+        {
+          timestamp: new Date('2024-01-03T10:00:00Z'),
           structured: {
             symptoms: {
               headache: { severity: 9 },
@@ -990,7 +1012,10 @@ describe('Analysis Service', () => {
             },
           },
         },
-        { structured: { symptoms: { fatigue: { severity: 7 } } } },
+        {
+          timestamp: new Date('2024-01-04T10:00:00Z'),
+          structured: { symptoms: { fatigue: { severity: 7 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1017,9 +1042,18 @@ describe('Analysis Service', () => {
     it('should calculate average severity for symptoms', async () => {
       let callCount = 0;
       const currentPeriodCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 7 } } } },
-        { structured: { symptoms: { headache: { severity: 9 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 7 } } },
+        },
+        {
+          timestamp: new Date('2024-01-03T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 9 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1041,13 +1075,25 @@ describe('Analysis Service', () => {
     it('should determine "improving" trend when severity decreases >10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: { severity: 4 } } } },
-        { structured: { symptoms: { headache: { severity: 5 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 4 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: { severity: 8 } } } },
-        { structured: { symptoms: { headache: { severity: 10 } } } },
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 8 } } },
+        },
+        {
+          timestamp: new Date('2023-12-26T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 10 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1069,13 +1115,25 @@ describe('Analysis Service', () => {
     it('should determine "worsening" trend when severity increases >10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: { severity: 9 } } } },
-        { structured: { symptoms: { headache: { severity: 10 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 9 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 10 } } },
+        },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 4 } } } },
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2023-12-26T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 4 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1097,13 +1155,25 @@ describe('Analysis Service', () => {
     it('should determine "stable" trend when change is within ±10%', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 6 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 6 } } },
+        },
       ];
 
       const previousCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 5 } } } },
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2023-12-26T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1191,8 +1261,14 @@ describe('Analysis Service', () => {
     it('should handle 0% change when previous count is 0', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 6 } } } },
+        {
+          timestamp: new Date('2024-01-01T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 6 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1213,9 +1289,15 @@ describe('Analysis Service', () => {
     it('should handle null symptoms in current period', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: null } },
-        { structured: { symptoms: { headache: { severity: 5 } } } },
-        { structured: { symptoms: { headache: { severity: 7 } } } },
+        { timestamp: new Date('2024-01-01T10:00:00Z'), structured: { symptoms: null } },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+        {
+          timestamp: new Date('2024-01-03T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 7 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1240,8 +1322,11 @@ describe('Analysis Service', () => {
     it('should handle undefined symptoms in current period', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: undefined } },
-        { structured: { symptoms: { fatigue: { severity: 8 } } } },
+        { timestamp: new Date('2024-01-01T10:00:00Z'), structured: { symptoms: undefined } },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { fatigue: { severity: 8 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1315,15 +1400,27 @@ describe('Analysis Service', () => {
     it('should handle mix of null and valid symptoms in both periods', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: null } },
-        { structured: { symptoms: { headache: { severity: 5 }, fatigue: { severity: 6 } } } },
-        { structured: { symptoms: undefined } },
-        { structured: { symptoms: { headache: { severity: 7 } } } },
+        { timestamp: new Date('2024-01-01T10:00:00Z'), structured: { symptoms: null } },
+        {
+          timestamp: new Date('2024-01-02T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 }, fatigue: { severity: 6 } } },
+        },
+        { timestamp: new Date('2024-01-03T10:00:00Z'), structured: { symptoms: undefined } },
+        {
+          timestamp: new Date('2024-01-04T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 7 } } },
+        },
       ];
       const previousCheckIns = [
-        { structured: { symptoms: { headache: { severity: 10 } } } },
-        { structured: { symptoms: null } },
-        { structured: { symptoms: { fatigue: { severity: 8 } } } },
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 10 } } },
+        },
+        { timestamp: new Date('2023-12-26T10:00:00Z'), structured: { symptoms: null } },
+        {
+          timestamp: new Date('2023-12-27T10:00:00Z'),
+          structured: { symptoms: { fatigue: { severity: 8 } } },
+        },
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1351,10 +1448,15 @@ describe('Analysis Service', () => {
     it('should handle all check-ins with null symptoms in current period', async () => {
       let callCount = 0;
       const currentCheckIns = [
-        { structured: { symptoms: null } },
-        { structured: { symptoms: undefined } },
+        { timestamp: new Date('2024-01-01T10:00:00Z'), structured: { symptoms: null } },
+        { timestamp: new Date('2024-01-02T10:00:00Z'), structured: { symptoms: undefined } },
       ];
-      const previousCheckIns = [{ structured: { symptoms: { headache: { severity: 5 } } } }];
+      const previousCheckIns = [
+        {
+          timestamp: new Date('2023-12-25T10:00:00Z'),
+          structured: { symptoms: { headache: { severity: 5 } } },
+        },
+      ];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
@@ -1397,6 +1499,428 @@ describe('Analysis Service', () => {
       expect(result.averageSeverity.current).toBe(0);
       expect(result.averageSeverity.previous).toBe(0);
       expect(result.averageSeverity.trend).toBe('stable');
+    });
+
+    describe('latestCheckIn functionality', () => {
+      it('should return undefined latestCheckIn when no check-ins exist', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockResolvedValue([]);
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeUndefined();
+      });
+
+      it('should calculate latest check-in with single symptom', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 7 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 6 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.timestamp).toEqual(new Date('2024-01-03T10:00:00Z'));
+        expect(result.latestCheckIn!.symptoms).toHaveLength(1);
+        expect(result.latestCheckIn!.symptoms[0].name).toBe('headache');
+        expect(result.latestCheckIn!.symptoms[0].latestValue).toBe(6);
+        expect(result.latestCheckIn!.symptoms[0].averageValue).toBe(6.0); // (5 + 7 + 6) / 3 = 6.0
+        expect(result.latestCheckIn!.symptoms[0].trend).toBe('equal');
+      });
+
+      it('should calculate latest check-in with multiple symptoms', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: {
+              symptoms: {
+                headache: { severity: 5 },
+                fatigue: { severity: 3 },
+                nausea: { severity: 4 },
+              },
+            },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: {
+              symptoms: {
+                headache: { severity: 7 },
+                fatigue: { severity: 5 },
+                nausea: { severity: 6 },
+              },
+            },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: {
+              symptoms: {
+                headache: { severity: 8 },
+                fatigue: { severity: 2 },
+                nausea: { severity: 5 },
+              },
+            },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms).toHaveLength(3);
+
+        const headacheSymptom = result.latestCheckIn!.symptoms.find((s) => s.name === 'headache');
+        expect(headacheSymptom).toBeDefined();
+        expect(headacheSymptom!.latestValue).toBe(8);
+        expect(headacheSymptom!.averageValue).toBe(6.7); // (5 + 7 + 8) / 3 = 6.67, rounded to 6.7
+        expect(headacheSymptom!.trend).toBe('above'); // 8 > 6.7 + 0.5
+
+        const fatigueSymptom = result.latestCheckIn!.symptoms.find((s) => s.name === 'fatigue');
+        expect(fatigueSymptom).toBeDefined();
+        expect(fatigueSymptom!.latestValue).toBe(2);
+        expect(fatigueSymptom!.averageValue).toBe(3.3); // (3 + 5 + 2) / 3 = 3.33, rounded to 3.3
+        expect(fatigueSymptom!.trend).toBe('below'); // 2 < 3.3 - 0.5
+
+        const nauseaSymptom = result.latestCheckIn!.symptoms.find((s) => s.name === 'nausea');
+        expect(nauseaSymptom).toBeDefined();
+        expect(nauseaSymptom!.latestValue).toBe(5);
+        expect(nauseaSymptom!.averageValue).toBe(5.0); // (4 + 6 + 5) / 3 = 5.0
+        expect(nauseaSymptom!.trend).toBe('equal'); // 5 ≈ 5.0
+      });
+
+      it('should detect "above" trend when latest value is significantly higher than average', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 3 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 4 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 9 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms[0].latestValue).toBe(9);
+        expect(result.latestCheckIn!.symptoms[0].averageValue).toBe(5.3); // (3 + 4 + 9) / 3 = 5.33
+        expect(result.latestCheckIn!.symptoms[0].trend).toBe('above'); // 9 > 5.3 + 0.5
+      });
+
+      it('should detect "below" trend when latest value is significantly lower than average', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 8 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 9 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 3 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms[0].latestValue).toBe(3);
+        expect(result.latestCheckIn!.symptoms[0].averageValue).toBe(6.7); // (8 + 9 + 3) / 3 = 6.67
+        expect(result.latestCheckIn!.symptoms[0].trend).toBe('below'); // 3 < 6.7 - 0.5
+      });
+
+      it('should detect "equal" trend when latest value is within ±0.5 of average', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 6 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { pain: { severity: 5 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms[0].latestValue).toBe(5);
+        expect(result.latestCheckIn!.symptoms[0].averageValue).toBe(5.3); // (5 + 6 + 5) / 3 = 5.33
+        expect(result.latestCheckIn!.symptoms[0].trend).toBe('equal'); // |5 - 5.3| < 0.5
+      });
+
+      it('should only include symptoms from latest check-in', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 }, fatigue: { severity: 4 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 7 }, nausea: { severity: 6 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 6 } } }, // Only headache in latest
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms).toHaveLength(1);
+        expect(result.latestCheckIn!.symptoms[0].name).toBe('headache');
+      });
+
+      it('should handle latest check-in with null symptoms', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: null },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeUndefined();
+      });
+
+      it('should handle latest check-in with undefined symptoms', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: undefined },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeUndefined();
+      });
+
+      it('should select check-in with most recent timestamp as latest', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-03T15:00:00Z'), // Latest
+            structured: { symptoms: { fatigue: { severity: 8 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { nausea: { severity: 6 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.timestamp).toEqual(new Date('2024-01-03T15:00:00Z'));
+        expect(result.latestCheckIn!.symptoms).toHaveLength(1);
+        expect(result.latestCheckIn!.symptoms[0].name).toBe('fatigue');
+      });
+
+      it('should handle symptoms stored as Map in latest check-in', async () => {
+        let callCount = 0;
+        const symptomsMap = new Map<string, { severity: number }>();
+        symptomsMap.set('headache', { severity: 7 });
+        symptomsMap.set('fatigue', { severity: 5 });
+
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 }, fatigue: { severity: 4 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: symptomsMap },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        expect(result.latestCheckIn!.symptoms).toHaveLength(2);
+        expect(result.latestCheckIn!.symptoms.some((s) => s.name === 'headache')).toBe(true);
+        expect(result.latestCheckIn!.symptoms.some((s) => s.name === 'fatigue')).toBe(true);
+      });
+
+      it('should handle latest check-in symptom not present in other check-ins', async () => {
+        let callCount = 0;
+        const currentCheckIns = [
+          {
+            timestamp: new Date('2024-01-01T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 5 } } },
+          },
+          {
+            timestamp: new Date('2024-01-02T10:00:00Z'),
+            structured: { symptoms: { headache: { severity: 7 }, new_symptom: { severity: 8 } } },
+          },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CheckIn.find as any).mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(currentCheckIns);
+          } else {
+            return Promise.resolve([]);
+          }
+        });
+
+        const result = await calculateQuickStats(userId, 7);
+
+        expect(result.latestCheckIn).toBeDefined();
+        // Should include both symptoms since both appear in the period
+        expect(result.latestCheckIn!.symptoms).toHaveLength(2);
+
+        const headacheSymptom = result.latestCheckIn!.symptoms.find((s) => s.name === 'headache');
+        expect(headacheSymptom).toBeDefined();
+        expect(headacheSymptom!.averageValue).toBe(6.0); // (5 + 7) / 2
+
+        const newSymptom = result.latestCheckIn!.symptoms.find((s) => s.name === 'new_symptom');
+        expect(newSymptom).toBeDefined();
+        expect(newSymptom!.latestValue).toBe(8);
+        expect(newSymptom!.averageValue).toBe(8.0); // Only appears once
+      });
     });
   });
 });

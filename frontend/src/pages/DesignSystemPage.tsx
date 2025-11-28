@@ -41,7 +41,7 @@ export default function DesignSystemPage() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900">
-            Annie's Health Journal Design System
+            Annie&apos;s Health Journal Design System
           </h1>
           <p className="mt-2 text-lg text-gray-600">
             Visual reference for all design tokens and components
@@ -903,7 +903,7 @@ export default function DesignSystemPage() {
         {/* Footer */}
         <div className="text-center pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            Annie's Health Journal Design System v1.2.0 • Component Library v1.2.0<br />
+            Annie&apos;s Health Journal Design System v1.2.0 • Component Library v1.2.0<br />
             See{' '}
             <a href="/docs/DESIGN_SYSTEM.md" className="text-primary-600 hover:text-primary-700 underline">
               full documentation

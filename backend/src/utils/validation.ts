@@ -61,11 +61,16 @@ export const manualCheckinSchema = Joi.object({
 
 /**
  * Joi validation schema for magic link request
+ * Accepts optional username for new user registration
  */
 export const magicLinkRequestSchema = Joi.object({
   email: Joi.string().email().trim().lowercase().required().messages({
     'string.email': 'Please provide a valid email address',
     'any.required': 'Email is required',
+  }),
+  username: Joi.string().min(3).max(30).trim().optional().messages({
+    'string.min': 'Username must be at least 3 characters',
+    'string.max': 'Username must not exceed 30 characters',
   }),
 });
 

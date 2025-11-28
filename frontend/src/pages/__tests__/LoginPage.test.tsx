@@ -8,6 +8,7 @@ import api from '../../services/api';
 // Mock the API
 vi.mock('../../services/api', () => ({
   default: {
+    get: vi.fn(),
     post: vi.fn(),
   },
 }));
@@ -17,7 +18,7 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  it('should render magic link request form', () => {
+  it('should render login link request form', () => {
     render(
       <MemoryRouter>
         <LoginPage />
@@ -26,7 +27,7 @@ describe('LoginPage', () => {
 
     expect(screen.getByText("Sign in to Annie's Health Journal")).toBeInTheDocument();
     expect(screen.getByLabelText('Email address')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send magic link/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send login link/i })).toBeInTheDocument();
     expect(screen.getByText(/no password needed/i)).toBeInTheDocument();
   });
 
@@ -60,8 +61,9 @@ describe('LoginPage', () => {
     });
   });
 
-  it('should send magic link request on submit', async () => {
+  it('should send login link request on submit for existing user', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockResolvedValue({ data: { success: true } });
 
     render(
@@ -71,17 +73,39 @@ describe('LoginPage', () => {
     );
 
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/auth/check-email', {
+        params: { email: 'test@example.com' },
+      });
       expect(api.post).toHaveBeenCalledWith('/auth/magic-link/request', {
         email: 'test@example.com',
       });
     });
   });
 
+  it('should show error message for non-existent account', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/no account found with this email/i)).toBeInTheDocument();
+    });
+  });
+
   it('should show email sent confirmation after successful request', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockResolvedValue({ data: { success: true } });
 
     render(
@@ -91,7 +115,7 @@ describe('LoginPage', () => {
     );
 
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/check your email/i)).toBeInTheDocument();
@@ -102,6 +126,7 @@ describe('LoginPage', () => {
 
   it('should show error message on failed request', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockRejectedValue(new Error('Rate limit exceeded'));
 
     render(
@@ -111,7 +136,7 @@ describe('LoginPage', () => {
     );
 
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Rate limit exceeded')).toBeInTheDocument();
@@ -120,6 +145,7 @@ describe('LoginPage', () => {
 
   it('should show generic error message on non-Error failure', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockRejectedValue('Something went wrong');
 
     render(
@@ -129,17 +155,18 @@ describe('LoginPage', () => {
     );
 
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
       expect(
-        screen.getByText('Failed to send magic link. Please try again.')
+        screen.getByText('Failed to send login link. Please try again.')
       ).toBeInTheDocument();
     });
   });
 
   it('should disable submit button while loading', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve({ data: { success: true } }), 100))
     );
@@ -152,7 +179,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
 
-    const submitButton = screen.getByRole('button', { name: /send magic link/i });
+    const submitButton = screen.getByRole('button', { name: /send login link/i });
     await user.click(submitButton);
 
     expect(submitButton).toBeDisabled();
@@ -166,6 +193,7 @@ describe('LoginPage', () => {
 
   it('should allow retrying from email sent screen', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
     vi.mocked(api.post).mockResolvedValue({ data: { success: true } });
 
     render(
@@ -176,7 +204,7 @@ describe('LoginPage', () => {
 
     // First submission
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/check your email/i)).toBeInTheDocument();
@@ -189,7 +217,7 @@ describe('LoginPage', () => {
     // Should go back to form
     await waitFor(() => {
       expect(screen.getByLabelText('Email address')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /send magic link/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /send login link/i })).toBeInTheDocument();
     });
   });
 
@@ -202,9 +230,10 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: /send magic link/i }));
+    await user.click(screen.getByRole('button', { name: /send login link/i }));
 
     await waitFor(() => {
+      expect(api.get).not.toHaveBeenCalled();
       expect(api.post).not.toHaveBeenCalled();
     });
   });

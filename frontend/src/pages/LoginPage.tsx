@@ -35,6 +35,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Check if email exists
+      const checkResponse = await api.get('/auth/check-email', {
+        params: { email: data.email },
+      });
+
+      if (!checkResponse.data.exists) {
+        // New user - show error message
+        setApiError('No account found with this email. Please sign up first.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Existing user - send login link
       await api.post('/auth/magic-link/request', { email: data.email });
       setSubmittedEmail(data.email);
       setEmailSent(true);
@@ -42,7 +55,7 @@ export default function LoginPage() {
       if (error instanceof Error) {
         setApiError(error.message);
       } else {
-        setApiError('Failed to send magic link. Please try again.');
+        setApiError('Failed to send login link. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -81,7 +94,7 @@ export default function LoginPage() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    Magic link sent!
+                    Login link sent!
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p>
@@ -127,7 +140,7 @@ export default function LoginPage() {
             Sign in to Annie&apos;s Health Journal
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email and we&apos;ll send you a magic link
+            Enter your email and we&apos;ll send you a login link
           </p>
         </div>
 
@@ -153,7 +166,7 @@ export default function LoginPage() {
               loading={isLoading}
               disabled={isLoading}
             >
-              {isLoading ? 'Sending...' : 'Send magic link'}
+              {isLoading ? 'Sending...' : 'Send login link'}
             </Button>
 
             <div className="text-center">

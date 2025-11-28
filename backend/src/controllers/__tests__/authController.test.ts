@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { register, login, logout, requestMagicLink, verifyMagicLink } from '../authController';
+import {
+  register,
+  login,
+  logout,
+  checkEmail,
+  requestMagicLink,
+  verifyMagicLink,
+} from '../authController';
 import User from '../../models/User';
 import MagicLinkToken from '../../models/MagicLinkToken';
 import { sendMagicLinkEmail } from '../../services/emailService';
@@ -25,6 +32,7 @@ describe('AuthController', () => {
     // Mock request
     mockReq = {
       body: {},
+      query: {},
       user: undefined,
     };
 
@@ -139,9 +147,15 @@ describe('AuthController', () => {
     });
 
     describe('Success Cases', () => {
-      it('should successfully request magic link and send email', async () => {
+      it('should successfully request magic link for existing user', async () => {
         mockReq.body = { email: 'test@example.com' };
 
+        // Mock existing user
+        (User.findOne as jest.Mock).mockResolvedValue({
+          _id: 'user123',
+          email: 'test@example.com',
+          username: 'testuser',
+        });
         (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
         (MagicLinkToken.create as jest.Mock).mockResolvedValue({
           email: 'test@example.com',
@@ -153,6 +167,7 @@ describe('AuthController', () => {
 
         await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
 
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
         expect(MagicLinkToken.countDocuments).toHaveBeenCalled();
         expect(crypto.randomBytes).toHaveBeenCalledWith(32);
         expect(MagicLinkToken.create).toHaveBeenCalledWith({
@@ -160,9 +175,50 @@ describe('AuthController', () => {
           token: 'a'.repeat(64),
           expiresAt: expect.any(Date),
           used: false,
+          username: undefined,
         });
         expect(sendMagicLinkEmail).toHaveBeenCalledWith({
           email: 'test@example.com',
+          token: 'a'.repeat(64),
+          expiryMinutes: 15,
+        });
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          message: 'If an account exists with this email, a magic link has been sent.',
+        });
+      });
+
+      it('should successfully request magic link for new user with username', async () => {
+        mockReq.body = { email: 'newuser@example.com', username: 'newuser' };
+
+        // Mock no existing user
+        (User.findOne as jest.Mock).mockResolvedValue(null);
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+        (MagicLinkToken.create as jest.Mock).mockResolvedValue({
+          email: 'newuser@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          used: false,
+          username: 'newuser',
+        });
+        (sendMagicLinkEmail as jest.Mock).mockResolvedValue(undefined);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'newuser@example.com' });
+        expect(User.findOne).toHaveBeenCalledWith({ username: 'newuser' });
+        expect(MagicLinkToken.countDocuments).toHaveBeenCalled();
+        expect(crypto.randomBytes).toHaveBeenCalledWith(32);
+        expect(MagicLinkToken.create).toHaveBeenCalledWith({
+          email: 'newuser@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: expect.any(Date),
+          used: false,
+          username: 'newuser',
+        });
+        expect(sendMagicLinkEmail).toHaveBeenCalledWith({
+          email: 'newuser@example.com',
           token: 'a'.repeat(64),
           expiryMinutes: 15,
         });
@@ -191,6 +247,11 @@ describe('AuthController', () => {
       it('should return 429 when rate limit is exceeded', async () => {
         mockReq.body = { email: 'test@example.com' };
 
+        // Mock existing user
+        (User.findOne as jest.Mock).mockResolvedValue({
+          _id: 'user123',
+          email: 'test@example.com',
+        });
         (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(3);
 
         await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
@@ -216,10 +277,72 @@ describe('AuthController', () => {
         expect(mockRes.status).not.toHaveBeenCalled();
       });
 
+      it('should return 400 when new user does not provide username', async () => {
+        mockReq.body = { email: 'newuser@example.com' };
+
+        // Mock no existing user
+        (User.findOne as jest.Mock).mockResolvedValue(null);
+        // Mock rate limit check (not exceeded)
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Username is required for new user registration',
+        });
+        expect(MagicLinkToken.create).not.toHaveBeenCalled();
+      });
+
+      it('should return 400 when username is already taken', async () => {
+        mockReq.body = { email: 'newuser@example.com', username: 'existinguser' };
+
+        // Mock no existing user with this email, but username exists
+        (User.findOne as jest.Mock)
+          .mockResolvedValueOnce(null) // First call for email check
+          .mockResolvedValueOnce({
+            // Second call for username check
+            _id: 'user123',
+            username: 'existinguser',
+          });
+        // Mock rate limit check (not exceeded)
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Username is already taken',
+        });
+        expect(MagicLinkToken.create).not.toHaveBeenCalled();
+      });
+
+      it('should call next with error when database error occurs', async () => {
+        mockReq.body = { email: 'test@example.com' };
+
+        const dbError = new Error('Database connection failed');
+        (User.findOne as jest.Mock).mockRejectedValue(dbError);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+
       it('should call next with error when email service fails', async () => {
         mockReq.body = { email: 'test@example.com' };
 
+        // Mock existing user
+        (User.findOne as jest.Mock).mockResolvedValue({
+          _id: 'user123',
+          email: 'test@example.com',
+        });
         (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+        (crypto.randomBytes as jest.Mock).mockReturnValue({
+          toString: jest.fn().mockReturnValue('a'.repeat(64)),
+        });
         (MagicLinkToken.create as jest.Mock).mockResolvedValue({});
 
         const emailError = new Error('Email service failed');
@@ -229,6 +352,64 @@ describe('AuthController', () => {
 
         expect(mockNext).toHaveBeenCalledWith(emailError);
       });
+    });
+  });
+
+  describe('checkEmail', () => {
+    it('should return exists: true for existing email', async () => {
+      mockReq.query = { email: 'test@example.com' };
+
+      (User.findOne as jest.Mock).mockResolvedValue({
+        _id: 'user123',
+        email: 'test@example.com',
+      });
+
+      await checkEmail(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        exists: true,
+      });
+    });
+
+    it('should return exists: false for non-existing email', async () => {
+      mockReq.query = { email: 'newuser@example.com' };
+
+      (User.findOne as jest.Mock).mockResolvedValue(null);
+
+      await checkEmail(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: 'newuser@example.com' });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        exists: false,
+      });
+    });
+
+    it('should return 400 when email is missing', async () => {
+      mockReq.query = {};
+
+      await checkEmail(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Email is required',
+      });
+    });
+
+    it('should call next with error when database error occurs', async () => {
+      mockReq.query = { email: 'test@example.com' };
+
+      const dbError = new Error('Database error');
+      (User.findOne as jest.Mock).mockRejectedValue(dbError);
+
+      await checkEmail(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(dbError);
     });
   });
 
@@ -242,11 +423,12 @@ describe('AuthController', () => {
           token: 'a'.repeat(64),
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),
           used: false,
+          username: undefined,
           save: jest.fn().mockResolvedValue(true),
         };
 
         const mockUser = {
-          _id: '507f1f77bcf86cd799439011',
+          _id: 'user123',
           username: 'testuser',
           email: 'test@example.com',
           notificationTimes: ['08:00', '14:00', '20:00'],
@@ -269,7 +451,7 @@ describe('AuthController', () => {
         expect(mockMagicLinkToken.save).toHaveBeenCalled();
         expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
         expect(jwt.sign).toHaveBeenCalledWith(
-          { id: '507f1f77bcf86cd799439011' },
+          { id: 'user123' },
           expect.any(String),
           expect.objectContaining({
             algorithm: 'HS256',
@@ -292,7 +474,7 @@ describe('AuthController', () => {
         });
       });
 
-      it('should successfully verify magic link and create new user', async () => {
+      it('should successfully verify magic link and create new user with username from token', async () => {
         mockReq.body = { token: 'a'.repeat(64) };
 
         const mockMagicLinkToken = {
@@ -300,6 +482,7 @@ describe('AuthController', () => {
           token: 'a'.repeat(64),
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),
           used: false,
+          username: 'newuser', // Username provided during registration
           save: jest.fn().mockResolvedValue(true),
         };
 
@@ -341,6 +524,43 @@ describe('AuthController', () => {
             token: 'mock-jwt-token',
           },
         });
+      });
+
+      it('should successfully verify magic link and create new user with email prefix as username', async () => {
+        mockReq.body = { token: 'a'.repeat(64) };
+
+        const mockMagicLinkToken = {
+          email: 'newuser@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          used: false,
+          username: undefined, // No username provided - should use email prefix
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        const mockNewUser = {
+          _id: '507f1f77bcf86cd799439013',
+          username: 'newuser', // Email prefix
+          email: 'newuser@example.com',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+          notificationsEnabled: true,
+          createdAt: new Date(),
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(mockMagicLinkToken);
+        (User.findOne as jest.Mock).mockResolvedValue(null);
+        (User as any).mockImplementation(() => mockNewUser);
+        (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(MagicLinkToken.findOne).toHaveBeenCalled();
+        expect(mockMagicLinkToken.used).toBe(true);
+        expect(mockMagicLinkToken.save).toHaveBeenCalled();
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'newuser@example.com' });
+        expect(mockNewUser.save).toHaveBeenCalled();
+        expect(mockRes.status).toHaveBeenCalledWith(200);
       });
     });
 

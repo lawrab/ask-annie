@@ -9,6 +9,7 @@ export interface IMagicLinkToken extends Document {
   token: string;
   expiresAt: Date;
   used: boolean;
+  username?: string; // Optional username for new user registration
   createdAt: Date;
 }
 
@@ -41,6 +42,13 @@ const magicLinkTokenSchema = new Schema<IMagicLinkToken>(
       type: Boolean,
       default: false,
       index: true,
+    },
+    username: {
+      type: String,
+      trim: true,
+      minlength: [3, 'Username must be at least 3 characters'],
+      maxlength: [30, 'Username must be at most 30 characters'],
+      // Optional - only provided for new user registration
     },
   },
   {

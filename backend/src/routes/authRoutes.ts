@@ -6,6 +6,7 @@ import {
   register,
   login,
   logout,
+  checkEmail,
   requestMagicLink,
   verifyMagicLink,
 } from '../controllers/authController';
@@ -20,7 +21,8 @@ const router = Router();
 
 /**
  * Rate limiter for authentication endpoints to prevent brute force attacks
- * Allows 5 requests per 15 minutes per IP
+ * Allows 5 requests per 15 minutes per IP in production
+ * Disabled for localhost in development
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -31,7 +33,21 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for localhost in development
+    const isLocalhost = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1';
+    return process.env.NODE_ENV === 'development' && isLocalhost;
+  },
 });
+
+/**
+ * GET /api/auth/check-email
+ * Check if an email exists in the system
+ * Query: ?email=user@example.com
+ * Response: { success, exists }
+ * Rate limited to prevent email enumeration attacks
+ */
+router.get('/check-email', authLimiter, checkEmail);
 
 /**
  * POST /api/auth/register

@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuthStore } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import MagicLinkVerifyPage from './pages/MagicLinkVerifyPage';
 import DashboardPage from './pages/DashboardPage';
 import CheckInPage from './pages/CheckInPage';
 import TrendsPage from './pages/TrendsPage';
@@ -23,6 +24,7 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/magic-link" element={<MagicLinkVerifyPage />} />
         <Route path="/design-system" element={<DesignSystemPage />} />
 
         {/* Protected routes */}

@@ -14,6 +14,8 @@ interface MockAuthState {
   token: null;
   isLoading: boolean;
   isAuthenticated: () => boolean;
+  setUser: () => void;
+  setToken: () => void;
   login: () => Promise<void>;
   register: () => Promise<void>;
   logout: () => void;
@@ -35,6 +37,8 @@ describe('ProtectedRoute', () => {
           token: null,
           isLoading: false,
           isAuthenticated: () => true,
+          setUser: vi.fn(),
+          setToken: vi.fn(),
           login: vi.fn().mockResolvedValue(undefined),
           register: vi.fn().mockResolvedValue(undefined),
           logout: vi.fn(),
@@ -71,6 +75,8 @@ describe('ProtectedRoute', () => {
           token: null,
           isLoading: false,
           isAuthenticated: () => false,
+          setUser: vi.fn(),
+          setToken: vi.fn(),
           login: vi.fn().mockResolvedValue(undefined),
           register: vi.fn().mockResolvedValue(undefined),
           logout: vi.fn(),

@@ -58,3 +58,24 @@ export const manualCheckinSchema = Joi.object({
     notes: Joi.string().allow('').required(),
   }).required(),
 });
+
+/**
+ * Joi validation schema for magic link request
+ */
+export const magicLinkRequestSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required().messages({
+    'string.email': 'Please provide a valid email address',
+    'any.required': 'Email is required',
+  }),
+});
+
+/**
+ * Joi validation schema for magic link verification
+ */
+export const magicLinkVerifySchema = Joi.object({
+  token: Joi.string().length(64).hex().required().messages({
+    'string.length': 'Invalid token format',
+    'string.hex': 'Invalid token format',
+    'any.required': 'Token is required',
+  }),
+});

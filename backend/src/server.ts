@@ -1,16 +1,17 @@
+// Load environment variables FIRST, before any other imports
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import 'express-async-errors';
-import dotenv from 'dotenv';
 import { connectDatabase } from './config/database';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import passport from './config/passport';
 import routes from './routes';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

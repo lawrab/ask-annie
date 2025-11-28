@@ -2,8 +2,19 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateRequest } from '../middleware/validateRequest';
 import { authenticate } from '../middleware/auth';
-import { register, login, logout } from '../controllers/authController';
-import { registerSchema, loginSchema } from '../utils/validation';
+import {
+  register,
+  login,
+  logout,
+  requestMagicLink,
+  verifyMagicLink,
+} from '../controllers/authController';
+import {
+  registerSchema,
+  loginSchema,
+  magicLinkRequestSchema,
+  magicLinkVerifySchema,
+} from '../utils/validation';
 
 const router = Router();
 
@@ -45,5 +56,27 @@ router.post('/login', authLimiter, validateRequest(loginSchema), login);
  * Response: { success, message }
  */
 router.post('/logout', authenticate, logout);
+
+/**
+ * POST /api/auth/magic-link/request
+ * Request a magic link for passwordless authentication
+ * Body: { email }
+ * Response: { success, message }
+ * Rate limited: 3 requests per 15 minutes per email (handled in controller)
+ */
+router.post(
+  '/magic-link/request',
+  authLimiter,
+  validateRequest(magicLinkRequestSchema),
+  requestMagicLink
+);
+
+/**
+ * POST /api/auth/magic-link/verify
+ * Verify magic link token and authenticate user
+ * Body: { token }
+ * Response: { success, data: { user, token } }
+ */
+router.post('/magic-link/verify', validateRequest(magicLinkVerifySchema), verifyMagicLink);
 
 export default router;

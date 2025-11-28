@@ -330,6 +330,39 @@ describe('insightService', () => {
 
       expect(card).toBeNull();
     });
+
+    it('should handle Map-based symptoms correctly', async () => {
+      const symptomsMap = new Map([['headache', { severity: 4 }]]);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockCurrentCheckIn: any = {
+        _id: checkInId,
+        userId,
+        structured: {
+          symptoms: symptomsMap,
+        },
+      };
+
+      // Mock historical check-ins with high severity
+      const mockCheckIns = [
+        { structured: { symptoms: { headache: { severity: 8 } } } },
+        { structured: { symptoms: { headache: { severity: 9 } } } },
+        { structured: { symptoms: { headache: { severity: 10 } } } },
+      ];
+
+      mockFindChain(mockCheckIns);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.countDocuments as any).mockResolvedValue(3);
+
+      const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
+
+      expect(card).not.toBeNull();
+      expect(card?.type).toBe('data_context');
+      expect(card?.title).toBe("Today's Context");
+      expect(card?.message).toContain('below');
+      expect(card?.message).toContain('trending better');
+    });
   });
 
   describe('generateValidationCard', () => {
@@ -427,6 +460,36 @@ describe('insightService', () => {
 
       expect(card.type).toBe('validation');
       expect(card.icon).toBe('💚');
+    });
+
+    it('should handle Map-based symptoms correctly', async () => {
+      const symptomsMap = new Map([
+        ['headache', { severity: 8 }],
+        ['fatigue', { severity: 6 }],
+      ]);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockCurrentCheckIn: any = {
+        _id: checkInId,
+        userId,
+        structured: {
+          symptoms: symptomsMap,
+        },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (CheckIn.countDocuments as any).mockResolvedValue(3);
+
+      const mockCheckIns = [{ timestamp: new Date() }];
+
+      mockFindChain(mockCheckIns, ['select', 'sort', 'lean']);
+
+      const card = await generateValidationCard(userId.toString(), mockCurrentCheckIn);
+
+      expect(card.type).toBe('validation');
+      expect(card.title).toBe('You Showed Up');
+      expect(card.message).toContain('8/10');
+      expect(card.message).toContain('strength');
     });
   });
 

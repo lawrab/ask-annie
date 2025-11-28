@@ -6,6 +6,7 @@ import {
   register,
   login,
   logout,
+  checkEmail,
   requestMagicLink,
   verifyMagicLink,
 } from '../controllers/authController';
@@ -32,6 +33,15 @@ const authLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
+
+/**
+ * GET /api/auth/check-email
+ * Check if an email exists in the system
+ * Query: ?email=user@example.com
+ * Response: { success, exists }
+ * Rate limited to prevent email enumeration attacks
+ */
+router.get('/check-email', authLimiter, checkEmail);
 
 /**
  * POST /api/auth/register

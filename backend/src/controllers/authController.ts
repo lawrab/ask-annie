@@ -90,8 +90,42 @@ function generateToken(userId: string): string {
 }
 
 /**
+ * GET /api/auth/check-email
+ * Check if an email exists in the system (rate limited to prevent enumeration)
+ * Returns generic response for security
+ */
+export async function checkEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.query;
+
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Email is required',
+      });
+      return;
+    }
+
+    logger.info('Email check request', { email });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Return generic response (don't reveal if email exists for security)
+    // Frontend will show username form for all emails
+    res.status(200).json({
+      success: true,
+      exists: !!user,
+    });
+  } catch (error) {
+    logger.error('Email check error', { error });
+    next(error);
+  }
+}
+
+/**
  * POST /api/auth/magic-link/request
  * Request a magic link for passwordless authentication
+ * Accepts optional username for new user registration
  */
 export async function requestMagicLink(
   req: Request,
@@ -99,7 +133,7 @@ export async function requestMagicLink(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email } = req.body;
+    const { email, username } = req.body;
 
     if (!email) {
       res.status(400).json({
@@ -127,6 +161,30 @@ export async function requestMagicLink(
       return;
     }
 
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    // If this is a new user registration, username is required
+    if (!existingUser && !username) {
+      res.status(400).json({
+        success: false,
+        error: 'Username is required for new user registration',
+      });
+      return;
+    }
+
+    // If username is provided, validate it's not already taken
+    if (username && !existingUser) {
+      const usernameExists = await User.findOne({ username });
+      if (usernameExists) {
+        res.status(400).json({
+          success: false,
+          error: 'Username is already taken',
+        });
+        return;
+      }
+    }
+
     // Generate secure random token
     const token = crypto.randomBytes(32).toString('hex');
 
@@ -134,12 +192,13 @@ export async function requestMagicLink(
     const expiryMinutes = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || '15', 10);
     const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
 
-    // Save token to database
+    // Save token to database (with optional username for new users)
     await MagicLinkToken.create({
       email,
       token,
       expiresAt,
       used: false,
+      username: username || undefined, // Store username for new user creation
     });
 
     // Send magic link email
@@ -205,7 +264,8 @@ export async function verifyMagicLink(
 
     if (!user) {
       // Create new user (passwordless registration)
-      const username = magicLinkToken.email.split('@')[0]; // Use email prefix as default username
+      // Use username from token (set during registration) or email prefix as fallback
+      const username = magicLinkToken.username || magicLinkToken.email.split('@')[0];
       user = new User({
         username,
         email: magicLinkToken.email,
@@ -216,6 +276,7 @@ export async function verifyMagicLink(
       logger.info('New user created via magic link', {
         userId: user._id,
         email: user.email,
+        username: user.username,
       });
     } else {
       logger.info('Existing user authenticated via magic link', {

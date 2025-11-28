@@ -52,13 +52,28 @@ export async function createVoiceCheckin(
     logger.info('Starting symptom parsing');
     const parsed = await parseSymptoms(rawTranscript);
 
+    const symptomCount = Object.keys(parsed.symptoms).length;
+    const activityCount = parsed.activities.length;
+    const triggerCount = parsed.triggers.length;
+    const hasNotes = parsed.notes.length > 0;
+
     logger.info('Symptom parsing completed', {
-      symptomCount: Object.keys(parsed.symptoms).length,
-      activityCount: parsed.activities.length,
-      triggerCount: parsed.triggers.length,
+      symptomCount,
+      activityCount,
+      triggerCount,
+      hasNotes,
+      checkInType: symptomCount > 0 ? 'with-symptoms' : 'activities-only',
     });
 
     // Step 3: Save to database
+    logger.info('Attempting to save check-in', {
+      userId,
+      symptomCount,
+      activityCount,
+      triggerCount,
+      hasNotes,
+    });
+
     const checkIn = new CheckIn({
       userId,
       timestamp: new Date(),
@@ -72,11 +87,29 @@ export async function createVoiceCheckin(
       flaggedForDoctor: false,
     });
 
-    await checkIn.save();
+    try {
+      await checkIn.save();
 
-    logger.info('Check-in saved successfully', {
-      checkInId: checkIn._id,
-    });
+      logger.info('Check-in saved successfully', {
+        checkInId: checkIn._id,
+        checkInType: symptomCount > 0 ? 'with-symptoms' : 'activities-only',
+        symptomCount,
+        activityCount,
+        triggerCount,
+        hasNotes,
+      });
+    } catch (saveError) {
+      logger.error('Failed to save check-in to database', {
+        userId,
+        symptomCount,
+        activityCount,
+        triggerCount,
+        hasNotes,
+        error: saveError,
+        errorMessage: saveError instanceof Error ? saveError.message : 'Unknown error',
+      });
+      throw saveError; // Re-throw original error for proper error handling
+    }
 
     // Step 4: Generate post check-in insight
     logger.info('Generating post check-in insight');
@@ -286,13 +319,28 @@ export async function createManualCheckin(
 
     const { structured } = req.body;
 
+    const symptomCount = Object.keys(structured.symptoms || {}).length;
+    const activityCount = (structured.activities || []).length;
+    const triggerCount = (structured.triggers || []).length;
+    const hasNotes = (structured.notes || '').length > 0;
+
     logger.info('Manual check-in data received', {
-      symptomCount: Object.keys(structured.symptoms || {}).length,
-      activityCount: (structured.activities || []).length,
-      triggerCount: (structured.triggers || []).length,
+      symptomCount,
+      activityCount,
+      triggerCount,
+      hasNotes,
+      checkInType: symptomCount > 0 ? 'with-symptoms' : 'activities-only',
     });
 
     // Save to database with rawTranscript set to 'manual entry'
+    logger.info('Attempting to save manual check-in', {
+      userId,
+      symptomCount,
+      activityCount,
+      triggerCount,
+      hasNotes,
+    });
+
     const checkIn = new CheckIn({
       userId,
       timestamp: new Date(),
@@ -306,11 +354,29 @@ export async function createManualCheckin(
       flaggedForDoctor: false,
     });
 
-    await checkIn.save();
+    try {
+      await checkIn.save();
 
-    logger.info('Manual check-in saved successfully', {
-      checkInId: checkIn._id,
-    });
+      logger.info('Manual check-in saved successfully', {
+        checkInId: checkIn._id,
+        checkInType: symptomCount > 0 ? 'with-symptoms' : 'activities-only',
+        symptomCount,
+        activityCount,
+        triggerCount,
+        hasNotes,
+      });
+    } catch (saveError) {
+      logger.error('Failed to save manual check-in to database', {
+        userId,
+        symptomCount,
+        activityCount,
+        triggerCount,
+        hasNotes,
+        error: saveError,
+        errorMessage: saveError instanceof Error ? saveError.message : 'Unknown error',
+      });
+      throw saveError; // Re-throw original error for proper error handling
+    }
 
     // Generate post check-in insight
     logger.info('Generating post check-in insight');

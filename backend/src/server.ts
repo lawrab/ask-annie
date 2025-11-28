@@ -16,6 +16,11 @@ import routes from './routes';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - Required for Railway and other reverse proxies
+// This allows Express to correctly read X-Forwarded-For headers
+// Needed for accurate IP detection in rate limiting and logging
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 

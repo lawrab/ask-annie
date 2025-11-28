@@ -96,8 +96,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     // Size styles
     const sizeStyles = {
-      small: 'px-3 py-1.5 text-sm',
-      medium: 'px-3 py-2 text-sm',
+      small: 'px-3 py-1.5 text-base',
+      medium: 'px-3 py-2 text-base',
       large: 'px-4 py-3 text-base',
     };
 

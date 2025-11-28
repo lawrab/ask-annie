@@ -6,14 +6,12 @@ describe('User Model', () => {
       const validUser = {
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
       };
 
       const user = new User(validUser);
 
       expect(user.username).toBe(validUser.username);
       expect(user.email).toBe(validUser.email);
-      expect(user.password).toBe(validUser.password);
       expect(user.notificationsEnabled).toBe(true); // default
       expect(user.notificationTimes).toEqual(['08:00', '14:00', '20:00']); // default
     });
@@ -21,7 +19,6 @@ describe('User Model', () => {
     it('should fail validation without username', () => {
       const userWithoutUsername = new User({
         email: 'test@example.com',
-        password: 'password123',
       });
 
       const error = userWithoutUsername.validateSync();
@@ -32,7 +29,6 @@ describe('User Model', () => {
     it('should fail validation without email', () => {
       const userWithoutEmail = new User({
         username: 'testuser',
-        password: 'password123',
       });
 
       const error = userWithoutEmail.validateSync();
@@ -40,22 +36,10 @@ describe('User Model', () => {
       expect(error?.errors.email).toBeDefined();
     });
 
-    it('should fail validation without password', () => {
-      const userWithoutPassword = new User({
-        username: 'testuser',
-        email: 'test@example.com',
-      });
-
-      const error = userWithoutPassword.validateSync();
-      expect(error).toBeDefined();
-      expect(error?.errors.password).toBeDefined();
-    });
-
     it('should fail validation with invalid email format', () => {
       const userWithInvalidEmail = new User({
         username: 'testuser',
         email: 'invalid-email',
-        password: 'password123',
       });
 
       const error = userWithInvalidEmail.validateSync();
@@ -67,7 +51,6 @@ describe('User Model', () => {
       const user = new User({
         username: 'testuser',
         email: '  TEST@EXAMPLE.COM  ',
-        password: 'password123',
       });
 
       expect(user.email).toBe('test@example.com');
@@ -77,7 +60,6 @@ describe('User Model', () => {
       const user = new User({
         username: '  testuser  ',
         email: 'test@example.com',
-        password: 'password123',
       });
 
       expect(user.username).toBe('testuser');
@@ -87,7 +69,6 @@ describe('User Model', () => {
       const userWithShortUsername = new User({
         username: 'ab', // less than 3 characters
         email: 'test@example.com',
-        password: 'password123',
       });
 
       const error = userWithShortUsername.validateSync();
@@ -99,24 +80,11 @@ describe('User Model', () => {
       const userWithLongUsername = new User({
         username: 'a'.repeat(31), // more than 30 characters
         email: 'test@example.com',
-        password: 'password123',
       });
 
       const error = userWithLongUsername.validateSync();
       expect(error).toBeDefined();
       expect(error?.errors.username).toBeDefined();
-    });
-
-    it('should enforce minimum password length', () => {
-      const userWithShortPassword = new User({
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'pass', // less than 8 characters
-      });
-
-      const error = userWithShortPassword.validateSync();
-      expect(error).toBeDefined();
-      expect(error?.errors.password).toBeDefined();
     });
   });
 
@@ -126,9 +94,13 @@ describe('User Model', () => {
 
       expect(schema.path('username')).toBeDefined();
       expect(schema.path('email')).toBeDefined();
-      expect(schema.path('password')).toBeDefined();
       expect(schema.path('notificationsEnabled')).toBeDefined();
       expect(schema.path('notificationTimes')).toBeDefined();
+    });
+
+    it('should not have password field (passwordless authentication)', () => {
+      const schema = User.schema;
+      expect(schema.path('password')).toBeUndefined();
     });
 
     it('should have timestamps enabled', () => {
@@ -162,7 +134,6 @@ describe('User Model', () => {
       const userWithInvalidTime = new User({
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
         notificationTimes: ['9:00', '3pm', '25:00'], // invalid formats
       });
 
@@ -176,7 +147,6 @@ describe('User Model', () => {
       const userWithValidTimes = new User({
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
         notificationTimes: customTimes,
       });
 
@@ -189,7 +159,6 @@ describe('User Model', () => {
       const user = new User({
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
       });
 
       expect(user.notificationsEnabled).toBe(true);
@@ -199,7 +168,6 @@ describe('User Model', () => {
       const user = new User({
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
         notificationsEnabled: false,
       });
 
@@ -213,11 +181,9 @@ describe('User Model', () => {
 
       const usernameValidators = schema.path('username').validators;
       const emailValidators = schema.path('email').validators;
-      const passwordValidators = schema.path('password').validators;
 
       expect(usernameValidators.some((v: any) => v.type === 'required')).toBe(true);
       expect(emailValidators.some((v: any) => v.type === 'required')).toBe(true);
-      expect(passwordValidators.some((v: any) => v.type === 'required')).toBe(true);
     });
 
     it('should have minlength validator on username', () => {
@@ -228,11 +194,6 @@ describe('User Model', () => {
     it('should have maxlength validator on username', () => {
       const usernameValidators = User.schema.path('username').validators;
       expect(usernameValidators.some((v: any) => v.type === 'maxlength')).toBe(true);
-    });
-
-    it('should have minlength validator on password', () => {
-      const passwordValidators = User.schema.path('password').validators;
-      expect(passwordValidators.some((v: any) => v.type === 'minlength')).toBe(true);
     });
 
     it('should have email validator', () => {

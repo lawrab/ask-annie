@@ -6,7 +6,6 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IUser extends Document {
   username: string;
   email: string;
-  password: string;
   notificationTimes: string[];
   notificationsEnabled: boolean;
   createdAt: Date;
@@ -33,11 +32,6 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address'],
-    },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
     },
     notificationTimes: {
       type: [String],

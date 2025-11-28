@@ -106,6 +106,8 @@ describe('TrendsPage', () => {
         token: 'mock-token',
         isLoading: false,
         isAuthenticated: () => true,
+        setUser: vi.fn(),
+        setToken: vi.fn(),
         login: vi.fn(),
         register: vi.fn(),
         logout: mockLogout,

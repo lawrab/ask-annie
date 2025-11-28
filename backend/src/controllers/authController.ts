@@ -1,142 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import type { StringValue } from 'ms';
 import User from '../models/User';
+import MagicLinkToken from '../models/MagicLinkToken';
+import { sendMagicLinkEmail } from '../services/emailService';
 import { logger } from '../utils/logger';
 
 /**
  * POST /api/auth/register
- * Creates a new user account with hashed password
+ * Deprecated: Registration now happens via magic link verification
+ * This endpoint redirects to magic link flow
  */
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { username, email, password } = req.body;
+    const { email } = req.body;
 
-    logger.info('Registration attempt', { username, email });
+    logger.info('Registration redirect to magic link', { email });
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (existingUser) {
-      const field = existingUser.email === email ? 'email' : 'username';
-      logger.warn('Registration failed: user already exists', {
-        field,
-        value: field === 'email' ? email : username,
-      });
-      res.status(409).json({
-        success: false,
-        error: `User with this ${field} already exists`,
-      });
-      return;
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    await user.save();
-
-    logger.info('User registered successfully', {
-      userId: user._id,
-      username: user.username,
-    });
-
-    // Generate JWT token
-    const token = generateToken(String(user._id));
-
-    // Return user data (without password) and token
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      data: {
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          notificationTimes: user.notificationTimes,
-          notificationsEnabled: user.notificationsEnabled,
-          createdAt: user.createdAt,
-        },
-        token,
-      },
+      message: 'Please use magic link authentication. Check your email for a login link.',
+      redirectTo: '/api/auth/magic-link/request',
     });
   } catch (error) {
-    logger.error('Registration error', { error });
+    logger.error('Registration redirect error', { error });
     next(error);
   }
 }
 
 /**
  * POST /api/auth/login
- * Authenticates user and returns JWT token
+ * Deprecated: Login now happens via magic link
+ * This endpoint redirects to magic link flow
  */
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
-    logger.info('Login attempt', { email });
+    logger.info('Login redirect to magic link', { email });
 
-    // Find user by email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      logger.warn('Login failed: user not found', { email });
-      res.status(401).json({
-        success: false,
-        error: 'Invalid email or password',
-      });
-      return;
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      logger.warn('Login failed: invalid password', {
-        userId: user._id,
-        email,
-      });
-      res.status(401).json({
-        success: false,
-        error: 'Invalid email or password',
-      });
-      return;
-    }
-
-    logger.info('User logged in successfully', {
-      userId: user._id,
-      username: user.username,
-    });
-
-    // Generate JWT token
-    const token = generateToken(String(user._id));
-
-    // Return user data (without password) and token
     res.status(200).json({
       success: true,
-      data: {
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          notificationTimes: user.notificationTimes,
-          notificationsEnabled: user.notificationsEnabled,
-          createdAt: user.createdAt,
-        },
-        token,
-      },
+      message: 'Password login is no longer supported. Please use magic link authentication.',
+      redirectTo: '/api/auth/magic-link/request',
     });
   } catch (error) {
-    logger.error('Login error', { error });
+    logger.error('Login redirect error', { error });
     next(error);
   }
 }
@@ -177,4 +87,163 @@ function generateToken(userId: string): string {
     expiresIn,
     algorithm: 'HS256',
   });
+}
+
+/**
+ * POST /api/auth/magic-link/request
+ * Request a magic link for passwordless authentication
+ */
+export async function requestMagicLink(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        error: 'Email is required',
+      });
+      return;
+    }
+
+    logger.info('Magic link request', { email });
+
+    // Check rate limiting: max 3 requests per 15 minutes per email
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const recentTokens = await MagicLinkToken.countDocuments({
+      email,
+      createdAt: { $gte: fifteenMinutesAgo },
+    });
+
+    if (recentTokens >= 3) {
+      logger.warn('Magic link rate limit exceeded', { email, recentTokens });
+      res.status(429).json({
+        success: false,
+        error: 'Too many magic link requests. Please try again in 15 minutes.',
+      });
+      return;
+    }
+
+    // Generate secure random token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Set expiration (15 minutes from now)
+    const expiryMinutes = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || '15', 10);
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+    // Save token to database
+    await MagicLinkToken.create({
+      email,
+      token,
+      expiresAt,
+      used: false,
+    });
+
+    // Send magic link email
+    await sendMagicLinkEmail({ email, token, expiryMinutes });
+
+    logger.info('Magic link sent successfully', { email });
+
+    // Always return success to prevent email enumeration
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists with this email, a magic link has been sent.',
+    });
+  } catch (error) {
+    logger.error('Magic link request error', { error });
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/magic-link/verify
+ * Verify magic link token and authenticate user
+ */
+export async function verifyMagicLink(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      res.status(400).json({
+        success: false,
+        error: 'Token is required',
+      });
+      return;
+    }
+
+    logger.info('Magic link verification attempt', { token: token.substring(0, 8) + '...' });
+
+    // Find valid token
+    const magicLinkToken = await MagicLinkToken.findOne({
+      token,
+      used: false,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!magicLinkToken) {
+      logger.warn('Invalid or expired magic link token', { token: token.substring(0, 8) + '...' });
+      res.status(401).json({
+        success: false,
+        error: 'Invalid or expired magic link. Please request a new one.',
+      });
+      return;
+    }
+
+    // Mark token as used
+    magicLinkToken.used = true;
+    await magicLinkToken.save();
+
+    // Find or create user
+    let user = await User.findOne({ email: magicLinkToken.email });
+
+    if (!user) {
+      // Create new user (passwordless registration)
+      const username = magicLinkToken.email.split('@')[0]; // Use email prefix as default username
+      user = new User({
+        username,
+        email: magicLinkToken.email,
+        // No password required for magic link users
+      });
+      await user.save();
+
+      logger.info('New user created via magic link', {
+        userId: user._id,
+        email: user.email,
+      });
+    } else {
+      logger.info('Existing user authenticated via magic link', {
+        userId: user._id,
+        email: user.email,
+      });
+    }
+
+    // Generate JWT token
+    const jwtToken = generateToken(String(user._id));
+
+    // Return user data and token
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          notificationTimes: user.notificationTimes,
+          notificationsEnabled: user.notificationsEnabled,
+          createdAt: user.createdAt,
+        },
+        token: jwtToken,
+      },
+    });
+  } catch (error) {
+    logger.error('Magic link verification error', { error });
+    next(error);
+  }
 }

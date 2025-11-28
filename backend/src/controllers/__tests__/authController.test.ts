@@ -1,13 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { register, login, logout } from '../authController';
+import crypto from 'crypto';
+import { register, login, logout, requestMagicLink, verifyMagicLink } from '../authController';
 import User from '../../models/User';
+import MagicLinkToken from '../../models/MagicLinkToken';
+import { sendMagicLinkEmail } from '../../services/emailService';
 
 // Mock dependencies
 jest.mock('../../models/User');
-jest.mock('bcryptjs');
+jest.mock('../../models/MagicLinkToken');
+jest.mock('../../services/emailService');
 jest.mock('jsonwebtoken');
+jest.mock('crypto');
 
 describe('AuthController', () => {
   let mockReq: Partial<Request>;
@@ -34,322 +38,381 @@ describe('AuthController', () => {
     mockNext = jest.fn();
   });
 
-  describe('register', () => {
-    describe('Success Cases', () => {
-      it('should successfully register a new user and return token', async () => {
-        // Arrange
-        mockReq.body = {
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'Password123',
-        };
+  describe('register (deprecated)', () => {
+    it('should return redirect message to magic link flow', async () => {
+      mockReq.body = { email: 'test@example.com' };
 
-        const mockUser = {
-          _id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'hashedPassword123',
-          notificationTimes: ['08:00', '14:00', '20:00'],
-          notificationsEnabled: true,
-          createdAt: new Date('2024-01-01T12:00:00Z'),
-          save: jest.fn().mockResolvedValue(true),
-        };
+      await register(mockReq as Request, mockRes as Response, mockNext);
 
-        (User.findOne as jest.Mock).mockResolvedValue(null); // No existing user
-        (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
-        (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword123');
-        (User as any).mockImplementation(() => mockUser);
-        (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
-
-        // Act
-        await register(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(User.findOne).toHaveBeenCalledWith({
-          $or: [{ email: 'test@example.com' }, { username: 'testuser' }],
-        });
-        expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
-        expect(bcrypt.hash).toHaveBeenCalledWith('Password123', 'salt');
-        expect(mockUser.save).toHaveBeenCalled();
-        expect(jwt.sign).toHaveBeenCalledWith(
-          { id: '507f1f77bcf86cd799439011' },
-          expect.any(String),
-          expect.objectContaining({
-            algorithm: 'HS256',
-          })
-        );
-        expect(mockRes.status).toHaveBeenCalledWith(201);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: true,
-          data: {
-            user: {
-              id: mockUser._id,
-              username: mockUser.username,
-              email: mockUser.email,
-              notificationTimes: mockUser.notificationTimes,
-              notificationsEnabled: mockUser.notificationsEnabled,
-              createdAt: mockUser.createdAt,
-            },
-            token: 'mock-jwt-token',
-          },
-        });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Please use magic link authentication. Check your email for a login link.',
+        redirectTo: '/api/auth/magic-link/request',
       });
     });
 
-    describe('Error Cases', () => {
-      it('should return 409 when email already exists', async () => {
-        // Arrange
-        mockReq.body = {
-          username: 'newuser',
-          email: 'existing@example.com',
-          password: 'Password123',
-        };
-
-        const existingUser = {
-          _id: '507f1f77bcf86cd799439011',
-          email: 'existing@example.com',
-          username: 'existinguser',
-        };
-
-        (User.findOne as jest.Mock).mockResolvedValue(existingUser);
-
-        // Act
-        await register(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(409);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: false,
-          error: 'User with this email already exists',
-        });
-        expect(bcrypt.genSalt).not.toHaveBeenCalled();
+    it('should call next with error when error occurs', async () => {
+      const error = new Error('Unexpected error');
+      mockRes.status = jest.fn().mockImplementation(() => {
+        throw error;
       });
 
-      it('should return 409 when username already exists', async () => {
-        // Arrange
-        mockReq.body = {
-          username: 'existinguser',
-          email: 'new@example.com',
-          password: 'Password123',
-        };
+      await register(mockReq as Request, mockRes as Response, mockNext);
 
-        const existingUser = {
-          _id: '507f1f77bcf86cd799439011',
-          email: 'different@example.com',
-          username: 'existinguser',
-        };
-
-        (User.findOne as jest.Mock).mockResolvedValue(existingUser);
-
-        // Act
-        await register(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(409);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: false,
-          error: 'User with this username already exists',
-        });
-        expect(bcrypt.genSalt).not.toHaveBeenCalled();
-      });
-
-      it('should call next with error when database error occurs', async () => {
-        // Arrange
-        mockReq.body = {
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'Password123',
-        };
-
-        const dbError = new Error('Database connection failed');
-        (User.findOne as jest.Mock).mockRejectedValue(dbError);
-
-        // Act
-        await register(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockNext).toHaveBeenCalledWith(dbError);
-        expect(mockRes.status).not.toHaveBeenCalled();
-      });
+      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 
-  describe('login', () => {
-    describe('Success Cases', () => {
-      it('should successfully login user and return token', async () => {
-        // Arrange
-        mockReq.body = {
-          email: 'test@example.com',
-          password: 'Password123',
-        };
+  describe('login (deprecated)', () => {
+    it('should return redirect message to magic link flow', async () => {
+      mockReq.body = { email: 'test@example.com' };
 
-        const mockUser = {
-          _id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'hashedPassword123',
-          notificationTimes: ['08:00', '14:00', '20:00'],
-          notificationsEnabled: true,
-          createdAt: new Date('2024-01-01T12:00:00Z'),
-        };
+      await login(mockReq as Request, mockRes as Response, mockNext);
 
-        (User.findOne as jest.Mock).mockResolvedValue(mockUser);
-        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-        (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
-
-        // Act
-        await login(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-        expect(bcrypt.compare).toHaveBeenCalledWith('Password123', 'hashedPassword123');
-        expect(jwt.sign).toHaveBeenCalledWith(
-          { id: '507f1f77bcf86cd799439011' },
-          expect.any(String),
-          expect.objectContaining({
-            algorithm: 'HS256',
-          })
-        );
-        expect(mockRes.status).toHaveBeenCalledWith(200);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: true,
-          data: {
-            user: {
-              id: mockUser._id,
-              username: mockUser.username,
-              email: mockUser.email,
-              notificationTimes: mockUser.notificationTimes,
-              notificationsEnabled: mockUser.notificationsEnabled,
-              createdAt: mockUser.createdAt,
-            },
-            token: 'mock-jwt-token',
-          },
-        });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Password login is no longer supported. Please use magic link authentication.',
+        redirectTo: '/api/auth/magic-link/request',
       });
     });
 
-    describe('Error Cases', () => {
-      it('should return 401 when user not found', async () => {
-        // Arrange
-        mockReq.body = {
-          email: 'nonexistent@example.com',
-          password: 'Password123',
-        };
-
-        (User.findOne as jest.Mock).mockResolvedValue(null);
-
-        // Act
-        await login(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(401);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: false,
-          error: 'Invalid email or password',
-        });
-        expect(bcrypt.compare).not.toHaveBeenCalled();
+    it('should call next with error when error occurs', async () => {
+      const error = new Error('Unexpected error');
+      mockRes.status = jest.fn().mockImplementation(() => {
+        throw error;
       });
 
-      it('should return 401 when password is incorrect', async () => {
-        // Arrange
-        mockReq.body = {
-          email: 'test@example.com',
-          password: 'WrongPassword123',
-        };
+      await login(mockReq as Request, mockRes as Response, mockNext);
 
-        const mockUser = {
-          _id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'hashedPassword123',
-        };
-
-        (User.findOne as jest.Mock).mockResolvedValue(mockUser);
-        (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-
-        // Act
-        await login(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(bcrypt.compare).toHaveBeenCalledWith('WrongPassword123', 'hashedPassword123');
-        expect(mockRes.status).toHaveBeenCalledWith(401);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: false,
-          error: 'Invalid email or password',
-        });
-        expect(jwt.sign).not.toHaveBeenCalled();
-      });
-
-      it('should call next with error when database error occurs', async () => {
-        // Arrange
-        mockReq.body = {
-          email: 'test@example.com',
-          password: 'Password123',
-        };
-
-        const dbError = new Error('Database connection failed');
-        (User.findOne as jest.Mock).mockRejectedValue(dbError);
-
-        // Act
-        await login(mockReq as Request, mockRes as Response, mockNext);
-
-        // Assert
-        expect(mockNext).toHaveBeenCalledWith(dbError);
-        expect(mockRes.status).not.toHaveBeenCalled();
-      });
+      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 
   describe('logout', () => {
-    describe('Success Cases', () => {
-      it('should successfully logout user', async () => {
-        // Arrange
-        mockReq.user = {
-          id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-          email: 'test@example.com',
-        };
+    it('should successfully logout user', async () => {
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'testuser',
+        email: 'test@example.com',
+      };
 
-        // Act
-        await logout(mockReq as Request, mockRes as Response, mockNext);
+      await logout(mockReq as Request, mockRes as Response, mockNext);
 
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(200);
-        expect(mockRes.json).toHaveBeenCalledWith({
-          success: true,
-          message: 'Logged out successfully',
-        });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    });
+
+    it('should handle logout even without user in request', async () => {
+      mockReq.user = undefined;
+
+      await logout(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    });
+
+    it('should call next with error when error occurs', async () => {
+      const error = new Error('Unexpected error');
+      mockRes.status = jest.fn().mockImplementation(() => {
+        throw error;
       });
 
-      it('should handle logout even without user in request', async () => {
-        // Arrange
-        mockReq.user = undefined;
+      await logout(mockReq as Request, mockRes as Response, mockNext);
 
-        // Act
-        await logout(mockReq as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
+  });
 
-        // Assert
+  describe('requestMagicLink', () => {
+    beforeEach(() => {
+      (crypto.randomBytes as jest.Mock).mockReturnValue({
+        toString: jest.fn().mockReturnValue('a'.repeat(64)),
+      });
+    });
+
+    describe('Success Cases', () => {
+      it('should successfully request magic link and send email', async () => {
+        mockReq.body = { email: 'test@example.com' };
+
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+        (MagicLinkToken.create as jest.Mock).mockResolvedValue({
+          email: 'test@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          used: false,
+        });
+        (sendMagicLinkEmail as jest.Mock).mockResolvedValue(undefined);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(MagicLinkToken.countDocuments).toHaveBeenCalled();
+        expect(crypto.randomBytes).toHaveBeenCalledWith(32);
+        expect(MagicLinkToken.create).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: expect.any(Date),
+          used: false,
+        });
+        expect(sendMagicLinkEmail).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          token: 'a'.repeat(64),
+          expiryMinutes: 15,
+        });
         expect(mockRes.status).toHaveBeenCalledWith(200);
         expect(mockRes.json).toHaveBeenCalledWith({
           success: true,
-          message: 'Logged out successfully',
+          message: 'If an account exists with this email, a magic link has been sent.',
         });
       });
     });
 
     describe('Error Cases', () => {
-      it('should call next with error when error occurs', async () => {
-        // Arrange
-        const error = new Error('Unexpected error');
-        mockRes.status = jest.fn().mockImplementation(() => {
-          throw error;
+      it('should return 400 when email is missing', async () => {
+        mockReq.body = {};
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Email is required',
         });
+        expect(MagicLinkToken.countDocuments).not.toHaveBeenCalled();
+      });
 
-        // Act
-        await logout(mockReq as Request, mockRes as Response, mockNext);
+      it('should return 429 when rate limit is exceeded', async () => {
+        mockReq.body = { email: 'test@example.com' };
 
-        // Assert
-        expect(mockNext).toHaveBeenCalledWith(error);
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(3);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(429);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Too many magic link requests. Please try again in 15 minutes.',
+        });
+        expect(MagicLinkToken.create).not.toHaveBeenCalled();
+        expect(sendMagicLinkEmail).not.toHaveBeenCalled();
+      });
+
+      it('should call next with error when database error occurs', async () => {
+        mockReq.body = { email: 'test@example.com' };
+
+        const dbError = new Error('Database connection failed');
+        (MagicLinkToken.countDocuments as jest.Mock).mockRejectedValue(dbError);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
+      });
+
+      it('should call next with error when email service fails', async () => {
+        mockReq.body = { email: 'test@example.com' };
+
+        (MagicLinkToken.countDocuments as jest.Mock).mockResolvedValue(0);
+        (MagicLinkToken.create as jest.Mock).mockResolvedValue({});
+
+        const emailError = new Error('Email service failed');
+        (sendMagicLinkEmail as jest.Mock).mockRejectedValue(emailError);
+
+        await requestMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockNext).toHaveBeenCalledWith(emailError);
+      });
+    });
+  });
+
+  describe('verifyMagicLink', () => {
+    describe('Success Cases', () => {
+      it('should successfully verify magic link for existing user', async () => {
+        mockReq.body = { token: 'a'.repeat(64) };
+
+        const mockMagicLinkToken = {
+          email: 'test@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          used: false,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        const mockUser = {
+          _id: '507f1f77bcf86cd799439011',
+          username: 'testuser',
+          email: 'test@example.com',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+          notificationsEnabled: true,
+          createdAt: new Date('2024-01-01T12:00:00Z'),
+        };
+
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(mockMagicLinkToken);
+        (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+        (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(MagicLinkToken.findOne).toHaveBeenCalledWith({
+          token: 'a'.repeat(64),
+          used: false,
+          expiresAt: { $gt: expect.any(Date) },
+        });
+        expect(mockMagicLinkToken.used).toBe(true);
+        expect(mockMagicLinkToken.save).toHaveBeenCalled();
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
+        expect(jwt.sign).toHaveBeenCalledWith(
+          { id: '507f1f77bcf86cd799439011' },
+          expect.any(String),
+          expect.objectContaining({
+            algorithm: 'HS256',
+          })
+        );
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            user: {
+              id: mockUser._id,
+              username: mockUser.username,
+              email: mockUser.email,
+              notificationTimes: mockUser.notificationTimes,
+              notificationsEnabled: mockUser.notificationsEnabled,
+              createdAt: mockUser.createdAt,
+            },
+            token: 'mock-jwt-token',
+          },
+        });
+      });
+
+      it('should successfully verify magic link and create new user', async () => {
+        mockReq.body = { token: 'a'.repeat(64) };
+
+        const mockMagicLinkToken = {
+          email: 'newuser@example.com',
+          token: 'a'.repeat(64),
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          used: false,
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        const mockNewUser = {
+          _id: '507f1f77bcf86cd799439012',
+          username: 'newuser',
+          email: 'newuser@example.com',
+          notificationTimes: ['08:00', '14:00', '20:00'],
+          notificationsEnabled: true,
+          createdAt: new Date(),
+          save: jest.fn().mockResolvedValue(true),
+        };
+
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(mockMagicLinkToken);
+        (User.findOne as jest.Mock).mockResolvedValue(null);
+        (User as any).mockImplementation(() => mockNewUser);
+        (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(MagicLinkToken.findOne).toHaveBeenCalled();
+        expect(mockMagicLinkToken.used).toBe(true);
+        expect(mockMagicLinkToken.save).toHaveBeenCalled();
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'newuser@example.com' });
+        expect(mockNewUser.save).toHaveBeenCalled();
+        expect(jwt.sign).toHaveBeenCalled();
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: true,
+          data: {
+            user: {
+              id: mockNewUser._id,
+              username: mockNewUser.username,
+              email: mockNewUser.email,
+              notificationTimes: mockNewUser.notificationTimes,
+              notificationsEnabled: mockNewUser.notificationsEnabled,
+              createdAt: mockNewUser.createdAt,
+            },
+            token: 'mock-jwt-token',
+          },
+        });
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should return 400 when token is missing', async () => {
+        mockReq.body = {};
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Token is required',
+        });
+        expect(MagicLinkToken.findOne).not.toHaveBeenCalled();
+      });
+
+      it('should return 401 when token is invalid', async () => {
+        mockReq.body = { token: 'invalid-token' };
+
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(null);
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(401);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Invalid or expired magic link. Please request a new one.',
+        });
+        expect(User.findOne).not.toHaveBeenCalled();
+      });
+
+      it('should return 401 when token is expired', async () => {
+        mockReq.body = { token: 'expired-token' };
+
+        // Token exists but is expired (findOne returns null due to expiresAt query)
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(null);
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(401);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Invalid or expired magic link. Please request a new one.',
+        });
+      });
+
+      it('should return 401 when token is already used', async () => {
+        mockReq.body = { token: 'used-token' };
+
+        // Token exists but is used (findOne returns null due to used: false query)
+        (MagicLinkToken.findOne as jest.Mock).mockResolvedValue(null);
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(401);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          success: false,
+          error: 'Invalid or expired magic link. Please request a new one.',
+        });
+      });
+
+      it('should call next with error when database error occurs', async () => {
+        mockReq.body = { token: 'valid-token' };
+
+        const dbError = new Error('Database connection failed');
+        (MagicLinkToken.findOne as jest.Mock).mockRejectedValue(dbError);
+
+        await verifyMagicLink(mockReq as Request, mockRes as Response, mockNext);
+
+        expect(mockNext).toHaveBeenCalledWith(dbError);
+        expect(mockRes.status).not.toHaveBeenCalled();
       });
     });
   });

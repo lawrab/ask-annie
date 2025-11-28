@@ -9,6 +9,7 @@ import CheckIn from '../../models/CheckIn';
 import User from '../../models/User';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { parseSymptoms } from '../../services/parsingService';
+import { generatePostCheckInInsight } from '../../services/insightService';
 import fs from 'fs/promises';
 
 // Mock dependencies
@@ -16,6 +17,7 @@ jest.mock('../../models/CheckIn');
 jest.mock('../../models/User');
 jest.mock('../../services/transcriptionService');
 jest.mock('../../services/parsingService');
+jest.mock('../../services/insightService');
 jest.mock('fs/promises');
 
 describe('CheckinController', () => {
@@ -60,6 +62,15 @@ describe('CheckinController', () => {
 
     // Mock fs.unlink to resolve successfully
     (fs.unlink as jest.Mock).mockResolvedValue(undefined);
+
+    // Mock insight generation
+    (generatePostCheckInInsight as jest.Mock).mockResolvedValue({
+      type: 'validation',
+      title: 'You Showed Up',
+      message: 'You checked in today.\nGreat job!',
+      icon: '💚',
+      metadata: { checkInCount: 1 },
+    });
   });
 
   describe('createVoiceCheckin', () => {
@@ -112,6 +123,12 @@ describe('CheckinController', () => {
               rawTranscript: mockTranscript,
               structured: mockParsed,
             },
+            insight: expect.objectContaining({
+              type: expect.any(String),
+              title: expect.any(String),
+              message: expect.any(String),
+              icon: expect.any(String),
+            }),
           },
         });
         expect(mockNext).not.toHaveBeenCalled();
@@ -452,6 +469,12 @@ describe('CheckinController', () => {
               rawTranscript: 'manual entry',
               structured: mockStructured,
             },
+            insight: expect.objectContaining({
+              type: expect.any(String),
+              title: expect.any(String),
+              message: expect.any(String),
+              icon: expect.any(String),
+            }),
           },
         });
         expect(mockNext).not.toHaveBeenCalled();

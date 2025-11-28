@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import CheckIn from '../models/CheckIn';
 import User from '../models/User';
 import { transcribeAudio } from '../services/transcriptionService';
 import { parseSymptoms } from '../services/parsingService';
+import { generatePostCheckInInsight } from '../services/insightService';
 import { logger } from '../utils/logger';
 import fs from 'fs/promises';
 
@@ -76,7 +78,18 @@ export async function createVoiceCheckin(
       checkInId: checkIn._id,
     });
 
-    // Step 4: Clean up audio file
+    // Step 4: Generate post check-in insight
+    logger.info('Generating post check-in insight');
+    const insight = await generatePostCheckInInsight(
+      userId,
+      (checkIn._id as mongoose.Types.ObjectId).toString()
+    );
+
+    logger.info('Insight generated', {
+      insightType: insight.type,
+    });
+
+    // Step 5: Clean up audio file
     try {
       await fs.unlink(audioFilePath);
       logger.debug('Audio file cleaned up', { path: audioFilePath });
@@ -87,7 +100,7 @@ export async function createVoiceCheckin(
       });
     }
 
-    // Step 5: Return response
+    // Step 6: Return response with insight
     res.status(201).json({
       success: true,
       data: {
@@ -97,6 +110,7 @@ export async function createVoiceCheckin(
           rawTranscript: checkIn.rawTranscript,
           structured: checkIn.structured,
         },
+        insight,
       },
     });
   } catch (error) {
@@ -298,7 +312,18 @@ export async function createManualCheckin(
       checkInId: checkIn._id,
     });
 
-    // Return response
+    // Generate post check-in insight
+    logger.info('Generating post check-in insight');
+    const insight = await generatePostCheckInInsight(
+      userId,
+      (checkIn._id as mongoose.Types.ObjectId).toString()
+    );
+
+    logger.info('Insight generated', {
+      insightType: insight.type,
+    });
+
+    // Return response with insight
     res.status(201).json({
       success: true,
       data: {
@@ -308,6 +333,7 @@ export async function createManualCheckin(
           rawTranscript: checkIn.rawTranscript,
           structured: checkIn.structured,
         },
+        insight,
       },
     });
   } catch (error) {

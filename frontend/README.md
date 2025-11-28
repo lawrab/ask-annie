@@ -1,6 +1,6 @@
-# Ask Annie Frontend
+# Annie's Health Journal Frontend
 
-React TypeScript frontend for the Ask Annie symptom tracking application.
+React TypeScript frontend for the Annie's Health Journal symptom tracking application.
 
 ## Status
 

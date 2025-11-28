@@ -241,7 +241,7 @@ To maintain compliance:
 - [WCAG 2.1 Color Contrast Guidelines](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - [Tailwind CSS Colors](https://tailwindcss.com/docs/customizing-colors)
-- [Ask Annie Design System](./DESIGN_SYSTEM.md)
+- [Annie's Health Journal Design System](./DESIGN_SYSTEM.md)
 
 ---
 

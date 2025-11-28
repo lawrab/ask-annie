@@ -1,4 +1,4 @@
-# Ask Annie Agent Quick Reference
+# Annie's Health Journal Agent Quick Reference
 
 ## Available Agents
 

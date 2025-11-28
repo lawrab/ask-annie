@@ -52,7 +52,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Button component following the Ask Annie design system
+ * Button component following the Annie's Health Journal design system
  *
  * @example
  * ```tsx

@@ -1,6 +1,6 @@
 # UX Design Decisions
 
-This document records significant UX design decisions made during the Ask Annie project development.
+This document records significant UX design decisions made during the Annie's Health Journal project development.
 
 ---
 

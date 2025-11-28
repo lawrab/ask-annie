@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ask-annie';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/annies-health-journal';
 
     await mongoose.connect(mongoUri);
 

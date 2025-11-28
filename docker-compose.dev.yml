@@ -8,14 +8,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    container_name: ask-annie-backend-dev
+    container_name: annies-health-journal-backend-dev
     restart: unless-stopped
     ports:
       - '3000:3000'
     environment:
       NODE_ENV: development
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/ask-annie?authSource=admin
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/annies-health-journal?authSource=admin
       JWT_SECRET: dev-secret-change-in-production
       ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
       LOG_LEVEL: debug
@@ -31,14 +31,14 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
     command: npm run dev
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: ask-annie-frontend-dev
+    container_name: annies-health-journal-frontend-dev
     restart: unless-stopped
     ports:
       - '5173:5173'
@@ -54,9 +54,9 @@ services:
       - ./frontend/tailwind.config.js:/app/tailwind.config.js
       - /app/node_modules
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
     command: npm run dev -- --host
 
 networks:
-  ask-annie-network:
+  annies-health-journal-network:
     external: true

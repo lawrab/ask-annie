@@ -3,19 +3,19 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:6
-    container_name: ask-annie-mongodb
+    container_name: annies-health-journal-mongodb
     restart: unless-stopped
     ports:
       - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
-      MONGO_INITDB_DATABASE: ask-annie
+      MONGO_INITDB_DATABASE: annies-health-journal
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -25,7 +25,7 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    container_name: ask-annie-mongo-express
+    container_name: annies-health-journal-mongo-express
     restart: unless-stopped
     ports:
       - '8081:8081'
@@ -39,18 +39,18 @@ services:
       mongodb:
         condition: service_healthy
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
 
   redis:
     image: redis:7-alpine
-    container_name: ask-annie-redis
+    container_name: annies-health-journal-redis
     restart: unless-stopped
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,7 +60,7 @@ services:
 
   whisper:
     image: fedirz/faster-whisper-server:latest-cpu
-    container_name: ask-annie-whisper
+    container_name: annies-health-journal-whisper
     restart: unless-stopped
     ports:
       - '8000:8000'
@@ -69,7 +69,7 @@ services:
     volumes:
       - whisper_models:/root/.cache/huggingface
     networks:
-      - ask-annie-network
+      - annies-health-journal-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -88,5 +88,5 @@ volumes:
     driver: local
 
 networks:
-  ask-annie-network:
+  annies-health-journal-network:
     driver: bridge

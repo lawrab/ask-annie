@@ -1,12 +1,12 @@
-# Ask Annie - Deployment Guide
+# Annie's Health Journal - Deployment Guide
 
-This guide covers deploying Ask Annie to Railway (recommended) and other platforms.
+This guide covers deploying Annie's Health Journal to Railway (recommended) and other platforms.
 
 ---
 
 ## Deployment Strategy
 
-Ask Annie uses **tag-based deployments** to Railway:
+Annie's Health Journal uses **tag-based deployments** to Railway:
 
 - ✅ **Production Only**: Single production environment
 - ✅ **Deploy on Git Tags**: Only git tags trigger deployments (e.g., `v0.2.0-alpha`)
@@ -40,7 +40,7 @@ Railway provides the simplest deployment path with automatic CI/CD from GitHub.
 
 - GitHub account
 - Railway account (free tier available)
-- Git repository with Ask Annie code
+- Git repository with Annie's Health Journal code
 
 ### Steps
 
@@ -54,7 +54,7 @@ Railway provides the simplest deployment path with automatic CI/CD from GitHub.
 2. **Create Railway project**
    - Visit [railway.app](https://railway.app)
    - Click "New Project" → "Deploy from GitHub repo"
-   - Select your `ask-annie` repository
+   - Select your `annies-health-journal` repository
    - Railway will auto-detect the monorepo structure
 
 3. **Configure services**
@@ -213,7 +213,7 @@ Deploy Python transcription service separately:
 1. In Railway dashboard, select service
 2. Go to "Settings" → "Domains"
 3. Click "Add Custom Domain"
-4. Enter your domain (e.g., `ask-annie.com`)
+4. Enter your domain (e.g., `annies-health-journal.com`)
 5. Add DNS records as instructed:
    ```
    Type: CNAME
@@ -226,7 +226,7 @@ Deploy Python transcription service separately:
 
 After adding custom domain, update backend environment:
 ```env
-ALLOWED_ORIGINS=https://ask-annie.com,https://www.ask-annie.com
+ALLOWED_ORIGINS=https://annies-health-journal.com,https://www.annies-health-journal.com
 ```
 
 ---
@@ -398,7 +398,7 @@ Environment variables:
 
 1. Create Heroku app:
    ```bash
-   heroku create ask-annie
+   heroku create annies-health-journal
    ```
 
 2. Add MongoDB addon:
@@ -557,7 +557,7 @@ artillery quick --count 10 --num 100 https://<backend-url>/api/health
 
 - **Railway Docs**: https://docs.railway.app
 - **Railway Discord**: https://discord.gg/railway
-- **Ask Annie Issues**: https://github.com/lrabbets/ask-annie/issues
+- **Annie's Health Journal Issues**: https://github.com/lrabbets/annies-health-journal/issues
 
 ---
 

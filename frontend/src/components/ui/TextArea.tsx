@@ -53,7 +53,7 @@ export interface TextAreaProps
 }
 
 /**
- * TextArea component following the Ask Annie design system
+ * TextArea component following the Annie's Health Journal design system
  *
  * @example
  * ```tsx

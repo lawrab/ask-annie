@@ -1,8 +1,8 @@
-# Ask Annie - Architecture Documentation
+# Annie's Health Journal - Architecture Documentation
 
 ## System Overview
 
-Ask Annie is a full-stack health symptom tracking application built with a microservices-oriented architecture. The system consists of three main components:
+Annie's Health Journal is a full-stack health symptom tracking application built with a microservices-oriented architecture. The system consists of three main components:
 
 1. **React Frontend** - User-facing web application
 2. **Express Backend** - RESTful API server

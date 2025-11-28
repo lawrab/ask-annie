@@ -1,4 +1,4 @@
-# Ask Annie Design System
+# Annie's Health Journal Design System
 
 **Version**: 1.2.0
 **Last Updated**: 2025-11-18
@@ -6,7 +6,7 @@
 
 ## Overview
 
-This design system defines the visual language, components, and patterns for Ask Annie. It ensures consistency, accessibility (WCAG 2.1 AA compliance), and maintainability across the application.
+This design system defines the visual language, components, and patterns for Annie's Health Journal. It ensures consistency, accessibility (WCAG 2.1 AA compliance), and maintainability across the application.
 
 **Core Principles**:
 - **Accessibility First**: WCAG 2.1 AA minimum, AAA where possible

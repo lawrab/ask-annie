@@ -1,8 +1,8 @@
 # Development Workflow
 
-**Ask Annie - Professional Development Workflow Guide**
+**Annie's Health Journal - Professional Development Workflow Guide**
 
-This document outlines the standard workflow for all development work on Ask Annie. Following this workflow ensures consistent quality, proper code review, and maintains project stability.
+This document outlines the standard workflow for all development work on Annie's Health Journal. Following this workflow ensures consistent quality, proper code review, and maintains project stability.
 
 ---
 

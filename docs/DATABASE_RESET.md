@@ -19,12 +19,12 @@ make down
 ### 2. Drop the database
 ```bash
 # Connect to MongoDB and drop the database
-mongosh mongodb://localhost:27017/ask-annie --eval "db.dropDatabase()"
+mongosh mongodb://localhost:27017/annies-health-journal --eval "db.dropDatabase()"
 ```
 
 Or using docker/podman:
 ```bash
-docker exec -it ask-annie-mongodb mongosh ask-annie --eval "db.dropDatabase()"
+docker exec -it annies-health-journal-mongodb mongosh annies-health-journal --eval "db.dropDatabase()"
 ```
 
 ### 3. Restart services
@@ -41,19 +41,19 @@ Navigate to http://localhost:5173/register and create a new account.
 
 If you only want to clear check-ins:
 ```bash
-mongosh mongodb://localhost:27017/ask-annie --eval "db.checkins.deleteMany({})"
+mongosh mongodb://localhost:27017/annies-health-journal --eval "db.checkins.deleteMany({})"
 ```
 
 If you only want to clear users (this will also invalidate all sessions):
 ```bash
-mongosh mongodb://localhost:27017/ask-annie --eval "db.users.deleteMany({})"
+mongosh mongodb://localhost:27017/annies-health-journal --eval "db.users.deleteMany({})"
 ```
 
 ## Verification
 
 After reset, verify the database is clean:
 ```bash
-mongosh mongodb://localhost:27017/ask-annie --eval "db.stats()"
+mongosh mongodb://localhost:27017/annies-health-journal --eval "db.stats()"
 ```
 
 You should see 0 documents in all collections.

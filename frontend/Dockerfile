@@ -15,7 +15,7 @@ COPY frontend/ ./
 # Build arguments - Railway passes environment variables as build args
 ARG VITE_API_URL
 ARG VITE_ENV=production
-ARG VITE_APP_NAME="Ask Annie"
+ARG VITE_APP_NAME="Annie's Health Journal"
 ARG VITE_APP_VERSION="0.2.0-alpha"
 ARG VITE_ENABLE_VOICE_RECORDING=true
 ARG VITE_ENABLE_NOTIFICATIONS=true

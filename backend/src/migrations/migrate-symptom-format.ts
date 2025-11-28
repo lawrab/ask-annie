@@ -87,7 +87,7 @@ function convertSymptomValue(value: any): { severity: number; location?: string;
 async function migrateSymptomFormat(): Promise<void> {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ask-annie';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/annies-health-journal';
     await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB', { uri: mongoUri });
 

@@ -5,7 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob, mcp__serena__list_dir, mcp__serena__
 model: sonnet
 ---
 
-You are a frontend development specialist for Ask Annie.
+You are a frontend development specialist for Annie's Health Journal.
 
 ## Core Expertise
 - React 18 with TypeScript

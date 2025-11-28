@@ -1,6 +1,6 @@
 # Database Migrations
 
-This directory contains database migration scripts for the Ask Annie backend.
+This directory contains database migration scripts for the Annie's Health Journal backend.
 
 ## Available Migrations
 
@@ -34,7 +34,7 @@ This directory contains database migration scripts for the Ask Annie backend.
 
 1. Set your MongoDB connection string in environment variables:
    ```bash
-   export MONGODB_URI="mongodb://localhost:27017/ask-annie"
+   export MONGODB_URI="mongodb://localhost:27017/annies-health-journal"
    ```
 
 2. Run the migration:

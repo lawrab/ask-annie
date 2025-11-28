@@ -10,7 +10,7 @@ Currently supported versions for security updates:
 
 ## Reporting a Vulnerability
 
-We take the security of Ask Annie seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of Annie's Health Journal seriously. If you discover a security vulnerability, please follow these steps:
 
 ### 1. Do Not Disclose Publicly
 
@@ -18,7 +18,7 @@ Please **do not** create a public GitHub issue for security vulnerabilities.
 
 ### 2. Report Privately
 
-Send details to: **security@ask-annie.app** (or open a private security advisory on GitHub)
+Send details to: **security@annies-health-journal.app** (or open a private security advisory on GitHub)
 
 Include:
 - Description of the vulnerability
@@ -128,7 +128,7 @@ Before deploying to production:
 ## Contact
 
 For security concerns:
-- **Email**: security@ask-annie.app
+- **Email**: security@annies-health-journal.app
 - **GitHub**: Private security advisory
 - **PGP Key**: [If available]
 

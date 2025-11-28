@@ -1,5 +1,5 @@
 {
-  "name": "ask-annie",
+  "name": "annies-health-journal",
   "version": "0.2.0-alpha",
   "description": "Your daily health companion. Track symptoms, spot patterns, empower your health.",
   "private": true,
@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lrabbets/ask-annie.git"
+    "url": "https://github.com/lrabbets/annies-health-journal.git"
   },
   "keywords": [
     "health",

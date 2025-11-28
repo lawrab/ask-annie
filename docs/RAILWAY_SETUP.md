@@ -1,12 +1,12 @@
 # Railway Setup Guide
 
-Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
+Step-by-step guide to set up Annie's Health Journal on Railway with tag-based deployments.
 
 > **⚠️ Important**: This project uses **Dockerfile-based builds** (not Nixpacks). Railway will automatically detect the Dockerfiles in `backend/` and `frontend/` directories. Ensure the **Root Directory** is set correctly for each service.
 
 ## Prerequisites
 
-- [x] GitHub repository with Ask Annie code
+- [x] GitHub repository with Annie's Health Journal code
 - [ ] Railway account (https://railway.app)
 - [ ] GitHub account connected to Railway
 
@@ -17,7 +17,7 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 1. Go to https://railway.app/dashboard
 2. Click **"New Project"**
 3. Select **"Deploy from GitHub repo"**
-4. Choose `lawrab/ask-annie` repository
+4. Choose `lawrab/annies-health-journal` repository
 5. Railway detects the monorepo structure
 
 ### 2. Create MongoDB Service
@@ -30,7 +30,7 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 ### 3. Create Backend Service
 
 1. Click **"New Service"** → **"GitHub Repo"**
-2. Select `lawrab/ask-annie` repository
+2. Select `lawrab/annies-health-journal` repository
 3. **Configure service**:
    - Service name: `backend`
    - **Root directory**: `backend` ⚠️ **CRITICAL - Must be set in Settings → Source**
@@ -71,7 +71,7 @@ Step-by-step guide to set up Ask Annie on Railway with tag-based deployments.
 ### 4. Create Frontend Service
 
 1. Click **"New Service"** → **"GitHub Repo"**
-2. Select `lawrab/ask-annie` repository
+2. Select `lawrab/annies-health-journal` repository
 3. **Configure service**:
    - Service name: `frontend`
    - **Root directory**: `frontend` ⚠️ **CRITICAL - Must be set in Settings → Source**
@@ -160,7 +160,7 @@ Copy the output and set as `JWT_SECRET` in backend service.
 **Backend**:
 1. Service settings → **Domains**
 2. Click **"Add Custom Domain"**
-3. Enter: `api.ask-annie.com` (or your domain)
+3. Enter: `api.annies-health-journal.com` (or your domain)
 4. Add CNAME record in DNS:
    ```
    Type: CNAME
@@ -171,7 +171,7 @@ Copy the output and set as `JWT_SECRET` in backend service.
 **Frontend**:
 1. Service settings → **Domains**
 2. Click **"Add Custom Domain"**
-3. Enter: `ask-annie.com`
+3. Enter: `annies-health-journal.com`
 4. Add CNAME record in DNS:
    ```
    Type: CNAME
@@ -185,12 +185,12 @@ After adding custom domains, update:
 
 **Backend**:
 ```env
-ALLOWED_ORIGINS=https://ask-annie.com,https://www.ask-annie.com
+ALLOWED_ORIGINS=https://annies-health-journal.com,https://www.annies-health-journal.com
 ```
 
 **Frontend**:
 ```env
-VITE_API_URL=https://api.ask-annie.com/api
+VITE_API_URL=https://api.annies-health-journal.com/api
 ```
 
 ## Monitoring Setup
@@ -354,7 +354,7 @@ After setup complete:
 - **Railway Docs**: https://docs.railway.app
 - **Railway Discord**: https://discord.gg/railway
 - **Railway Status**: https://status.railway.app
-- **Ask Annie Issues**: https://github.com/lawrab/ask-annie/issues
+- **Annie's Health Journal Issues**: https://github.com/lawrab/annies-health-journal/issues
 
 ---
 

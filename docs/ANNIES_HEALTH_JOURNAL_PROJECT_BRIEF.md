@@ -1,4 +1,4 @@
-# Ask Annie - Project Brief
+# Annie's Health Journal - Project Brief
 
 **Strapline:** *Your daily health companion. Track symptoms, spot patterns, empower your health.*
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets, the app is intuitive enough for anyone to use daily.
+Annie's Health Journal is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets, the app is intuitive enough for anyone to use daily.
 
 **Core Philosophy:** Simple daily check-ins via voice or quick selections, flexible symptom tracking, and meaningful trend analysis.
 
@@ -20,7 +20,7 @@ People with undiagnosed or mysterious health conditions struggle to:
 - Spot correlations between activities and symptoms
 - Track evolving or new symptoms without rigid forms
 
-Ask Annie solves this by being frictionless, flexible, and focused on what actually matters: patterns over time.
+Annie's Health Journal solves this by being frictionless, flexible, and focused on what actually matters: patterns over time.
 
 ---
 
@@ -386,4 +386,4 @@ Before starting, confirm:
 
 ---
 
-**Ready to ship. Let's build Ask Annie. 🐰**
+**Ready to ship. Let's build Annie's Health Journal. 🐰**

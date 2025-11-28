@@ -1,7 +1,7 @@
 {
-  "name": "ask-annie-frontend",
+  "name": "annies-health-journal-frontend",
   "version": "0.2.0-alpha",
-  "description": "Frontend application for Ask Annie symptom tracking",
+  "description": "Frontend application for Annie's Health Journal symptom tracking",
   "type": "module",
   "scripts": {
     "dev": "vite",

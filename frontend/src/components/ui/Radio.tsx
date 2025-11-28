@@ -26,7 +26,7 @@ export interface RadioProps
 }
 
 /**
- * Radio component following the Ask Annie design system
+ * Radio component following the Annie's Health Journal design system
  *
  * @example
  * ```tsx

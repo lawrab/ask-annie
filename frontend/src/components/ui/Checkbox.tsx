@@ -32,7 +32,7 @@ export interface CheckboxProps
 }
 
 /**
- * Checkbox component following the Ask Annie design system
+ * Checkbox component following the Annie's Health Journal design system
  *
  * @example
  * ```tsx

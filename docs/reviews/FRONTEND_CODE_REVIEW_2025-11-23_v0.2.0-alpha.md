@@ -1,4 +1,4 @@
-# Ask Annie Frontend Architecture - Senior Code Review
+# Annie's Health Journal Frontend Architecture - Senior Code Review
 
 **Reviewer**: Claude Code
 **Date**: 2025-11-23
@@ -12,7 +12,7 @@
 
 ### Overall Assessment: **B+ (Good, with areas for improvement)**
 
-The Ask Annie frontend demonstrates **solid fundamentals** with a well-structured design system, good accessibility practices, and comprehensive testing. However, there are **critical gaps** in mobile optimization, performance, and production readiness that need immediate attention before Wave 3.
+The Annie's Health Journal frontend demonstrates **solid fundamentals** with a well-structured design system, good accessibility practices, and comprehensive testing. However, there are **critical gaps** in mobile optimization, performance, and production readiness that need immediate attention before Wave 3.
 
 ### Key Strengths
 - Well-defined design system with WCAG 2.1 AA compliance
@@ -35,7 +35,7 @@ The Ask Annie frontend demonstrates **solid fundamentals** with a well-structure
 
 ### 1.1 Component Organization ✅ **GOOD**
 
-**File**: `/home/lrabbets/repos/ask-annie/frontend/src/components/`
+**File**: `/home/lrabbets/repos/annies-health-journal/frontend/src/components/`
 
 **Strengths**:
 - Clear separation: `/ui/` (design system), `/dashboard/`, `/charts/`
@@ -58,7 +58,7 @@ The Ask Annie frontend demonstrates **solid fundamentals** with a well-structure
   <div className="container mx-auto px-4 py-6">
     <div className="flex justify-between items-center">
       <div>
-        <h1 className="text-3xl font-bold">Ask Annie</h1>
+        <h1 className="text-3xl font-bold">Annie's Health Journal</h1>
         <p className="text-indigo-100">Welcome, {user?.username}!</p>
       </div>
       {/* ... */}
@@ -107,7 +107,7 @@ export function AppHeader() {
 
 ### 1.2 Zustand Store Implementation ⚠️ **NEEDS IMPROVEMENT**
 
-**File**: `/home/lrabbets/repos/ask-annie/frontend/src/stores/authStore.ts`
+**File**: `/home/lrabbets/repos/annies-health-journal/frontend/src/stores/authStore.ts`
 
 **Strengths**:
 - Clean, minimal API
@@ -781,7 +781,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'logo.svg'],
       manifest: {
-        name: 'Ask Annie',
+        name: 'Annie's Health Journal',
         short_name: 'Annie',
         description: 'Track symptoms, spot patterns, empower your health',
         theme_color: '#4f46e5',
@@ -804,7 +804,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.askAnnie\.com\/api\/.*/i,
+            urlPattern: /^https:\/\/api\.anniesHealthJournal\.com\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -965,7 +965,7 @@ export default function DashboardPage() {
 
 ### 4.1 API Service Organization ✅ **GOOD**
 
-**File**: `/home/lrabbets/repos/ask-annie/frontend/src/services/api.ts`
+**File**: `/home/lrabbets/repos/annies-health-journal/frontend/src/services/api.ts`
 
 **Strengths**:
 - Clean separation of concerns (authApi, checkInsApi, analysisApi)
@@ -1503,7 +1503,7 @@ See Issue #13 and #14 above.
 // Use native lazy loading
 <img
   src={logo}
-  alt="Ask Annie Logo"
+  alt="Annie's Health Journal Logo"
   className="mx-auto h-16 w-auto"
   loading="lazy" // ADD THIS
   decoding="async" // ADD THIS
@@ -2026,17 +2026,17 @@ With focused effort on the critical issues, this app can reach production qualit
 ## Appendix: File Locations Summary
 
 ### Components Needing Attention
-- `/home/lrabbets/repos/ask-annie/frontend/src/App.tsx` - Add error boundary, lazy loading
-- `/home/lrabbets/repos/ask-annie/frontend/src/pages/DashboardPage.tsx` - Split into smaller components, add memoization
-- `/home/lrabbets/repos/ask-annie/frontend/src/components/VoiceRecorder.tsx` - Fix memory leak
-- `/home/lrabbets/repos/ask-annie/frontend/src/components/CheckInCard.tsx` - Add React.memo, fix touch targets
-- `/home/lrabbets/repos/ask-annie/frontend/src/services/api.ts` - Remove side effects from interceptor
-- `/home/lrabbets/repos/ask-annie/frontend/src/stores/authStore.ts` - Use persist middleware, add error state
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/App.tsx` - Add error boundary, lazy loading
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/pages/DashboardPage.tsx` - Split into smaller components, add memoization
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/components/VoiceRecorder.tsx` - Fix memory leak
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/components/CheckInCard.tsx` - Add React.memo, fix touch targets
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/services/api.ts` - Remove side effects from interceptor
+- `/home/lrabbets/repos/annies-health-journal/frontend/src/stores/authStore.ts` - Use persist middleware, add error state
 
 ### Config Files Needing Updates
-- `/home/lrabbets/repos/ask-annie/frontend/vite.config.ts` - Add code splitting, PWA plugin
-- `/home/lrabbets/repos/ask-annie/frontend/package.json` - Add React Query, axios-retry, Sentry
-- `/home/lrabbets/repos/ask-annie/frontend/index.html` - Update theme-color to match indigo
+- `/home/lrabbets/repos/annies-health-journal/frontend/vite.config.ts` - Add code splitting, PWA plugin
+- `/home/lrabbets/repos/annies-health-journal/frontend/package.json` - Add React Query, axios-retry, Sentry
+- `/home/lrabbets/repos/annies-health-journal/frontend/index.html` - Update theme-color to match indigo
 
 ### Files to Create
 - `src/components/layout/AppLayout.tsx`

@@ -121,7 +121,7 @@ describe('CheckInPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Annie's Health Journal')).toBeInTheDocument();
+    expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
     expect(screen.getByText('Hi, testuser!')).toBeInTheDocument();
     expect(screen.getByText('Create Check-in')).toBeInTheDocument();
   });

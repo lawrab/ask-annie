@@ -143,7 +143,7 @@ describe('TrendsPage', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Annie's Health Journal')).toBeInTheDocument();
+        expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
         expect(screen.getByText('Welcome, testuser!')).toBeInTheDocument();
       });
     });

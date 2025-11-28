@@ -288,7 +288,7 @@ describe('DashboardPage', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByText('Annie's Health Journal')).toBeInTheDocument();
+      expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
       expect(screen.getByText('Welcome, testuser!')).toBeInTheDocument();
     });
 
@@ -1192,7 +1192,7 @@ describe('DashboardPage', () => {
         expect(screen.getByText('Failed to load weekly insights.')).toBeInTheDocument();
         expect(screen.getByText('Failed to load check-ins.')).toBeInTheDocument();
         // Page still renders
-        expect(screen.getByText('Annie's Health Journal')).toBeInTheDocument();
+        expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
       });
     });
 

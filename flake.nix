@@ -63,6 +63,7 @@
             playwright-driver.browsers
             playwright-mcp-wrapper
             mongodb-tools
+            mongosh
             railway
           ];
 

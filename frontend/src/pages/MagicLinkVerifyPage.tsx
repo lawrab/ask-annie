@@ -26,7 +26,7 @@ export default function MagicLinkVerifyPage() {
 
       if (!token) {
         setStatus('error');
-        setErrorMessage('No token provided. Please request a new magic link.');
+        setErrorMessage('No token provided. Please request a new login link.');
         return;
       }
 
@@ -53,7 +53,7 @@ export default function MagicLinkVerifyPage() {
         if (error instanceof Error) {
           setErrorMessage(error.message);
         } else {
-          setErrorMessage('Invalid or expired magic link. Please request a new one.');
+          setErrorMessage('Invalid or expired login link. Please request a new one.');
         }
       }
     };
@@ -75,7 +75,7 @@ export default function MagicLinkVerifyPage() {
             <div className="mt-6 text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
               <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
-                Verifying your magic link...
+                Verifying your login link...
               </h2>
               <p className="mt-2 text-sm text-gray-600">
                 Please wait while we sign you in
@@ -144,7 +144,7 @@ export default function MagicLinkVerifyPage() {
                     onClick={() => navigate('/login')}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
-                    Request a new magic link
+                    Request a new login link
                   </button>
                 </div>
               </div>

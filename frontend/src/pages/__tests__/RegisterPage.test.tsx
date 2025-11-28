@@ -3,43 +3,32 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import RegisterPage from '../RegisterPage';
-import { useAuthStore } from '../../stores/authStore';
+import api from '../../services/api';
 
-// Mock the auth store
-vi.mock('../../stores/authStore', () => ({
-  useAuthStore: vi.fn(),
+// Mock the API
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
 }));
 
-// Mock react-router navigation
-const mockNavigate = vi.fn();
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
 describe('RegisterPage', () => {
-  const mockRegister = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAuthStore).mockReturnValue(mockRegister);
   });
 
-  it('should render register form', () => {
+  it('should render email entry form', () => {
     render(
       <MemoryRouter>
         <RegisterPage />
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Create your account')).toBeInTheDocument();
-    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByText(/get started with annie/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Email address')).toBeInTheDocument();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
+    expect(screen.getByText(/no password needed/i)).toBeInTheDocument();
   });
 
   it('should have link to login page', () => {
@@ -49,45 +38,9 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const loginLink = screen.getByRole('link', { name: /sign in to existing account/i });
+    const loginLink = screen.getByRole('link', { name: /log in/i });
     expect(loginLink).toBeInTheDocument();
     expect(loginLink).toHaveAttribute('href', '/login');
-  });
-
-  it('should show validation error for short username', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    );
-
-    const usernameInput = screen.getByLabelText('Username');
-    await user.type(usernameInput, 'ab');
-    await user.tab();
-
-    await waitFor(() => {
-      expect(screen.getByText(/username must be at least 3 characters/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should show validation error for long username', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    );
-
-    const usernameInput = screen.getByLabelText('Username');
-    await user.type(usernameInput, 'a'.repeat(31));
-    await user.tab();
-
-    await waitFor(() => {
-      expect(screen.getByText(/username must be at most 30 characters/i)).toBeInTheDocument();
-    });
   });
 
   it('should show validation error for invalid email', async () => {
@@ -108,8 +61,9 @@ describe('RegisterPage', () => {
     });
   });
 
-  it('should show validation error for short password', async () => {
+  it('should proceed to username step for new user', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
 
     render(
       <MemoryRouter>
@@ -117,17 +71,68 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText('Password');
-    await user.type(passwordInput, 'short');
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/choose your username/i)).toBeInTheDocument();
+      expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    });
+  });
+
+  it('should send login link directly for existing user', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: true } });
+    vi.mocked(api.post).mockResolvedValue({ data: { success: true } });
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText('Email address'), 'existing@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/auth/magic-link/request', {
+        email: 'existing@example.com',
+      });
+      expect(screen.getByText(/check your email/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should show validation error for short username', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
+
+    // First step - email
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Second step - username
+    await waitFor(() => {
+      expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    });
+
+    const usernameInput = screen.getByLabelText('Username');
+    await user.type(usernameInput, 'ab');
     await user.tab();
 
     await waitFor(() => {
-      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+      expect(screen.getByText(/username must be at least 3 characters/i)).toBeInTheDocument();
     });
   });
 
-  it('should toggle password visibility', async () => {
+  it('should show validation error for long username', async () => {
     const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
 
     render(
       <MemoryRouter>
@@ -135,43 +140,27 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    const passwordInput = screen.getByLabelText('Password') as HTMLInputElement;
-    const toggleButton = screen.getByRole('button', { name: /show password/i });
+    // First step - email
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
 
-    expect(passwordInput.type).toBe('password');
+    // Second step - username
+    await waitFor(() => {
+      expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    });
 
-    await user.click(toggleButton);
-    expect(passwordInput.type).toBe('text');
-    expect(screen.getByRole('button', { name: /hide password/i })).toBeInTheDocument();
-
-    await user.click(toggleButton);
-    expect(passwordInput.type).toBe('password');
-  });
-
-  it('should call register and navigate on successful submit', async () => {
-    const user = userEvent.setup();
-    mockRegister.mockResolvedValue(undefined);
-
-    render(
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    );
-
-    await user.type(screen.getByLabelText('Username'), 'testuser');
-    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.type(screen.getByLabelText('Password'), 'password123');
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    const usernameInput = screen.getByLabelText('Username');
+    await user.type(usernameInput, 'a'.repeat(31));
+    await user.tab();
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith('testuser', 'test@example.com', 'password123');
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      expect(screen.getByText(/username must be at most 30 characters/i)).toBeInTheDocument();
     });
   });
 
-  it('should show error message on failed registration', async () => {
+  it('should allow going back to email step from username step', async () => {
     const user = userEvent.setup();
-    mockRegister.mockRejectedValue(new Error('Email already exists'));
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
 
     render(
       <MemoryRouter>
@@ -179,19 +168,29 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText('Username'), 'testuser');
-    await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.type(screen.getByLabelText('Password'), 'password123');
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    // Go to username step
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Email already exists')).toBeInTheDocument();
+      expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    });
+
+    // Click back button
+    const backButton = screen.getByRole('button', { name: /back to email/i });
+    await user.click(backButton);
+
+    // Should be back on email step
+    await waitFor(() => {
+      expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
     });
   });
 
-  it('should show generic error message on non-Error failure', async () => {
+  it('should complete registration for new user', async () => {
     const user = userEvent.setup();
-    mockRegister.mockRejectedValue('Something went wrong');
+    vi.mocked(api.get).mockResolvedValue({ data: { success: true, exists: false } });
+    vi.mocked(api.post).mockResolvedValue({ data: { success: true } });
 
     render(
       <MemoryRouter>
@@ -199,22 +198,51 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText('Username'), 'testuser');
+    // Step 1: Email
+    await user.type(screen.getByLabelText('Email address'), 'new@example.com');
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Step 2: Username
+    await waitFor(() => {
+      expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText('Username'), 'newuser');
+    await user.click(screen.getByRole('button', { name: /create account & send login link/i }));
+
+    // Step 3: Success screen
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/auth/magic-link/request', {
+        email: 'new@example.com',
+        username: 'newuser',
+      });
+      expect(screen.getByText(/check your email/i)).toBeInTheDocument();
+      expect(screen.getByText(/login link sent/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should show error message on API failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockRejectedValue(new Error('Network error'));
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
+
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.type(screen.getByLabelText('Password'), 'password123');
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /continue/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Failed to create account. Please try again.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Network error')).toBeInTheDocument();
     });
   });
 
   it('should disable submit button while loading', async () => {
     const user = userEvent.setup();
-    mockRegister.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
+    vi.mocked(api.get).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { success: true, exists: false } }), 100))
     );
 
     render(
@@ -223,34 +251,16 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     );
 
-    await user.type(screen.getByLabelText('Username'), 'testuser');
     await user.type(screen.getByLabelText('Email address'), 'test@example.com');
-    await user.type(screen.getByLabelText('Password'), 'password123');
 
-    const submitButton = screen.getByRole('button', { name: /create account/i });
+    const submitButton = screen.getByRole('button', { name: /continue/i });
     await user.click(submitButton);
 
     expect(submitButton).toBeDisabled();
 
+    // After loading, should proceed to next step
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled();
-    });
-  });
-
-  it('should not submit form with validation errors', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    );
-
-    await user.click(screen.getByRole('button', { name: /create account/i }));
-
-    await waitFor(() => {
-      expect(mockRegister).not.toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(screen.getByText(/choose your username/i)).toBeInTheDocument();
     });
   });
 });

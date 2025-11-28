@@ -143,7 +143,7 @@ export async function requestMagicLink(
       return;
     }
 
-    logger.info('Magic link request', { email });
+    logger.info('Magic link request', { email, usernameProvided: !!username });
 
     // Check rate limiting: max 3 requests per 15 minutes per email
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
@@ -163,9 +163,11 @@ export async function requestMagicLink(
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+    logger.info('User existence check', { email, exists: !!existingUser });
 
     // If this is a new user registration, username is required
     if (!existingUser && !username) {
+      logger.warn('Username required for new user', { email });
       res.status(400).json({
         success: false,
         error: 'Username is required for new user registration',
@@ -177,6 +179,7 @@ export async function requestMagicLink(
     if (username && !existingUser) {
       const usernameExists = await User.findOne({ username });
       if (usernameExists) {
+        logger.warn('Username already taken', { username });
         res.status(400).json({
           success: false,
           error: 'Username is already taken',

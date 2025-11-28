@@ -180,6 +180,12 @@ describe('CheckInPage', () => {
           createdAt: '2024-01-01T12:00:00.000Z',
           updatedAt: '2024-01-01T12:00:00.000Z',
         },
+        insight: {
+          type: 'validation',
+          title: 'Check-in Complete',
+          message: 'Your symptoms have been recorded.',
+          icon: '✅',
+        },
       },
     });
 
@@ -285,6 +291,12 @@ describe('CheckInPage', () => {
           flaggedForDoctor: false,
           createdAt: '2024-01-01T12:00:00.000Z',
           updatedAt: '2024-01-01T12:00:00.000Z',
+        },
+        insight: {
+          type: 'validation',
+          title: 'Check-in Complete',
+          message: 'Your symptoms have been recorded.',
+          icon: '✅',
         },
       },
     });

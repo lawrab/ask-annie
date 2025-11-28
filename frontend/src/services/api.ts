@@ -91,10 +91,19 @@ export interface CheckInsResponse {
   };
 }
 
+export interface InsightCard {
+  type: 'data_context' | 'validation' | 'pattern' | 'community';
+  title: string;
+  message: string;
+  icon: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface CheckInResponse {
   success: boolean;
   data: {
     checkIn: CheckIn;
+    insight: InsightCard;
   };
 }
 

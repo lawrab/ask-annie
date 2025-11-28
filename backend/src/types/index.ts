@@ -18,3 +18,13 @@ export interface DateRangeParams {
   startDate?: string;
   endDate?: string;
 }
+
+export type InsightType = 'data_context' | 'validation' | 'pattern' | 'community';
+
+export interface InsightCard {
+  type: InsightType;
+  title: string;
+  message: string;
+  icon: string;
+  metadata?: Record<string, unknown>;
+}

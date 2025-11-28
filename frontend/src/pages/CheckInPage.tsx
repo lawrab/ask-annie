@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '../stores/authStore';
-import { checkInsApi } from '../services/api';
+import { checkInsApi, InsightCard } from '../services/api';
 import VoiceRecorder from '../components/VoiceRecorder';
 import ManualCheckInForm from '../components/ManualCheckInForm';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
+import PostCheckInInsight from '../components/PostCheckInInsight';
 
 type CheckInMode = 'voice' | 'manual';
 
@@ -28,8 +29,8 @@ export default function CheckInPage() {
   const [mode, setMode] = useState<CheckInMode>('voice');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [insight, setInsight] = useState<InsightCard | null>(null);
 
   const handleVoiceRecordingComplete = (blob: Blob) => {
     setAudioBlob(blob);
@@ -52,18 +53,8 @@ export default function CheckInPage() {
       const response = await checkInsApi.createVoice(audioFile);
 
       if (response.success) {
-        const symptoms = Object.entries(response.data.checkIn.structured.symptoms)
-          .map(([name, value]) => `${name}: ${value.severity}`)
-          .join(', ');
-
-        setSuccess(
-          `Check-in saved! ${symptoms ? `Detected: ${symptoms}` : 'No symptoms detected.'}`
-        );
-
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
+        // Show insight modal
+        setInsight(response.data.insight);
       }
     } catch (err) {
       setError(
@@ -82,18 +73,8 @@ export default function CheckInPage() {
       const response = await checkInsApi.createManual({ structured: data });
 
       if (response.success) {
-        const symptoms = Object.entries(response.data.checkIn.structured.symptoms)
-          .map(([name, value]) => `${name}: ${value.severity}`)
-          .join(', ');
-
-        setSuccess(
-          `Check-in saved! ${symptoms ? `Recorded: ${symptoms}` : 'Check-in recorded.'}`
-        );
-
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
+        // Show insight modal
+        setInsight(response.data.insight);
       }
     } catch (err) {
       setError(
@@ -106,6 +87,11 @@ export default function CheckInPage() {
 
   const handleVoiceError = (errorMessage: string) => {
     setError(errorMessage);
+  };
+
+  const handleInsightDismiss = () => {
+    setInsight(null);
+    navigate('/dashboard');
   };
 
   return (
@@ -135,9 +121,6 @@ export default function CheckInPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Create Check-in
           </h2>
-
-          {/* Success Message */}
-          {success && <Alert type="success" className="mb-6">{success}</Alert>}
 
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
@@ -201,6 +184,11 @@ export default function CheckInPage() {
           )}
         </div>
       </main>
+
+      {/* Post Check-In Insight Modal */}
+      {insight && (
+        <PostCheckInInsight insight={insight} onDismiss={handleInsightDismiss} />
+      )}
     </div>
   );
 }

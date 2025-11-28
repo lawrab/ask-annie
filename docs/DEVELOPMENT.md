@@ -1,4 +1,4 @@
-# Ask Annie - Development Guide
+# Annie's Health Journal - Development Guide
 
 This guide covers setting up the development environment and common development workflows.
 
@@ -34,8 +34,8 @@ This guide covers setting up the development environment and common development 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/lrabbets/ask-annie.git
-cd ask-annie
+git clone https://github.com/lrabbets/annies-health-journal.git
+cd annies-health-journal
 ```
 
 ### 2. Install Dependencies
@@ -94,7 +94,7 @@ Edit `backend/.env`:
 ```env
 NODE_ENV=development
 PORT=3000
-MONGODB_URI=mongodb://admin:admin123@localhost:27017/ask-annie?authSource=admin
+MONGODB_URI=mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin
 JWT_SECRET=dev-secret-change-in-production
 ALLOWED_ORIGINS=http://localhost:5173
 WHISPER_MODEL_SIZE=base
@@ -444,7 +444,7 @@ Create `.lintstagedrc.json`:
 
 **Connect via CLI**:
 ```bash
-mongosh mongodb://localhost:27017/ask-annie
+mongosh mongodb://localhost:27017/annies-health-journal
 ```
 
 **Common queries**:
@@ -470,7 +470,7 @@ import mongoose from 'mongoose';
 import CheckIn from '../src/models/CheckIn';
 
 async function seed() {
-  await mongoose.connect('mongodb://localhost:27017/ask-annie');
+  await mongoose.connect('mongodb://localhost:27017/annies-health-journal');
 
   await CheckIn.create({
     userId: 'test-user',

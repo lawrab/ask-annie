@@ -1,6 +1,6 @@
 # Podman-Specific Guide
 
-Podman is the default container runtime for Ask Annie development on Linux systems.
+Podman is the default container runtime for Annie's Health Journal development on Linux systems.
 
 ## Why Podman?
 
@@ -71,7 +71,7 @@ Podman rootless uses slirp4netns for networking. No additional configuration nee
 # But our services use high ports (3000, 5173, etc.) so no issue
 ```
 
-## Using Podman with Ask Annie
+## Using Podman with Annie's Health Journal
 
 ### Start Dependencies
 
@@ -106,7 +106,7 @@ make deps-logs
 
 ```bash
 # MongoDB shell
-podman exec -it ask-annie-mongodb mongosh
+podman exec -it annies-health-journal-mongodb mongosh
 
 # Or using make
 make db-shell
@@ -120,15 +120,15 @@ Run containers as systemd services (optional):
 
 ```bash
 # Generate systemd unit for MongoDB
-podman generate systemd --name ask-annie-mongodb --files
+podman generate systemd --name annies-health-journal-mongodb --files
 
 # Move to systemd user directory
 mkdir -p ~/.config/systemd/user/
-mv container-ask-annie-mongodb.service ~/.config/systemd/user/
+mv container-annies-health-journal-mongodb.service ~/.config/systemd/user/
 
 # Enable and start
 systemctl --user daemon-reload
-systemctl --user enable --now container-ask-annie-mongodb
+systemctl --user enable --now container-annies-health-journal-mongodb
 ```
 
 ### Auto-Start on Boot
@@ -142,16 +142,16 @@ loginctl enable-linger $USER
 
 ```bash
 # Status
-systemctl --user status container-ask-annie-mongodb
+systemctl --user status container-annies-health-journal-mongodb
 
 # Restart
-systemctl --user restart container-ask-annie-mongodb
+systemctl --user restart container-annies-health-journal-mongodb
 
 # Stop
-systemctl --user stop container-ask-annie-mongodb
+systemctl --user stop container-annies-health-journal-mongodb
 
 # View logs
-journalctl --user -u container-ask-annie-mongodb -f
+journalctl --user -u container-annies-health-journal-mongodb -f
 ```
 
 ## Podman Compose Specifics
@@ -186,7 +186,7 @@ podman-compose --version
 ### Create Network
 
 ```bash
-podman network create ask-annie-network
+podman network create annies-health-journal-network
 ```
 
 ### List Networks
@@ -198,7 +198,7 @@ podman network ls
 ### Inspect Network
 
 ```bash
-podman network inspect ask-annie-network
+podman network inspect annies-health-journal-network
 ```
 
 ### Container Connectivity
@@ -207,7 +207,7 @@ Containers can reference each other by service name:
 
 ```bash
 # Backend connects to MongoDB
-MONGODB_URI=mongodb://mongodb:27017/ask-annie
+MONGODB_URI=mongodb://mongodb:27017/annies-health-journal
 ```
 
 ## Volumes and Storage
@@ -221,7 +221,7 @@ podman volume ls
 ### Inspect Volume
 
 ```bash
-podman volume inspect ask-annie_mongodb_data
+podman volume inspect annies-health-journal_mongodb_data
 ```
 
 ### Backup Volume
@@ -229,13 +229,13 @@ podman volume inspect ask-annie_mongodb_data
 ```bash
 # Create backup
 podman run --rm \
-  -v ask-annie_mongodb_data:/data \
+  -v annies-health-journal_mongodb_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/mongodb-backup.tar.gz /data
 
 # Restore backup
 podman run --rm \
-  -v ask-annie_mongodb_data:/data \
+  -v annies-health-journal_mongodb_data:/data \
   -v $(pwd):/backup \
   alpine tar xzf /backup/mongodb-backup.tar.gz -C /
 ```
@@ -247,7 +247,7 @@ podman run --rm \
 podman volume prune
 
 # Remove specific volume
-podman volume rm ask-annie_mongodb_data
+podman volume rm annies-health-journal_mongodb_data
 ```
 
 ## Security Best Practices
@@ -411,13 +411,13 @@ podman export <container> > filesystem.tar
 podman stats
 
 # Inspect container
-podman inspect ask-annie-mongodb
+podman inspect annies-health-journal-mongodb
 
 # View container processes
-podman top ask-annie-mongodb
+podman top annies-health-journal-mongodb
 
 # Generate Kubernetes YAML
-podman generate kube ask-annie-mongodb > mongodb.yaml
+podman generate kube annies-health-journal-mongodb > mongodb.yaml
 ```
 
 ## Resources

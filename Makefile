@@ -66,7 +66,7 @@ deps-clean:
 
 # Full stack with containers
 dev-up:
-	$(CONTAINER_RUNTIME) network create ask-annie-network 2>/dev/null || true
+	$(CONTAINER_RUNTIME) network create annies-health-journal-network 2>/dev/null || true
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml up -d
 	@echo "✓ All services started"
 	@echo "  - Frontend: http://localhost:5173"
@@ -104,7 +104,7 @@ typecheck:
 
 # Database utilities
 db-shell:
-	$(CONTAINER_RUNTIME) exec -it ask-annie-mongodb mongosh -u admin -p admin123 --authenticationDatabase admin ask-annie
+	$(CONTAINER_RUNTIME) exec -it annies-health-journal-mongodb mongosh -u admin -p admin123 --authenticationDatabase admin annies-health-journal
 
 db-ui:
 	@echo "Opening Mongo Express at http://localhost:8081"
@@ -113,7 +113,7 @@ db-ui:
 	@xdg-open http://localhost:8081 2>/dev/null || open http://localhost:8081 2>/dev/null || echo "Navigate to http://localhost:8081"
 
 redis-cli:
-	$(CONTAINER_RUNTIME) exec -it ask-annie-redis redis-cli
+	$(CONTAINER_RUNTIME) exec -it annies-health-journal-redis redis-cli
 
 # Utilities
 ps:

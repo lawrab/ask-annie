@@ -49,7 +49,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 /**
- * Input component following the Ask Annie design system
+ * Input component following the Annie's Health Journal design system
  *
  * @example
  * ```tsx

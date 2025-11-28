@@ -1,10 +1,10 @@
-# Ask Annie
+# Annie's Health Journal
 
 **Your daily health companion. Track symptoms, spot patterns, empower your health.**
 
 > **📦 Project Status**: v0.1.0 MVP + Wave 2B + Wave 3 Complete - Backend API fully functional (99.08% coverage, 332 tests) with analytics endpoints. Frontend includes authentication, routing, enhanced dashboard, trends visualization, complete check-in functionality (468 tests), and comprehensive design system with 12 accessible UI components documented in Storybook. See roadmap below for progress.
 
-Ask Annie is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
+Annie's Health Journal is a health symptom tracking app designed to help people with undiagnosed or complex conditions track symptoms, identify patterns, and prepare for medical appointments. Built as a dedication to Annie Rabbets.
 
 ## Features
 
@@ -33,7 +33,7 @@ Ask Annie is a health symptom tracking app designed to help people with undiagno
 ## Project Structure
 
 ```
-ask-annie/
+annies-health-journal/
 ├── backend/          # Express API server
 ├── frontend/         # React application
 ├── docs/            # Documentation
@@ -51,8 +51,8 @@ ask-annie/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/lrabbets/ask-annie.git
-   cd ask-annie
+   git clone https://github.com/lrabbets/annies-health-journal.git
+   cd annies-health-journal
    ```
 
 2. **Start dependencies (MongoDB + Redis)**

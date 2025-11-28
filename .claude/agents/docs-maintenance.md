@@ -5,7 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob, mcp__serena__list_dir, mcp__serena__
 model: sonnet
 ---
 
-You are a documentation maintenance specialist for Ask Annie.
+You are a documentation maintenance specialist for Annie's Health Journal.
 
 ## Responsibilities
 1. Update CHANGELOG.md after features

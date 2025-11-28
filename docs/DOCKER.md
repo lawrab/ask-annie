@@ -1,6 +1,6 @@
 # Container Development Guide (Podman/Docker)
 
-This guide covers using Podman or Docker for local development with Ask Annie.
+This guide covers using Podman or Docker for local development with Annie's Health Journal.
 
 ## Container Runtime
 
@@ -44,7 +44,7 @@ podman-compose --version
 
 ### Dependencies in Containers, App Runs Locally (Recommended)
 
-This is the **recommended approach** for Ask Annie development:
+This is the **recommended approach** for Annie's Health Journal development:
 
 ```bash
 # 1. Start dependencies (MongoDB + Redis + Mongo Express)
@@ -77,8 +77,8 @@ make dev
 - **Port:** 27017
 - **Username:** admin
 - **Password:** admin123
-- **Database:** ask-annie
-- **Connection String:** `mongodb://admin:admin123@localhost:27017/ask-annie?authSource=admin`
+- **Database:** annies-health-journal
+- **Connection String:** `mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin`
 
 ### Mongo Express (Web UI)
 - **URL:** http://localhost:8081
@@ -223,7 +223,7 @@ Set in `docker-compose.dev.yml`:
 ```yaml
 environment:
   NODE_ENV: development
-  MONGODB_URI: mongodb://admin:admin123@mongodb:27017/ask-annie?authSource=admin
+  MONGODB_URI: mongodb://admin:admin123@mongodb:27017/annies-health-journal?authSource=admin
   JWT_SECRET: dev-secret-change-in-production
   ALLOWED_ORIGINS: http://localhost:5173
   REDIS_URL: redis://redis:6379
@@ -289,7 +289,7 @@ db.users.find()
 
 **Option 3: MongoDB Compass**
 ```
-Connection string: mongodb://admin:admin123@localhost:27017/ask-annie?authSource=admin
+Connection string: mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin
 ```
 
 ### Debugging in Docker
@@ -306,13 +306,13 @@ docker-compose logs -f backend
 
 **Access container shell:**
 ```bash
-docker exec -it ask-annie-backend-dev sh
-docker exec -it ask-annie-mongodb sh
+docker exec -it annies-health-journal-backend-dev sh
+docker exec -it annies-health-journal-mongodb sh
 ```
 
 **Inspect network:**
 ```bash
-docker network inspect ask-annie-network
+docker network inspect annies-health-journal-network
 ```
 
 ---
@@ -342,13 +342,13 @@ kill -9 <PID>
 **Solution (Local Development):**
 ```bash
 # Use localhost in .env
-MONGODB_URI=mongodb://admin:admin123@localhost:27017/ask-annie?authSource=admin
+MONGODB_URI=mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin
 ```
 
 **Solution (Docker):**
 ```bash
 # Use service name in docker-compose
-MONGODB_URI=mongodb://admin:admin123@mongodb:27017/ask-annie?authSource=admin
+MONGODB_URI=mongodb://admin:admin123@mongodb:27017/annies-health-journal?authSource=admin
 ```
 
 ### Container Won't Start
@@ -387,7 +387,7 @@ make deps-clean
 docker-compose down
 
 # Remove volumes
-docker volume rm ask-annie_mongodb_data
+docker volume rm annies-health-journal_mongodb_data
 
 # Restart
 docker-compose up -d mongodb

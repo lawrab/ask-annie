@@ -1,4 +1,4 @@
-# Ask Annie - Alpha Release Scope
+# Annie's Health Journal - Alpha Release Scope
 
 **Version:** 0.2.0-alpha
 **Release Date:** November 22, 2025
@@ -242,9 +242,9 @@ These improve quality but aren't strict blockers:
 
 **To be provided to alpha tester:**
 
-### Welcome to Ask Annie Alpha!
+### Welcome to Annie's Health Journal Alpha!
 
-You're testing an early version of Ask Annie, a voice-first symptom tracker for chronic illness.
+You're testing an early version of Annie's Health Journal, a voice-first symptom tracker for chronic illness.
 
 **What to Test:**
 1. **Voice Check-Ins** (Primary Flow)

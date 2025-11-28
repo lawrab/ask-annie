@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Last Updated:** 2025-11-23
-**Application:** Ask Annie v0.1.0+
+**Application:** Annie's Health Journal v0.1.0+
 **Purpose:** Pre-release manual testing checklist to ensure critical user flows work correctly
 
 ---
@@ -1234,7 +1234,7 @@ make dev
 #### Option 2: Manual Start
 ```bash
 # Terminal 1: Start MongoDB and Redis
-cd /home/lrabbets/repos/ask-annie
+cd /home/lrabbets/repos/annies-health-journal
 docker-compose up
 
 # Terminal 2: Start backend
@@ -1269,13 +1269,13 @@ Open browser: `http://localhost:5173`
 # Credentials: admin / admin
 
 # Or use mongo shell
-mongosh mongodb://localhost:27017/ask-annie
+mongosh mongodb://localhost:27017/annies-health-journal
 ```
 
 #### Check Database Contents
 ```javascript
 // In mongosh
-use ask-annie
+use annies-health-journal
 db.users.countDocuments()  // Should return number of users
 db.checkins.countDocuments()  // Should return number of check-ins
 ```
@@ -1290,7 +1290,7 @@ Verify `.env` files are configured:
 ```bash
 NODE_ENV=development
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/ask-annie
+MONGODB_URI=mongodb://localhost:27017/annies-health-journal
 JWT_SECRET=your-secret-key-here
 REDIS_URL=redis://localhost:6379
 ```
@@ -1710,15 +1710,15 @@ curl http://localhost:3000/api/analysis/streak \
 ### File Locations for Reference
 
 #### Frontend
-- Pages: `/home/lrabbets/repos/ask-annie/frontend/src/pages/`
-- Components: `/home/lrabbets/repos/ask-annie/frontend/src/components/`
-- Auth Store: `/home/lrabbets/repos/ask-annie/frontend/src/stores/authStore.ts`
-- API Client: `/home/lrabbets/repos/ask-annie/frontend/src/services/api.ts`
+- Pages: `/home/lrabbets/repos/annies-health-journal/frontend/src/pages/`
+- Components: `/home/lrabbets/repos/annies-health-journal/frontend/src/components/`
+- Auth Store: `/home/lrabbets/repos/annies-health-journal/frontend/src/stores/authStore.ts`
+- API Client: `/home/lrabbets/repos/annies-health-journal/frontend/src/services/api.ts`
 
 #### Backend
-- Routes: `/home/lrabbets/repos/ask-annie/backend/src/routes/`
-- Services: `/home/lrabbets/repos/ask-annie/backend/src/services/`
-- Models: `/home/lrabbets/repos/ask-annie/backend/src/models/`
+- Routes: `/home/lrabbets/repos/annies-health-journal/backend/src/routes/`
+- Services: `/home/lrabbets/repos/annies-health-journal/backend/src/services/`
+- Models: `/home/lrabbets/repos/annies-health-journal/backend/src/models/`
 
 ---
 

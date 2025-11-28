@@ -1,7 +1,7 @@
-# Ask Annie API Documentation
+# Annie's Health Journal API Documentation
 
 **Base URL**: `http://localhost:3000/api` (development)
-**Base URL**: `https://ask-annie.railway.app/api` (production)
+**Base URL**: `https://annies-health-journal.railway.app/api` (production)
 
 **API Version**: v1
 **Content-Type**: `application/json` (unless specified otherwise)

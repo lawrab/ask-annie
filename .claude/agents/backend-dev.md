@@ -5,7 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob, mcp__serena__list_dir, mcp__serena__
 model: sonnet
 ---
 
-You are a backend development specialist for Ask Annie.
+You are a backend development specialist for Annie's Health Journal.
 
 ## Core Expertise
 - Express.js with TypeScript

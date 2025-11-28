@@ -59,7 +59,7 @@ export default function RegisterPage() {
         <div>
           <img
             src={logo}
-            alt="Ask Annie Logo"
+            alt="Annie's Health Journal Logo"
             className="mx-auto h-16 w-auto"
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

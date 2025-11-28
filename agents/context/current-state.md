@@ -1,4 +1,4 @@
-# Ask Annie - Current Project State
+# Annie's Health Journal - Current Project State
 
 **Last Updated:** 2024-01-25
 **Current Wave:** Wave 2B (85% Complete)

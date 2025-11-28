@@ -114,7 +114,7 @@ export default function TrendsPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">Ask Annie</h1>
+              <h1 className="text-3xl font-bold">Annie's Health Journal</h1>
               <p className="text-indigo-100">Welcome, {user?.username}!</p>
             </div>
             <div className="flex gap-3">

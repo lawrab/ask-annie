@@ -1,4 +1,4 @@
-# Backend Architecture Code Review - Ask Annie
+# Backend Architecture Code Review - Annie's Health Journal
 
 **Review Date:** 2025-11-23
 **Reviewer:** Senior Backend Developer
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The Ask Annie backend demonstrates **strong engineering fundamentals** with excellent test coverage, consistent patterns, and good security practices. However, there are several **architectural gaps** and **production readiness concerns** that need addressing before mobile scaling.
+The Annie's Health Journal backend demonstrates **strong engineering fundamentals** with excellent test coverage, consistent patterns, and good security practices. However, there are several **architectural gaps** and **production readiness concerns** that need addressing before mobile scaling.
 
 **Key Strengths:**
 - Excellent test coverage (99.23%)
@@ -72,8 +72,8 @@ export async function getCheckins(req: Request, res: Response) {
 
 **MEDIUM** - Fat Controllers
 **Files:**
-- `/home/lrabbets/repos/ask-annie/backend/src/controllers/checkinController.ts` (427 lines)
-- `/home/lrabbets/repos/ask-annie/backend/src/controllers/authController.ts` (180 lines)
+- `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/checkinController.ts` (427 lines)
+- `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/authController.ts` (180 lines)
 
 **Issue:**
 Controllers contain business logic, validation logic, and response formatting. `getCheckins` has 100+ lines of query building logic.
@@ -85,7 +85,7 @@ Controllers contain business logic, validation logic, and response formatting. `
 ### 1.3 Missing Domain Models
 
 **HIGH** - Anemic Domain Models
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/models/*`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/models/*`
 
 **Issue:**
 Models are pure data containers with no business logic or methods. No domain behaviors encapsulated.
@@ -163,7 +163,7 @@ export interface ApiResponse<T = unknown> {
 ### 2.2 No API Versioning
 
 **HIGH** - Missing Versioning Strategy
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/routes/index.ts`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/routes/index.ts`
 
 **Issue:**
 Routes mounted at `/api/*` with no version prefix. Breaking changes will affect all clients.
@@ -183,7 +183,7 @@ app.use('/api/v1', routes);
 ### 2.3 Pagination Implementation
 
 **MEDIUM** - Incomplete Pagination
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/controllers/checkinController.ts:204-239`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/checkinController.ts:204-239`
 
 **Issue:**
 Uses `limit/offset` pagination which has performance issues at scale. No cursor-based pagination option.
@@ -246,8 +246,8 @@ interface CursorPagination {
 
 **LOW** - JWT Secret Management
 **Files:**
-- `/home/lrabbets/repos/ask-annie/backend/src/controllers/authController.ts:173`
-- `/home/lrabbets/repos/ask-annie/backend/src/config/passport.ts:13`
+- `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/authController.ts:173`
+- `/home/lrabbets/repos/annies-health-journal/backend/src/config/passport.ts:13`
 
 **Issue:**
 Default JWT secret with warning message is a security risk:
@@ -271,7 +271,7 @@ if (!secret) {
 ### 3.2 Rate Limiting
 
 **HIGH** - Insufficient Rate Limiting
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/routes/authRoutes.ts:14-23`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/routes/authRoutes.ts:14-23`
 
 **Issue:**
 Only auth endpoints have rate limiting (5 requests/15 min). Other endpoints unprotected.
@@ -352,7 +352,7 @@ export const getCheckinsQuerySchema = Joi.object({
 ### 3.4 File Upload Security
 
 **MEDIUM** - File Upload Vulnerabilities
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/middleware/upload.ts`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/middleware/upload.ts`
 
 **Issue:**
 File upload validation is incomplete:
@@ -407,7 +407,7 @@ if (!type || !['audio/mpeg', 'audio/wav', ...].includes(type.mime)) {
 ### 3.5 Password Security
 
 **MEDIUM** - Password Hashing Configuration
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/controllers/authController.ts:37`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/authController.ts:37`
 
 **Issue:**
 Salt rounds hardcoded to 10 (reasonable but not configurable):
@@ -462,7 +462,7 @@ app.use(mongoSanitize());
 ### 4.1 N+1 Query Issues
 
 **CRITICAL** - Multiple N+1 Query Patterns
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/services/analysisService.ts`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/services/analysisService.ts`
 
 **Issue:**
 Analysis functions fetch all check-ins into memory, then process:
@@ -511,7 +511,7 @@ async function analyzeSymptomsForUser(userId: string): Promise<SymptomsAnalysis>
 ### 4.2 Database Query Optimization
 
 **HIGH** - Missing Compound Indexes
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/models/CheckIn.ts`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/models/CheckIn.ts`
 
 **Issue:**
 Only basic indexes exist:
@@ -547,7 +547,7 @@ checkInSchema.index({ userId: 1, timestamp: 1 });
 ### 4.3 Synchronous Operations
 
 **MEDIUM** - Blocking File Operations
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/services/transcriptionService.ts:64`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/services/transcriptionService.ts:64`
 
 **Issue:**
 Uses synchronous file stream creation:
@@ -566,8 +566,8 @@ While `createReadStream` itself is async, file stat checks could block. Already 
 
 **HIGH** - Memory Leak Potential
 **Files:**
-- `/home/lrabbets/repos/ask-annie/backend/src/controllers/checkinController.ts`
-- `/home/lrabbets/repos/ask-annie/backend/src/services/analysisService.ts`
+- `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/checkinController.ts`
+- `/home/lrabbets/repos/annies-health-journal/backend/src/services/analysisService.ts`
 
 **Issue:**
 Large datasets loaded into memory without streaming:
@@ -607,7 +607,7 @@ const total = await CheckIn.estimatedDocumentCount();
 ### 4.5 Connection Pooling
 
 **MEDIUM** - Default Connection Pool Settings
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/config/database.ts:8`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/config/database.ts:8`
 
 **Issue:**
 Uses default Mongoose connection settings:
@@ -792,7 +792,7 @@ logger.info('Fetching check-ins', sanitizeLogData({ query: req.query }));
 ### 5.4 Error Messages
 
 **MEDIUM** - Error Message Information Disclosure
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/middleware/errorHandler.ts:43`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/middleware/errorHandler.ts:43`
 
 **Issue:**
 Stack traces exposed in development mode:
@@ -868,7 +868,7 @@ if (process.env.SENTRY_DSN) {
 
 **MEDIUM** - Duplicated Symptom Processing Logic
 **Files:**
-- `/home/lrabbets/repos/ask-annie/backend/src/services/analysisService.ts:529-554, 558-585`
+- `/home/lrabbets/repos/annies-health-journal/backend/src/services/analysisService.ts:529-554, 558-585`
 
 **Issue:**
 Identical symptom extraction logic duplicated:
@@ -930,8 +930,8 @@ function extractSymptomSeverities(
 
 **HIGH** - High Cyclomatic Complexity
 **Files:**
-- `/home/lrabbets/repos/ask-annie/backend/src/controllers/checkinController.ts:139` (getCheckins)
-- `/home/lrabbets/repos/ask-annie/backend/src/services/analysisService.ts:489` (calculateQuickStats)
+- `/home/lrabbets/repos/annies-health-journal/backend/src/controllers/checkinController.ts:139` (getCheckins)
+- `/home/lrabbets/repos/annies-health-journal/backend/src/services/analysisService.ts:489` (calculateQuickStats)
 
 **Issue:**
 Functions exceed 50 lines with multiple responsibilities:
@@ -1169,7 +1169,7 @@ describe('Edge Cases', () => {
 ### 8.1 TODOs in Code
 
 **LOW** - Unresolved TODOs
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/routes/index.ts:18`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/routes/index.ts:18`
 
 ```typescript
 // TODO: Add remaining route modules as they are created
@@ -1192,7 +1192,7 @@ describe('Edge Cases', () => {
 ### 8.3 Deprecated Patterns
 
 **MEDIUM** - Callback-based Passport Middleware
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/middleware/auth.ts:19`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/middleware/auth.ts:19`
 
 **Issue:**
 Using callback-based Passport authentication when async/await is available:
@@ -1225,7 +1225,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 ### 8.4 Temporary Fixes
 
 **LOW** - Symptom Value Clamping
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/services/parsingService.ts:141`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/services/parsingService.ts:141`
 
 ```typescript
 // Clamp severity to valid range [1, 10] in case GPT returns invalid values
@@ -1384,7 +1384,7 @@ app.use((req, res, next) => {
 ### 10.1 Health Checks
 
 **MEDIUM** - Incomplete Health Check
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/server.ts:38`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/server.ts:38`
 
 **Issue:**
 Health check only returns status, doesn't verify dependencies:
@@ -1429,7 +1429,7 @@ app.get('/health/live', (req, res) => {
 ### 10.2 Graceful Shutdown
 
 **MEDIUM** - Incomplete Shutdown Handling
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/config/database.ts:20`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/config/database.ts:20`
 
 **Issue:**
 Only handles SIGINT for database:
@@ -1494,7 +1494,7 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 Environment variables have fallbacks instead of failing fast:
 
 ```typescript
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ask-annie';
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/annies-health-journal';
 const secret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 ```
 
@@ -1562,7 +1562,7 @@ app.get('/metrics', async (req, res) => {
 ### 10.5 Logging Infrastructure
 
 **MEDIUM** - File-based Logging Only
-**Files:** `/home/lrabbets/repos/ask-annie/backend/src/utils/logger.ts:15-16`
+**Files:** `/home/lrabbets/repos/annies-health-journal/backend/src/utils/logger.ts:15-16`
 
 **Issue:**
 Logs written to files in production:
@@ -1613,7 +1613,7 @@ const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Ask Annie API',
+      title: 'Annie's Health Journal API',
       version: '1.0.0',
     },
   },
@@ -1721,7 +1721,7 @@ app.use((req, res, next) => {
 
 ## Conclusion
 
-The Ask Annie backend is **well-architected for a prototype** with excellent test coverage and consistent patterns. However, it requires significant work for **production mobile deployment**:
+The Annie's Health Journal backend is **well-architected for a prototype** with excellent test coverage and consistent patterns. However, it requires significant work for **production mobile deployment**:
 
 **Strengths:**
 - 99.23% test coverage

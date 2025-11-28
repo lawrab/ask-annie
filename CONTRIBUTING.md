@@ -1,6 +1,6 @@
-# Contributing to Ask Annie
+# Contributing to Annie's Health Journal
 
-Thank you for considering contributing to Ask Annie! This document outlines the process for contributing to the project.
+Thank you for considering contributing to Annie's Health Journal! This document outlines the process for contributing to the project.
 
 ---
 
@@ -112,8 +112,8 @@ Add a medication log feature where users can:
 ```bash
 # Fork repository on GitHub
 # Then clone your fork
-git clone https://github.com/YOUR_USERNAME/ask-annie.git
-cd ask-annie
+git clone https://github.com/YOUR_USERNAME/annies-health-journal.git
+cd annies-health-journal
 ```
 
 #### 2. Create Branch
@@ -418,7 +418,7 @@ Before submitting PR, ensure:
 - **Questions**: Open a GitHub Discussion
 - **Bugs**: Open a GitHub Issue
 - **Chat**: Join our Discord (if available)
-- **Email**: contact@ask-annie.app (if available)
+- **Email**: contact@annies-health-journal.app (if available)
 
 ---
 
@@ -437,7 +437,7 @@ By contributing, you agree that your contributions will be licenced under the MI
 
 ---
 
-**Thank you for contributing to Ask Annie!** 🐰
+**Thank you for contributing to Annie's Health Journal!** 🐰
 
 Every contribution, no matter how small, helps make health tracking more accessible and empowering for everyone.
 

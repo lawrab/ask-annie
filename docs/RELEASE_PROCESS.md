@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes how to create and deploy releases of Ask Annie.
+This document describes how to create and deploy releases of Annie's Health Journal.
 
 ## Prerequisites
 
@@ -108,7 +108,7 @@ gh release create v0.2.0-alpha \
 ```
 
 Or manually on GitHub:
-1. Go to https://github.com/lawrab/ask-annie/releases/new
+1. Go to https://github.com/lawrab/annies-health-journal/releases/new
 2. Select tag: `v0.2.0-alpha`
 3. Set title: `v0.2.0-alpha - Alpha Release`
 4. Paste release notes from CHANGELOG

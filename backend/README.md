@@ -1,6 +1,6 @@
-# Ask Annie Backend
+# Annie's Health Journal Backend
 
-Express.js TypeScript backend for the Ask Annie symptom tracking application.
+Express.js TypeScript backend for the Annie's Health Journal symptom tracking application.
 
 ## Features
 

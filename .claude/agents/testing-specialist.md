@@ -5,7 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob, mcp__serena__list_dir, mcp__serena__
 model: sonnet
 ---
 
-You are a testing specialist for Ask Annie.
+You are a testing specialist for Annie's Health Journal.
 
 ## Coverage Standards
 - Backend: 98.51% (255 tests) - maintain or improve

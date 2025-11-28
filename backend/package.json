@@ -1,7 +1,7 @@
 {
-  "name": "ask-annie-backend",
+  "name": "annies-health-journal-backend",
   "version": "0.2.0-alpha",
-  "description": "Backend API for Ask Annie symptom tracking application",
+  "description": "Backend API for Annie's Health Journal symptom tracking application",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",

@@ -1,4 +1,8 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import type {
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/browser';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -381,6 +385,112 @@ export const userApi = {
 
   requestDeletion: async (): Promise<RequestDeletionResponse> => {
     const response = await apiClient.post<RequestDeletionResponse>('/user/request-deletion');
+    return response.data;
+  },
+};
+
+// Passkey API Types
+export interface Passkey {
+  id: string;
+  credentialId: string;
+  deviceName: string;
+  lastUsedAt: string;
+  createdAt: string;
+  transports: string[];
+}
+
+export interface PasskeyListResponse {
+  success: boolean;
+  data: Passkey[];
+}
+
+export interface PasskeyRegistrationOptionsResponse {
+  success: boolean;
+  data: PublicKeyCredentialCreationOptionsJSON;
+}
+
+export interface PasskeyAuthenticationOptionsResponse {
+  success: boolean;
+  data: PublicKeyCredentialRequestOptionsJSON | null;
+  message?: string;
+}
+
+export interface PasskeyVerificationResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    user: User;
+    token: string;
+  };
+  error?: string;
+}
+
+// Passkey API
+export const passkeysApi = {
+  // Generate registration options for adding a new passkey
+  getRegistrationOptions: async (): Promise<PasskeyRegistrationOptionsResponse> => {
+    const response = await apiClient.post<PasskeyRegistrationOptionsResponse>(
+      '/auth/passkey/registration-options'
+    );
+    return response.data;
+  },
+
+  // Verify passkey registration
+  verifyRegistration: async (data: {
+    response: unknown; // RegistrationResponseJSON from @simplewebauthn/browser
+    deviceName?: string;
+  }): Promise<PasskeyVerificationResponse> => {
+    const response = await apiClient.post<PasskeyVerificationResponse>(
+      '/auth/passkey/registration-verification',
+      data
+    );
+    return response.data;
+  },
+
+  // Generate authentication options for passkey login
+  getAuthenticationOptions: async (email: string): Promise<PasskeyAuthenticationOptionsResponse> => {
+    const response = await apiClient.post<PasskeyAuthenticationOptionsResponse>(
+      '/auth/passkey/authentication-options',
+      { email }
+    );
+    return response.data;
+  },
+
+  // Verify passkey authentication
+  verifyAuthentication: async (data: {
+    response: unknown; // AuthenticationResponseJSON from @simplewebauthn/browser
+    email: string;
+  }): Promise<PasskeyVerificationResponse> => {
+    const response = await apiClient.post<PasskeyVerificationResponse>(
+      '/auth/passkey/authentication-verification',
+      data
+    );
+    return response.data;
+  },
+
+  // List all passkeys for authenticated user
+  list: async (): Promise<PasskeyListResponse> => {
+    const response = await apiClient.get<PasskeyListResponse>('/auth/passkeys');
+    return response.data;
+  },
+
+  // Delete a specific passkey
+  delete: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete<{ success: boolean; message: string }>(
+      `/auth/passkeys/${id}`
+    );
+    return response.data;
+  },
+
+  // Update passkey device name
+  updateDeviceName: async (
+    id: string,
+    deviceName: string
+  ): Promise<{ success: boolean; data: Passkey }> => {
+    const response = await apiClient.patch<{ success: boolean; data: Passkey }>(
+      `/auth/passkeys/${id}`,
+      { deviceName }
+    );
     return response.data;
   },
 };

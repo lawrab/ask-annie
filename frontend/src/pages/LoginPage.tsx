@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import logo from '../assets/logo.svg';
 import api from '../services/api';
+import { authenticateWithPasskey, isPasskeySupported } from '../utils/passkeys';
+import { useAuthStore } from '../stores/authStore';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,10 +18,18 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
+  const setToken = useAuthStore((state) => state.setToken);
+
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
+  const [showPasskeyEmailInput, setShowPasskeyEmailInput] = useState(false);
+  const [passkeyEmail, setPasskeyEmail] = useState('');
 
   const {
     register,
@@ -29,6 +39,11 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: 'onBlur',
   });
+
+  // Check passkey support on mount
+  useEffect(() => {
+    setPasskeySupported(isPasskeySupported());
+  }, []);
 
   const onSubmit = async (data: LoginFormData) => {
     setApiError(null);
@@ -59,6 +74,33 @@ export default function LoginPage() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasskeyLogin = async () => {
+    if (!passkeyEmail.trim()) {
+      setApiError('Please enter your email address.');
+      return;
+    }
+
+    setApiError(null);
+    setIsPasskeyLoading(true);
+
+    try {
+      const result = await authenticateWithPasskey(passkeyEmail);
+
+      if (result.success && result.user && result.token) {
+        setUser(result.user);
+        setToken(result.token);
+        navigate('/dashboard');
+      } else {
+        setApiError(result.error || 'Failed to authenticate with passkey.');
+      }
+    } catch (error) {
+      console.error('Passkey login error:', error);
+      setApiError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsPasskeyLoading(false);
     }
   };
 
@@ -140,12 +182,87 @@ export default function LoginPage() {
             Sign in to Annie&apos;s Health Journal
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email and we&apos;ll send you a login link
+            {passkeySupported
+              ? 'Sign in with a passkey or email link'
+              : 'Enter your email and we\'ll send you a login link'}
           </p>
         </div>
 
+        {/* Passkey login section */}
+        {passkeySupported && (
+          <>
+            {apiError && <Alert type="error">{apiError}</Alert>}
+
+            <div className="mt-8 space-y-4">
+              {!showPasskeyEmailInput ? (
+                <Button
+                  type="button"
+                  fullWidth
+                  variant="primary"
+                  onClick={() => setShowPasskeyEmailInput(true)}
+                >
+                  🔑 Sign in with passkey
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <Input
+                    id="passkey-email"
+                    type="email"
+                    label="Email address"
+                    placeholder="you@example.com"
+                    value={passkeyEmail}
+                    onChange={(e) => setPasskeyEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handlePasskeyLogin();
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      fullWidth
+                      variant="primary"
+                      loading={isPasskeyLoading}
+                      disabled={isPasskeyLoading}
+                      onClick={handlePasskeyLogin}
+                    >
+                      {isPasskeyLoading ? 'Authenticating...' : 'Continue'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={isPasskeyLoading}
+                      onClick={() => {
+                        setShowPasskeyEmailInput(false);
+                        setPasskeyEmail('');
+                        setApiError(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-50 text-gray-500">or</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          {apiError && <Alert type="error">{apiError}</Alert>}
+          {!passkeySupported && apiError && <Alert type="error">{apiError}</Alert>}
 
           <div className="rounded-md shadow-sm space-y-4">
             <Input

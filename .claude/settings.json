@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/post-write.sh"
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/post-write.sh\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/docs-reminder.sh"
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/docs-reminder.sh\""
           }
         ]
       }

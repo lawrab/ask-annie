@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Alert } from '../components/ui/Alert';
-import { userApi } from '../services/api';
+import { userApi, passkeysApi, type Passkey } from '../services/api';
+import {
+  registerPasskey,
+  isPasskeySupported,
+  isPlatformAuthenticatorAvailable,
+  getBrowserDeviceName,
+} from '../utils/passkeys';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -19,6 +25,41 @@ export default function SettingsPage() {
   const [isRequestingDeletion, setIsRequestingDeletion] = useState(false);
   const [deletionRequestError, setDeletionRequestError] = useState<string | null>(null);
   const [deletionRequestSuccess, setDeletionRequestSuccess] = useState(false);
+
+  // Passkey state
+  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+  const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  const [platformAuthAvailable, setPlatformAuthAvailable] = useState(false);
+  const [isAddingPasskey, setIsAddingPasskey] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeySuccess, setPasskeySuccess] = useState<string | null>(null);
+  const [editingPasskeyId, setEditingPasskeyId] = useState<string | null>(null);
+  const [editingDeviceName, setEditingDeviceName] = useState('');
+
+  // Load passkeys and check browser support on mount
+  useEffect(() => {
+    const init = async () => {
+      // Check browser support
+      setPasskeySupported(isPasskeySupported());
+      const platformAuth = await isPlatformAuthenticatorAvailable();
+      setPlatformAuthAvailable(platformAuth);
+
+      // Load passkeys
+      try {
+        const response = await passkeysApi.list();
+        if (response.success) {
+          setPasskeys(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load passkeys:', error);
+      } finally {
+        setIsLoadingPasskeys(false);
+      }
+    };
+
+    init();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -91,6 +132,75 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAddPasskey = async () => {
+    try {
+      setIsAddingPasskey(true);
+      setPasskeyError(null);
+      setPasskeySuccess(null);
+
+      const deviceName = getBrowserDeviceName();
+      const result = await registerPasskey(deviceName);
+
+      if (result.success) {
+        setPasskeySuccess('Passkey added successfully!');
+        // Reload passkeys
+        const response = await passkeysApi.list();
+        if (response.success) {
+          setPasskeys(response.data);
+        }
+      } else {
+        setPasskeyError(result.error || 'Failed to add passkey.');
+      }
+    } catch (error) {
+      console.error('Add passkey error:', error);
+      setPasskeyError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsAddingPasskey(false);
+    }
+  };
+
+  const handleDeletePasskey = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this passkey?')) {
+      return;
+    }
+
+    try {
+      setPasskeyError(null);
+      setPasskeySuccess(null);
+
+      const response = await passkeysApi.delete(id);
+      if (response.success) {
+        setPasskeySuccess('Passkey deleted successfully!');
+        setPasskeys(passkeys.filter((p) => p.id !== id));
+      } else {
+        setPasskeyError(response.message || 'Failed to delete passkey.');
+      }
+    } catch (error) {
+      console.error('Delete passkey error:', error);
+      setPasskeyError('Failed to delete passkey. Please try again.');
+    }
+  };
+
+  const handleUpdatePasskeyName = async (id: string, newName: string) => {
+    try {
+      setPasskeyError(null);
+      setPasskeySuccess(null);
+
+      const response = await passkeysApi.updateDeviceName(id, newName);
+      if (response.success) {
+        setPasskeySuccess('Passkey name updated successfully!');
+        setPasskeys(passkeys.map((p) => (p.id === id ? response.data : p)));
+        setEditingPasskeyId(null);
+        setEditingDeviceName('');
+      } else {
+        setPasskeyError('Failed to update passkey name.');
+      }
+    } catch (error) {
+      console.error('Update passkey error:', error);
+      setPasskeyError('Failed to update passkey name. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -133,6 +243,150 @@ export default function SettingsPage() {
                   <p className="text-gray-900">{user?.email}</p>
                 </div>
               </div>
+            </Card>
+          </section>
+
+          {/* Security */}
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Security</h2>
+
+            <Card variant="default" className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Passkeys</h3>
+              <p className="text-gray-600 mb-4">
+                Passkeys provide secure, passwordless authentication using Face ID, Touch ID, or
+                your device&apos;s security features.
+              </p>
+
+              {/* Browser support warning */}
+              {!passkeySupported && (
+                <Alert type="error" className="mb-4">
+                  Passkeys are not supported in your current browser. Please use a modern browser
+                  like Chrome, Safari, or Edge.
+                </Alert>
+              )}
+
+              {/* Platform authenticator info */}
+              {passkeySupported && !platformAuthAvailable && (
+                <Alert type="warning" className="mb-4">
+                  Your device may not support biometric authentication. You can still use
+                  security keys.
+                </Alert>
+              )}
+
+              {/* Success/Error messages */}
+              {passkeySuccess && (
+                <Alert type="success" className="mb-4">
+                  {passkeySuccess}
+                </Alert>
+              )}
+
+              {passkeyError && (
+                <Alert type="error" className="mb-4">
+                  {passkeyError}
+                </Alert>
+              )}
+
+              {/* Passkey list */}
+              {isLoadingPasskeys ? (
+                <div className="text-gray-600 mb-4">Loading passkeys...</div>
+              ) : passkeys.length > 0 ? (
+                <div className="space-y-3 mb-4">
+                  {passkeys.map((passkey) => (
+                    <div
+                      key={passkey.id}
+                      className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
+                    >
+                      <div className="flex-1">
+                        {editingPasskeyId === passkey.id ? (
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={editingDeviceName}
+                              onChange={(e) => setEditingDeviceName(e.target.value)}
+                              className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              placeholder="Device name"
+                            />
+                            <Button
+                              onClick={() => handleUpdatePasskeyName(passkey.id, editingDeviceName)}
+                              variant="primary"
+                              size="small"
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setEditingPasskeyId(null);
+                                setEditingDeviceName('');
+                              }}
+                              variant="secondary"
+                              size="small"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-medium text-gray-900">{passkey.deviceName}</p>
+                            <div className="flex gap-4 text-sm text-gray-600 mt-1">
+                              <span>
+                                Created:{' '}
+                                {new Date(passkey.createdAt).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                              <span>
+                                Last used:{' '}
+                                {new Date(passkey.lastUsedAt).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {editingPasskeyId !== passkey.id && (
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            onClick={() => {
+                              setEditingPasskeyId(passkey.id);
+                              setEditingDeviceName(passkey.deviceName);
+                            }}
+                            variant="secondary"
+                            size="small"
+                          >
+                            Rename
+                          </Button>
+                          <Button
+                            onClick={() => handleDeletePasskey(passkey.id)}
+                            variant="danger"
+                            size="small"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600 mb-4">No passkeys registered yet.</p>
+              )}
+
+              {/* Add passkey button */}
+              {passkeySupported && (
+                <Button
+                  onClick={handleAddPasskey}
+                  variant="primary"
+                  size="medium"
+                  disabled={isAddingPasskey}
+                >
+                  {isAddingPasskey ? 'Adding Passkey...' : 'Add Passkey'}
+                </Button>
+              )}
             </Card>
           </section>
 

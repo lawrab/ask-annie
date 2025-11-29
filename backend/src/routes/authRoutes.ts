@@ -11,6 +11,15 @@ import {
   verifyMagicLink,
 } from '../controllers/authController';
 import {
+  generateRegistrationOptions,
+  verifyRegistration,
+  generateAuthenticationOptions,
+  verifyAuthentication,
+  listPasskeys,
+  deletePasskey,
+  updatePasskey,
+} from '../controllers/passkeyController';
+import {
   registerSchema,
   loginSchema,
   magicLinkRequestSchema,
@@ -94,5 +103,63 @@ router.post(
  * Response: { success, data: { user, token } }
  */
 router.post('/magic-link/verify', validateRequest(magicLinkVerifySchema), verifyMagicLink);
+
+/**
+ * POST /api/auth/passkey/registration-options
+ * Generate WebAuthn registration options for adding a new passkey
+ * Requires authentication
+ * Response: { success, data: PublicKeyCredentialCreationOptions }
+ */
+router.post('/passkey/registration-options', authenticate, generateRegistrationOptions);
+
+/**
+ * POST /api/auth/passkey/registration-verification
+ * Verify and complete passkey registration
+ * Requires authentication
+ * Body: { response: RegistrationResponseJSON, deviceName?: string }
+ * Response: { success, message }
+ */
+router.post('/passkey/registration-verification', authenticate, verifyRegistration);
+
+/**
+ * POST /api/auth/passkey/authentication-options
+ * Generate WebAuthn authentication options for passkey login
+ * Body: { email }
+ * Response: { success, data: PublicKeyCredentialRequestOptions | null }
+ */
+router.post('/passkey/authentication-options', authLimiter, generateAuthenticationOptions);
+
+/**
+ * POST /api/auth/passkey/authentication-verification
+ * Verify passkey authentication and log in user
+ * Body: { response: AuthenticationResponseJSON, email }
+ * Response: { success, data: { user, token } }
+ */
+router.post('/passkey/authentication-verification', authLimiter, verifyAuthentication);
+
+/**
+ * GET /api/auth/passkeys
+ * List all registered passkeys for the authenticated user
+ * Requires authentication
+ * Response: { success, data: Passkey[] }
+ */
+router.get('/passkeys', authenticate, listPasskeys);
+
+/**
+ * DELETE /api/auth/passkeys/:id
+ * Delete a specific passkey
+ * Requires authentication
+ * Response: { success, message }
+ */
+router.delete('/passkeys/:id', authenticate, deletePasskey);
+
+/**
+ * PATCH /api/auth/passkeys/:id
+ * Update passkey device name
+ * Requires authentication
+ * Body: { deviceName }
+ * Response: { success, data: Passkey }
+ */
+router.patch('/passkeys/:id', authenticate, updatePasskey);
 
 export default router;

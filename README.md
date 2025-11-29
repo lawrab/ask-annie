@@ -174,8 +174,18 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ Reusable CheckInCard component (Issue #21, PR #93 merged)
 - 📋 Doctor summary generation (Issue #20)
 
+### v0.3.0-alpha - Family Alpha Release (Phase 1 Complete ✅)
+- ✅ Magic link passwordless authentication (Issue #157, PRs #163, #164, #167)
+- ✅ Account deletion with email confirmation (Issue #160, PR #172)
+- ✅ Data export (GDPR compliance) (Issue #160, PR #172)
+- ✅ PHI/PII sanitization in logs (Issue #129, PR #169)
+- ✅ VoiceRecorder memory leak fix (Issue #130, PR #170)
+- ✅ React Error Boundaries (Issue #131, PR #171)
+- 🚧 Passkey/WebAuthn support (Issue #158) - Phase 2 in progress
+- 📋 Deprecate password authentication (Issue #159) - Phase 3 planned
+
 ### Frontend (Wave 4) - Settings & Polish
-- 📋 Settings page (Issue #28)
+- ✅ Settings page with data export/deletion (Issue #28, PR #172)
 - 📋 Mobile-optimized PWA
 
 ### Future Enhancements

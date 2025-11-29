@@ -6,6 +6,81 @@ This document outlines the standard workflow for all development work on Annie's
 
 ---
 
+## 🤖 For Claude Code Sessions (Context Resets)
+
+**When starting work in a new session with clean context, follow this checklist to ensure consistency:**
+
+### Session Start Checklist
+
+1. **Activate project and read memories**
+   ```bash
+   # Serena will automatically activate and show available memories
+   # Read relevant memories for your task:
+   # - 03-tech-stack-architecture (always read this)
+   # - 04-testing-quality-standards (if writing tests)
+   # - 07-coding-patterns-consistency (CRITICAL - read before any code)
+   ```
+
+2. **Understand the task context**
+   - Read the GitHub issue thoroughly
+   - Check linked PRs or discussions
+   - Review any related documentation
+
+3. **Find similar existing implementations** (CRITICAL)
+   ```bash
+   # Before writing ANY new code, find similar code first:
+
+   # New controller? Read existing controllers:
+   # backend/src/controllers/userController.ts
+   # backend/src/controllers/checkInController.ts
+
+   # New page? Read existing pages:
+   # frontend/src/pages/DashboardPage.tsx
+   # frontend/src/pages/SettingsPage.tsx
+
+   # New component? Check design system first:
+   # frontend/src/components/ (and Storybook)
+
+   # Use Glob/Grep to find patterns:
+   # Glob: **/*Controller.ts
+   # Grep: "export async function"
+   ```
+
+4. **Match existing patterns**
+   - Use the same error handling approach
+   - Use the same state management pattern
+   - Use the same testing style
+   - Use the same naming conventions
+   - **When in doubt, copy the pattern from existing code**
+
+5. **Use the design system**
+   - Check Storybook for available components
+   - Don't create new buttons, inputs, modals if they exist
+   - Use existing Tailwind design tokens
+
+6. **Quick reference commands**
+   ```bash
+   # View coding patterns (if slash command exists)
+   /patterns
+
+   # Check current standards
+   cd backend && npm run lint      # See active lint rules
+   cd frontend && npm test          # See test patterns
+   ```
+
+### Why This Matters
+
+Context resets mean losing awareness of:
+- Previous architectural decisions
+- Established coding patterns
+- Component library conventions
+- Testing approaches
+- Style preferences
+
+**Following this checklist ensures new code matches existing code**, maintaining quality and consistency across sessions.
+
+---
+
 ## Workflow Overview
 
 ```

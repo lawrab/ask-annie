@@ -93,15 +93,25 @@ annies-health-journal/
 
 ## Documentation
 
-- [Development Workflow](docs/WORKFLOW.md) - **Start here for development work**
+### 📚 Essential Reading
+
+- **[Development Workflow](docs/WORKFLOW.md)** - **Start here!** Complete development process
+  - 🤖 Includes session start checklist for Claude Code (maintains consistency across context resets)
+- **[Contributing Guidelines](docs/CONTRIBUTING.md)** - Code standards, patterns, and best practices
+  - Reference this before implementing new features
+  - Contains coding pattern examples for backend and frontend
+
+### 📖 Reference Documentation
+
 - [Design System](docs/DESIGN_SYSTEM.md) - UI components and design tokens
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [API Documentation](docs/API_DOCUMENTATION.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [Container Setup (Podman/Docker)](docs/DOCKER.md)
-- [Podman Specific Guide](docs/PODMAN.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Contributing Guidelines](docs/CONTRIBUTING.md)
+- [Architecture Overview](docs/ARCHITECTURE.md) - System design and data models
+- [API Documentation](docs/API_DOCUMENTATION.md) - Endpoint specifications
+- [Development Guide](docs/DEVELOPMENT.md) - Environment setup
+- [Deployment Guide](docs/DEPLOYMENT.md) - Railway deployment
+- [Container Setup (Podman/Docker)](docs/DOCKER.md) - Container configuration
+- [Podman Specific Guide](docs/PODMAN.md) - Podman-specific instructions
+- [WCAG Compliance](docs/WCAG_COMPLIANCE.md) - Accessibility standards
+- [UX Decisions](docs/UX_DECISIONS.md) - Design rationale
 
 ## Deployment
 

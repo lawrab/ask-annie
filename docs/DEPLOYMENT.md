@@ -1,566 +1,513 @@
-# Annie's Health Journal - Deployment Guide
+# Deployment Guide
 
-This guide covers deploying Annie's Health Journal to Railway (recommended) and other platforms.
+Complete guide for deploying Annie's Health Journal to production.
 
----
+## Table of Contents
 
-## Deployment Strategy
-
-Annie's Health Journal uses **tag-based deployments** to Railway:
-
-- ✅ **Production Only**: Single production environment
-- ✅ **Deploy on Git Tags**: Only git tags trigger deployments (e.g., `v0.2.0-alpha`)
-- ✅ **Railway Built-in CD**: Railway automatically deploys when tags are pushed
-- ✅ **CI Checks in PRs**: All quality checks run in pull requests before merge
-
-### Quick Deploy
-
-```bash
-# 1. Ensure main branch is ready
-git checkout main
-git pull
-
-# 2. Create and push tag
-git tag -a v0.2.0-alpha -m "Release v0.2.0-alpha"
-git push origin v0.2.0-alpha
-
-# 3. Railway deploys automatically
-# Monitor at: https://railway.app/dashboard
-```
-
-See [RELEASE_PROCESS.md](./RELEASE_PROCESS.md) for detailed release procedures.
+1. [Quick Start (Railway)](#quick-start-railway)
+2. [Initial Setup](#initial-setup)
+3. [Configuration](#configuration)
+4. [Release Process](#release-process)
+5. [Operations](#operations)
+6. [Troubleshooting](#troubleshooting)
+7. [Reference](#reference)
 
 ---
 
 ## Quick Start (Railway)
 
-Railway provides the simplest deployment path with automatic CI/CD from GitHub.
+Railway provides the simplest deployment with automatic CI/CD from GitHub.
 
 ### Prerequisites
 
 - GitHub account
-- Railway account (free tier available)
-- Git repository with Annie's Health Journal code
+- Railway account (https://railway.app)
+- Repository: https://github.com/lrabbets/annies-health-journal
 
-### Steps
+### Deploy in 5 Minutes
 
-1. **Push code to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
+```bash
+# 1. Push code to GitHub
+git push origin main
 
-2. **Create Railway project**
-   - Visit [railway.app](https://railway.app)
-   - Click "New Project" → "Deploy from GitHub repo"
-   - Select your `annies-health-journal` repository
-   - Railway will auto-detect the monorepo structure
+# 2. Create Railway project
+# Visit railway.app → "New Project" → "Deploy from GitHub repo"
+# Select annies-health-journal repository
 
-3. **Configure services**
+# 3. Create and push a tag
+git tag -a v0.1.0 -m "Initial release"
+git push origin v0.1.0
 
-   Railway should create three services automatically:
-   - MongoDB database
-   - Backend (Node.js)
-   - Frontend (Static site)
-
-4. **Set environment variables**
-
-   For **Backend service**:
-   ```env
-   NODE_ENV=production
-   PORT=3000
-   MONGODB_URI=${{MongoDB.MONGO_URL}}
-   JWT_SECRET=<generate-secure-random-string>
-   ALLOWED_ORIGINS=https://<your-frontend-domain>.railway.app
-   WHISPER_MODEL_SIZE=base
-   WHISPER_DEVICE=cpu
-   LOG_LEVEL=info
-   ```
-
-   For **Frontend service**:
-   ```env
-   VITE_API_URL=https://<your-backend-domain>.railway.app/api
-   VITE_ENV=production
-   ```
-
-5. **Deploy**
-   - Railway will automatically build and deploy on push to `main`
-   - Monitor deployment logs in Railway dashboard
-
-6. **Verify deployment**
-   - Backend health: `https://<backend-url>/health`
-   - Frontend: `https://<frontend-url>`
-
----
-
-## Detailed Railway Configuration
-
-### MongoDB Setup
-
-Railway provides managed MongoDB instances:
-
-1. In Railway dashboard, click "New Service" → "Database" → "MongoDB"
-2. Railway generates `MONGO_URL` automatically
-3. Reference in backend: `${{MongoDB.MONGO_URL}}`
-
-**Backup strategy**:
-- Enable automatic backups in Railway settings
-- Consider scheduled exports via API
-
-### Backend Service Configuration
-
-> **Note**: Backend uses Dockerfile for builds. See `backend/Dockerfile` for build configuration.
-
-**Root Directory**: `backend` (must be set in Railway Settings → Source)
-
-**Builder**: Dockerfile (automatically detected)
-
-**Health Check**:
-- Path: `/health`
-- Expected status: `200`
-- Built into the Dockerfile with HEALTHCHECK instruction
-
-**Resources** (adjust as needed):
-- Memory: 512MB (minimum)
-- CPU: 0.5 vCPU
-
-### Frontend Service Configuration
-
-> **Note**: Frontend uses Dockerfile for builds. See `frontend/Dockerfile` for build configuration.
-
-**Root Directory**: `frontend` (must be set in Railway Settings → Source)
-
-**Builder**: Dockerfile (automatically detected)
-
-**Build Arguments** (configured in Dockerfile):
-- `VITE_API_URL` - Backend API URL
-- `VITE_ENV` - Environment (production)
-- Other Vite environment variables
-
-**Resources**:
-- Memory: 256MB
-- CPU: 0.25 vCPU
-
-### faster-whisper Setup
-
-Railway doesn't support Python natively in Node.js services. Options:
-
-**Option 1: Docker Multi-Stage Build** (Recommended for production)
-
-Create `backend/Dockerfile`:
-```dockerfile
-FROM python:3.11-slim as python-deps
-RUN pip install faster-whisper
-
-FROM node:18-alpine
-COPY --from=python-deps /usr/local/lib/python3.11 /usr/local/lib/python3.11
-COPY backend /app
-WORKDIR /app
-RUN npm install && npm run build
-CMD ["npm", "start"]
+# Railway deploys automatically!
 ```
 
-**Option 2: External Transcription Service**
-
-Use OpenAI Whisper API instead:
-- Add `OPENAI_API_KEY` to environment
-- Modify transcription service to use API
-
-**Option 3: Separate Python Service**
-
-Deploy Python transcription service separately:
-- Create new Railway service with Python runtime
-- Backend calls transcription service via HTTP
+See [Initial Setup](#initial-setup) for detailed configuration.
 
 ---
 
-## Environment Variables Reference
+## Initial Setup
 
-### Backend
+### Deployment Strategy
+
+Annie's Health Journal uses **tag-based deployments**:
+
+- ✅ **Production Only**: Single production environment
+- ✅ **Deploy on Git Tags**: Only tags trigger deployments (e.g., `v0.2.0-alpha`)
+- ✅ **Railway Auto-Deploy**: Railway automatically deploys when tags are pushed
+- ✅ **CI Checks in PRs**: All quality checks run in pull requests before merge
+
+### 1. Create Railway Project
+
+1. Go to https://railway.app/dashboard
+2. Click **"New Project"**
+3. Select **"Deploy from GitHub repo"**
+4. Choose your repository
+5. Railway detects monorepo structure
+
+### 2. Create MongoDB Service
+
+1. In Railway project, click **"New Service"**
+2. Select **"Database"** → **"MongoDB"**
+3. Railway provisions instance and creates `MONGO_URL` variable automatically
+
+### 3. Create Backend Service
+
+**Configure service:**
+- Service name: `backend`
+- **Root directory**: `backend` ⚠️ **CRITICAL - Set in Settings → Source**
+- **Builder**: Dockerfile (auto-detected from `backend/Dockerfile`)
+
+**Set environment variables:**
+
+```env
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=${{MongoDB.MONGO_URL}}
+JWT_SECRET=<GENERATE_STRONG_SECRET>
+ALLOWED_ORIGINS=https://${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+LOG_LEVEL=info
+```
+
+**Configure deployment triggers:**
+- Go to **Settings** → **Triggers**
+- **Disable** "Deploy on every commit to main"
+- **Enable** "Deploy on git tags"
+- Pattern: `v*`
+
+**Generate JWT Secret:**
+```bash
+openssl rand -base64 32
+```
+
+### 4. Create Frontend Service
+
+**Configure service:**
+- Service name: `frontend`
+- **Root directory**: `frontend` ⚠️ **CRITICAL - Set in Settings → Source**
+- **Builder**: Dockerfile (auto-detected from `frontend/Dockerfile`)
+
+**Set environment variables:**
+
+```env
+VITE_API_URL=https://${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api
+VITE_ENV=production
+```
+
+**Configure deployment triggers:**
+- Go to **Settings** → **Triggers**
+- **Disable** "Deploy on every commit to main"
+- **Enable** "Deploy on git tags"
+- Pattern: `v*`
+
+### 5. Verify Setup
+
+```bash
+# Create test tag
+git tag -a v0.0.1-test -m "Test deployment"
+git push origin v0.0.1-test
+
+# Check backend health
+curl https://<backend-domain>/health
+# Expected: {"status":"ok"}
+
+# Check frontend
+curl -I https://<frontend-domain>
+# Expected: 200 OK
+```
+
+---
+
+## Configuration
+
+### Custom Domain Setup
+
+**Backend (api.yourdomain.com):**
+
+1. Railway service → **Settings** → **Domains**
+2. Click **"Add Custom Domain"**
+3. Enter: `api.yourdomain.com`
+4. Add DNS CNAME record:
+   ```
+   Type: CNAME
+   Name: api
+   Value: <railway-generated-domain>
+   ```
+
+**Frontend (yourdomain.com):**
+
+1. Railway service → **Settings** → **Domains**
+2. Click **"Add Custom Domain"**
+3. Enter: `yourdomain.com` or `www.yourdomain.com`
+4. Add DNS CNAME record:
+   ```
+   Type: CNAME
+   Name: @ (or www)
+   Value: <railway-generated-domain>
+   ```
+
+**Update environment variables after adding domains:**
+
+Backend:
+```env
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+RP_ID=www.yourdomain.com
+WEBAUTHN_ORIGIN=https://www.yourdomain.com
+```
+
+Frontend:
+```env
+VITE_API_URL=https://api.yourdomain.com/api
+```
+
+### WebAuthn/Passkey Configuration
+
+For passkey authentication to work in production, set these environment variables:
+
+```env
+# Backend service
+RP_ID=www.yourdomain.com           # Domain where users access the app
+RP_NAME=Annie's Health Journal     # Display name during passkey creation
+WEBAUTHN_ORIGIN=https://www.yourdomain.com  # Full frontend URL
+```
+
+**Important**: These must match your actual production domain exactly, or passkey authentication will fail.
+
+### Environment Variables Reference
+
+#### Backend
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NODE_ENV` | Yes | development | Environment mode |
 | `PORT` | No | 3000 | Server port |
 | `MONGODB_URI` | Yes | - | MongoDB connection string |
-| `JWT_SECRET` | Yes | - | Secret for JWT signing |
-| `JWT_EXPIRES_IN` | No | 7d | Token expiry duration |
+| `JWT_SECRET` | Yes | - | Secret for JWT signing (32+ chars) |
 | `ALLOWED_ORIGINS` | Yes | - | Comma-separated CORS origins |
-| `OPENAI_API_KEY` | Recommended | - | OpenAI API key for Whisper transcription (production) |
-| `WHISPER_URL` | No | http://localhost:8000/v1/audio/transcriptions | faster-whisper server URL (dev only) |
-| `WHISPER_MODEL` | No | Systran/faster-distil-whisper-small.en | faster-whisper model (dev only) |
-| `MAX_FILE_SIZE` | No | 10485760 | Max upload size (bytes) |
-| `RATE_LIMIT_WINDOW_MS` | No | 900000 | Rate limit window (15 min) |
-| `RATE_LIMIT_MAX_REQUESTS` | No | 100 | Max requests per window |
+| `OPENAI_API_KEY` | Recommended | - | OpenAI API for Whisper transcription |
+| `RP_ID` | Yes | localhost | WebAuthn Relying Party ID (production domain) |
+| `RP_NAME` | No | Annie's Health Journal | Display name for passkeys |
+| `WEBAUTHN_ORIGIN` | Yes | http://localhost:5173 | Full frontend URL with protocol |
 | `LOG_LEVEL` | No | info | Logging level |
+| `MAX_FILE_SIZE` | No | 10485760 | Max upload size (bytes) |
 
-### Frontend
+#### Frontend
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `VITE_API_URL` | Yes | - | Backend API URL |
 | `VITE_ENV` | No | production | Environment |
-| `VITE_ENABLE_VOICE_RECORDING` | No | true | Feature flag |
-| `VITE_ENABLE_NOTIFICATIONS` | No | true | Feature flag |
 
 ---
 
-## Custom Domain Setup
+## Release Process
 
-### Railway Custom Domains
+### Prerequisites
 
-1. In Railway dashboard, select service
-2. Go to "Settings" → "Domains"
-3. Click "Add Custom Domain"
-4. Enter your domain (e.g., `annies-health-journal.com`)
-5. Add DNS records as instructed:
-   ```
-   Type: CNAME
-   Name: @ (or subdomain)
-   Value: <railway-generated-domain>
-   ```
-6. Wait for SSL certificate provisioning (~5 minutes)
+- All PR checks passing on `main` branch
+- Manual testing completed
+- CHANGELOG.md updated
 
-### Update CORS Origins
+### Release Steps
 
-After adding custom domain, update backend environment:
-```env
-ALLOWED_ORIGINS=https://annies-health-journal.com,https://www.annies-health-journal.com
+**1. Update version numbers:**
+
+```bash
+# Root, backend, and frontend
+npm version <patch|minor|major> --no-git-tag-version
+cd backend && npm version <version> --no-git-tag-version
+cd ../frontend && npm version <version> --no-git-tag-version
 ```
 
----
+**2. Update CHANGELOG.md:**
 
-## CI/CD Pipeline
+```markdown
+## [0.3.0] - 2025-11-29
 
-### Tag-Based Deployment Flow
+### Added
+- Feature description
 
-```
-Developer creates git tag (e.g., v0.2.0-alpha)
-    ↓
-Tag pushed to GitHub
-    ↓
-Railway webhook triggered
-    ↓
-Pull tagged code
-    ↓
-Run build commands
-    ↓
-Health checks pass
-    ↓
-Zero-downtime deployment
-    ↓
-Old instances terminated
+### Fixed
+- Bug fix description
 ```
 
-**Configuration**: Railway services are configured to deploy only on git tags through Railway dashboard settings.
+**3. Commit and create tag:**
 
-### Pull Request CI (Automated)
+```bash
+# Commit version bump
+git add .
+git commit -m "chore: Bump version to v0.3.0"
+git push origin main
 
-All quality checks run in PRs before merge:
-- ✅ TypeScript compilation
-- ✅ ESLint checks
-- ✅ Test suites (330 backend + 466 frontend)
-- ✅ Build verification
+# Create and push tag
+git tag -a v0.3.0 -m "Release v0.3.0
 
-### Manual Deployment
+- New feature X
+- Bug fix Y
+"
+git push origin v0.3.0
+```
 
-To trigger manual deployment:
-1. Railway dashboard → Service → "Deploy"
-2. Select tag to deploy
+**4. Railway deploys automatically**
 
-### Deployment Rollback
+Monitor at: https://railway.app/dashboard
 
-Railway keeps deployment history:
-1. Dashboard → Service → "Deployments"
-2. Find previous successful deployment
+**5. Verify deployment:**
+
+```bash
+# Backend health
+curl https://<backend-url>/health
+
+# Frontend
+curl -I https://<frontend-url>
+
+# Test authentication
+curl -X POST https://<backend-url>/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","email":"test@example.com","password":"Test123!"}'
+```
+
+**6. Create GitHub release:**
+
+```bash
+gh release create v0.3.0 \
+  --title "v0.3.0 - Release Title" \
+  --notes-file CHANGELOG.md
+```
+
+### Version Naming Convention
+
+- **Alpha**: `0.x.0-alpha` - Early testing, breaking changes expected
+- **Beta**: `0.x.0-beta` - Feature complete, bug fixing
+- **Release Candidate**: `0.x.0-rc.1` - Production candidate
+- **Stable**: `1.0.0` - Production ready
+
+### Rollback Procedure
+
+**Option 1: Railway Dashboard**
+
+1. Railway dashboard → Service → "Deployments"
+2. Find previous working deployment
 3. Click "Redeploy"
 
-Or redeploy previous tag:
+**Option 2: Redeploy Previous Tag**
+
 ```bash
-git push origin v0.1.0 --force
+git push origin v0.2.0 --force
+```
+
+**Option 3: Hotfix**
+
+```bash
+# Create hotfix branch from tag
+git checkout -b hotfix/critical-bug v0.3.0
+
+# Fix and create new patch tag
+git tag -a v0.3.1 -m "Hotfix: Critical bug fix"
+git push origin v0.3.1
 ```
 
 ---
 
-## Monitoring & Logs
+## Operations
 
-### Viewing Logs
+### Monitoring
 
-**Railway Dashboard**:
-- Navigate to service
-- Click "Logs" tab
-- Filter by service, time range
+**Railway Dashboard:**
+- Navigate to service → "Metrics" tab
+- Monitor CPU, memory, response times, error rates
 
-**Command Line** (Railway CLI):
+**Logs:**
 ```bash
+# Railway CLI
 railway logs --service backend
 railway logs --service frontend --tail
 ```
 
-### Health Monitoring
+**Health Checks:**
+- Backend: `https://<backend-url>/health` → `{"status":"ok"}`
+- Frontend: `https://<frontend-url>` → 200 OK
 
-Set up health check monitoring:
+**External Monitoring (Optional):**
 
-**Backend**:
-- Endpoint: `https://<backend-url>/health`
-- Expected response: `{"status":"ok"}`
-- Check interval: 60 seconds
+Set up UptimeRobot or Better Uptime:
+- Backend monitor: `https://<backend-url>/health`
+- Frontend monitor: `https://<frontend-url>`
+- Check interval: 5 minutes
 
-**Frontend**:
-- Endpoint: `https://<frontend-url>`
-- Expected status: 200
+### Backups
 
-### External Monitoring (Optional)
-
-Services like UptimeRobot or Better Uptime:
-1. Create account
-2. Add HTTP(S) monitor for backend `/health`
-3. Add HTTP(s) monitor for frontend
-4. Configure alert emails/SMS
-
----
-
-## Scaling
-
-### Vertical Scaling
-
-Increase resources in Railway dashboard:
-- Navigate to service → "Settings" → "Resources"
-- Adjust memory/CPU sliders
-- Redeploy if needed
-
-### Horizontal Scaling
-
-Railway supports multiple replicas:
-1. Service settings → "Scaling"
-2. Increase replica count
-3. Ensure session storage is stateless (use Redis if needed)
-
-### Database Scaling
-
-For large datasets:
-1. Upgrade MongoDB plan in Railway
-2. Enable read replicas
-3. Add database indexes:
-   ```javascript
-   // In MongoDB
-   db.checkins.createIndex({ userId: 1, timestamp: -1 });
-   db.checkins.createIndex({ userId: 1, "structured.symptoms.hand_grip": 1 });
-   ```
-
----
-
-## Backup & Disaster Recovery
-
-### Database Backups
-
-**Automated (Railway)**:
-- Enable in MongoDB service settings
+**Automated (Railway):**
+- MongoDB service → **Settings** → **Backups**
+- Enable automatic backups
 - Retention: 7 days (free tier)
 
-**Manual Backups**:
-```bash
-# Using Railway CLI
-railway run mongodump --uri=$MONGODB_URI --out=./backup
+**Manual Backups:**
 
-# Compress backup
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Export database
+railway run -s mongodb mongodump --uri=$MONGODB_URI --out=./backup
+
+# Compress
 tar -czf backup-$(date +%Y%m%d).tar.gz backup/
 ```
 
-**Restore**:
+**Restore:**
+
 ```bash
 railway run mongorestore --uri=$MONGODB_URI ./backup
 ```
 
-### Application Backup
+### Scaling
 
-- Code: Backed up in Git
-- Configuration: Environment variables documented
-- User uploads: Store in cloud storage (S3/Cloudinary) for production
+**Vertical Scaling (Increase Resources):**
 
----
+1. Railway dashboard → Service → **Settings** → **Resources**
+2. Adjust memory/CPU sliders
+3. Redeploy if needed
 
-## Alternative Deployment Platforms
+**Horizontal Scaling (Multiple Replicas):**
 
-### Vercel (Frontend Only)
+1. Service → **Settings** → **Scaling**
+2. Increase replica count
+3. Note: Ensure session storage is stateless
 
-```bash
-cd frontend
-npm install -g vercel
-vercel --prod
-```
+**Database Scaling:**
 
-Environment variables:
-- Add `VITE_API_URL` in Vercel dashboard
+Add indexes for performance:
 
-### Heroku (Full Stack)
-
-1. Create Heroku app:
-   ```bash
-   heroku create annies-health-journal
-   ```
-
-2. Add MongoDB addon:
-   ```bash
-   heroku addons:create mongolab
-   ```
-
-3. Set environment variables:
-   ```bash
-   heroku config:set JWT_SECRET=<your-secret>
-   ```
-
-4. Deploy:
-   ```bash
-   git push heroku main
-   ```
-
-### DigitalOcean App Platform
-
-1. Connect GitHub repository
-2. Configure services (similar to Railway)
-3. Set environment variables
-4. Deploy
-
-### Docker Compose (Self-Hosted)
-
-See `docker-compose.yml` in repository root:
-
-```bash
-docker-compose up -d
-```
-
----
-
-## Security Checklist
-
-Before deploying to production:
-
-- [ ] Generate strong `JWT_SECRET` (32+ random characters)
-- [ ] Use HTTPS for all domains
-- [ ] Set restrictive CORS origins (no wildcards)
-- [ ] Enable rate limiting
-- [ ] Review MongoDB access rules
-- [ ] Enable Railway IP allowlist (if available)
-- [ ] Set up error monitoring (Sentry/Rollbar)
-- [ ] Configure log retention policies
-- [ ] Test authentication flows
-- [ ] Verify file upload limits
-- [ ] Enable security headers (Helmet.js)
-- [ ] Set up monitoring alerts
-
----
-
-## Post-Deployment Testing
-
-### Smoke Tests
-
-```bash
-# Health check
-curl https://<backend-url>/health
-
-# Frontend loads
-curl -I https://<frontend-url>
-
-# API responds
-curl https://<backend-url>/api/health
-
-# Authentication works
-curl -X POST https://<backend-url>/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test","email":"test@test.com","password":"testpass123"}'
-```
-
-### Load Testing
-
-Using Apache Bench:
-```bash
-ab -n 1000 -c 10 https://<backend-url>/api/health
-```
-
-Or Artillery:
-```bash
-npm install -g artillery
-artillery quick --count 10 --num 100 https://<backend-url>/api/health
+```javascript
+// In MongoDB
+db.checkins.createIndex({ userId: 1, timestamp: -1 });
+db.checkins.createIndex({ userId: 1, "structured.symptoms.hand_grip": 1 });
 ```
 
 ---
 
 ## Troubleshooting
 
-### Deployment Fails
+### Deployment Not Triggered
 
-**Build errors**:
+**Check:**
+- Tag pushed to GitHub: `git push origin v0.3.0`
+- Tag pattern matches `v*` in Railway settings
+- Railway webhook connected (Settings → Integrations)
+
+### Build Fails
+
+**Common Issues:**
+- Missing dependencies in package.json
+- Node version mismatch
+- Incorrect build command
+
+**Fix:**
 - Check Railway build logs
-- Verify `package.json` scripts
-- Ensure all dependencies in `package.json`
+- Test locally: `npm install && npm run build`
+- Verify package.json scripts
 
-**Module not found**:
-- Clear build cache in Railway
-- Check TypeScript path aliases match runtime
+### Database Connection Error
 
-### Database Connection Issues
-
-**Connection refused**:
-- Verify `MONGODB_URI` is set correctly
-- Check MongoDB service is running
-- Review IP allowlist settings
-
-**Slow queries**:
-- Add database indexes
-- Review aggregation pipelines
-- Upgrade MongoDB plan
-
-### Whisper Transcription Fails
-
-**Python not found**:
-- Use Docker multi-stage build
-- Or switch to OpenAI Whisper API
-
-**Out of memory**:
-- Increase service memory allocation
-- Use smaller Whisper model (`tiny` or `base`)
+**Check:**
+- MongoDB service running
+- `MONGODB_URI` set correctly: `${{MongoDB.MONGO_URL}}`
+- Network policies allow connection
 
 ### CORS Errors
 
-**"Access-Control-Allow-Origin" missing**:
-- Add frontend URL to `ALLOWED_ORIGINS`
-- Include protocol (https://)
-- Check for trailing slashes
+**Check:**
+- Frontend URL in backend `ALLOWED_ORIGINS`
+- Include protocol: `https://`
+- No trailing slashes
+- Comma-separated for multiple origins
+
+### Passkey Authentication Fails
+
+**Check:**
+- `RP_ID` matches production domain exactly
+- `WEBAUTHN_ORIGIN` matches frontend URL with protocol
+- Users accessing via the domain specified in `RP_ID`
 
 ---
 
-## Cost Estimation
+## Reference
 
-### Railway (Monthly)
+### Security Checklist
 
-- **Free Tier**: $0
-  - Hobby plan: $5 credit/month
-  - Good for development/testing
+Before production deployment:
 
-- **Production**:
-  - Backend: ~$10/month (512MB RAM)
-  - Frontend: ~$5/month (static hosting)
-  - MongoDB: ~$15/month (shared cluster)
-  - **Total**: ~$30/month
+- [ ] Strong `JWT_SECRET` (32+ random characters)
+- [ ] HTTPS enabled for all domains
+- [ ] Restrictive CORS origins (no wildcards)
+- [ ] Rate limiting enabled
+- [ ] MongoDB access rules reviewed
+- [ ] MongoDB backups enabled
+- [ ] Error monitoring set up (optional)
+- [ ] Test authentication flows
+- [ ] Verify file upload limits
+- [ ] WebAuthn variables set correctly
 
-### Other Platforms
+### Cost Estimation (Railway)
 
-- **Heroku**: $25-50/month
-- **DigitalOcean**: $20-40/month
-- **Vercel + Railway**: $20-30/month
+**Free Tier**: $0
+- $5 credit/month
+- Good for development/testing
 
----
+**Production**: ~$30/month
+- Backend: ~$10/month (512MB RAM)
+- Frontend: ~$5/month (static hosting)
+- MongoDB: ~$15/month (shared cluster)
 
-## Support & Resources
+### Alternative Platforms
+
+**Vercel** (Frontend Only):
+```bash
+cd frontend
+npm install -g vercel
+vercel --prod
+```
+
+**Heroku** (Full Stack):
+```bash
+heroku create annies-health-journal
+heroku addons:create mongolab
+git push heroku main
+```
+
+**Docker Compose** (Self-Hosted):
+```bash
+docker-compose up -d
+```
+
+### Support Resources
 
 - **Railway Docs**: https://docs.railway.app
 - **Railway Discord**: https://discord.gg/railway
-- **Annie's Health Journal Issues**: https://github.com/lrabbets/annies-health-journal/issues
+- **Railway Status**: https://status.railway.app
+- **Project Issues**: https://github.com/lrabbets/annies-health-journal/issues
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2024-01-25
-**Next Review**: 2024-04-25
+**Last Updated**: 2025-11-29

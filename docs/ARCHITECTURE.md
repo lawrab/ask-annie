@@ -1,11 +1,13 @@
-# Annie's Health Journal - Architecture Documentation
+# Architecture Overview
+
+High-level architecture documentation for Annie's Health Journal.
 
 ## System Overview
 
-Annie's Health Journal is a full-stack health symptom tracking application built with a microservices-oriented architecture. The system consists of three main components:
+Annie's Health Journal is a full-stack health symptom tracking application with three main components:
 
-1. **React Frontend** - User-facing web application
-2. **Express Backend** - RESTful API server
+1. **React Frontend** - User-facing web application (TypeScript, Tailwind CSS)
+2. **Express Backend** - RESTful API server (Node.js, TypeScript)
 3. **MongoDB Database** - Flexible document storage
 
 ## Architecture Diagram
@@ -16,373 +18,213 @@ Annie's Health Journal is a full-stack health symptom tracking application built
 │  ┌─────────────────────────────────────────────────┐   │
 │  │        React Frontend (Port 5173)                │   │
 │  │  - Voice Recording (Web Audio API)               │   │
-│  │  - Dashboard & Visualisations                    │   │
-│  │  - Notification Management                       │   │
+│  │  - Dashboard & Visualizations                    │   │
+│  │  - Passkey Authentication                        │   │
 │  └─────────────────────────────────────────────────┘   │
 └───────────────────────┬─────────────────────────────────┘
-                        │ HTTP/HTTPS
-                        │ REST API Calls
+                        │ HTTPS REST API
 ┌───────────────────────▼─────────────────────────────────┐
 │              Express Backend (Port 3000)                 │
 │  ┌───────────────────────────────────────────────┐     │
 │  │  API Routes                                    │     │
-│  │  - /api/auth (Authentication)                  │     │
+│  │  - /api/auth (Authentication + WebAuthn)       │     │
 │  │  - /api/checkins (Check-in Management)        │     │
 │  │  - /api/analysis (Trend Analysis)             │     │
-│  │  - /api/user (User Settings)                  │     │
+│  │  - /api/passkeys (Passkey Management)         │     │
 │  └───────────────────┬───────────────────────────┘     │
 │                      │                                   │
 │  ┌───────────────────▼───────────────────────────┐     │
 │  │  Services Layer                                │     │
-│  │  - Whisper Transcription Service              │     │
-│  │  - Symptom Parsing Service                    │     │
-│  │  - Analysis Service                           │     │
-│  │  - PDF Generation Service                     │     │
-│  └───────────────────┬───────────────────────────┘     │
+│  │  - Voice Transcription (OpenAI/Whisper)       │     │
+│  │  - Symptom Parsing (GPT-4o-mini)             │     │
+│  │  - Analysis & Trends                          │     │
+│  │  - WebAuthn (Passkeys)                        │     │
+│  └───────────────────────────────────────────────┘     │
 └────────────────────────┬────────────────────────────────┘
-                         │
                          │ Mongoose ODM
 ┌────────────────────────▼────────────────────────────────┐
 │               MongoDB Database                           │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Collections:                                     │  │
-│  │  - users (User accounts & settings)              │  │
-│  │  - checkins (Symptom check-ins)                  │  │
-│  └──────────────────────────────────────────────────┘  │
+│  Collections: users, checkins, passkeys                  │
 └─────────────────────────────────────────────────────────┘
 
 External Services:
-┌──────────────────────┐
-│  faster-whisper      │  (Voice → Text Transcription)
-│  (Python Process)    │
-└──────────────────────┘
-
-┌──────────────────────┐
-│  OpenAI Claude API   │  (Optional fallback for parsing)
-│  (External)          │
-└──────────────────────┘
+- OpenAI API (transcription + parsing)
 ```
 
 ## Technology Stack
 
 ### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **Routing**: React Router v6
-- **Forms**: React Hook Form + Zod validation
-- **Charts**: Recharts
-- **HTTP Client**: Axios
-- **Date Utilities**: date-fns
+- React 18 + TypeScript + Vite
+- Tailwind CSS (styling)
+- Zustand (state management)
+- React Router v6 (routing)
+- Recharts (visualizations)
+- React Hook Form + Zod (forms/validation)
 
 ### Backend
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js with TypeScript
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT (jsonwebtoken)
-- **Validation**: Joi
-- **Logging**: Winston
-- **Security**: Helmet, CORS, express-rate-limit
-- **File Upload**: Multer
-- **Voice Transcription**: faster-whisper (Python)
+- Node.js 18+ + Express + TypeScript
+- MongoDB + Mongoose ODM
+- JWT + WebAuthn (authentication)
+- Winston (logging)
+- Helmet, CORS, rate limiting (security)
 
 ### Infrastructure
 - **Hosting**: Railway
+- **Database**: Railway MongoDB
+- **CI/CD**: GitHub → Railway auto-deploy on tags
 - **Version Control**: GitHub
-- **CI/CD**: GitHub Actions → Railway auto-deploy
-- **Database Hosting**: Railway MongoDB
-
-## Data Flow
-
-### Voice Check-In Flow
-
-```
-1. User taps "Check-In" button
-   ↓
-2. Frontend: Microphone permission requested
-   ↓
-3. Web Audio API records audio (5-30 seconds)
-   ↓
-4. Audio blob sent to backend via FormData
-   ↓
-5. Backend: Multer saves temporary file
-   ↓
-6. faster-whisper transcribes audio → text
-   ↓
-7. Parsing service extracts symptoms from transcript
-   ↓
-8. Structured data saved to MongoDB
-   ↓
-9. Response sent back to frontend
-   ↓
-10. Frontend displays confirmation & clears recording
-```
-
-### Manual Check-In Flow
-
-```
-1. User selects symptoms via UI controls
-   ↓
-2. Frontend validates form data
-   ↓
-3. JSON payload sent to backend
-   ↓
-4. Backend validates & stores in MongoDB
-   ↓
-5. Confirmation response sent to frontend
-```
-
-### Trend Analysis Flow
-
-```
-1. User navigates to Trends page
-   ↓
-2. Frontend requests analysis for date range
-   ↓
-3. Backend queries MongoDB with aggregation pipeline
-   ↓
-4. Analysis service calculates:
-   - Frequency of each symptom
-   - Severity trends over time
-   - Correlations with activities
-   ↓
-5. Data sent to frontend
-   ↓
-6. Recharts renders visualisations
-```
 
 ## Key Design Decisions
 
 ### 1. Flexible Symptom Storage
 
-**Decision**: Store symptoms as dynamic key-value pairs rather than rigid schema.
+Store symptoms as dynamic key-value pairs rather than rigid schema.
 
-**Rationale**:
-- Health conditions evolve; new symptoms may appear
-- Different users have different symptoms
-- Allows natural language capture from voice
+**Rationale**: Health conditions evolve; users have different symptoms; allows natural language capture from voice.
 
-**Implementation**:
 ```typescript
-structured: {
-  symptoms: {
-    hand_grip?: "bad" | "moderate" | "good",
-    pain_level?: number,
+{
+  "symptoms": {
+    "headache": { "severity": 7 },
+    "nausea": { "severity": 5 },
     [customSymptom: string]: any
   }
 }
 ```
 
-### 2. Voice-First Input
+### 2. Voice-First Input with Manual Fallback
 
-**Decision**: Prioritise voice recording with manual fallback.
-
-**Rationale**:
-- Lower friction for daily use
-- More natural expression of symptoms
-- Accessible for users with hand mobility issues
-
-**Trade-offs**:
-- Requires Python dependency (faster-whisper)
-- Privacy considerations for audio processing
-- Network bandwidth for audio upload
-
-### 3. Client-Side State Management (Zustand)
-
-**Decision**: Use Zustand instead of Redux or Context API.
+Prioritize voice recording for lower friction and accessibility.
 
 **Rationale**:
-- Simpler API, less boilerplate
-- Better TypeScript support
-- Lightweight (<1KB gzipped)
-- Sufficient for app complexity
+- More natural symptom expression
+- Lower daily friction (just speak)
+- Accessible for hand mobility issues
+- Manual fallback for reliability
+
+**Trade-offs**: Requires OpenAI API, privacy considerations
+
+### 3. Passwordless Authentication (Passkeys)
+
+WebAuthn-based passkey authentication with password fallback.
+
+**Rationale**:
+- More secure (phishing-resistant)
+- Better UX (Face ID/Touch ID)
+- No password management burden
+
+**Implementation**: Biometric authentication via Web Authentication API
 
 ### 4. MongoDB Document Database
 
-**Decision**: Use MongoDB over PostgreSQL.
+Use MongoDB over relational database.
 
 **Rationale**:
 - Flexible schema matches symptom tracking needs
-- Easy to add new symptom fields without migrations
-- JSON-native storage aligns with API structure
-- Aggregation pipeline good for trend analysis
+- Easy to add new symptom fields
+- JSON-native storage
+- Good aggregation pipeline for trends
 
-**Trade-offs**:
-- Less strict referential integrity
-- Requires careful indexing for performance
+**Trade-offs**: Requires careful indexing for performance
 
 ### 5. Monorepo Structure
 
-**Decision**: Keep frontend and backend in same repository.
+Keep frontend and backend in same repository.
 
 **Rationale**:
 - Shared TypeScript types
-- Simplified deployment pipeline
-- Easier local development
+- Simplified deployment
 - Single source of truth
+- Easier local development
 
-## Security Considerations
+## Security Architecture
 
 ### Authentication
-- JWT tokens with secure HTTP-only cookies
-- Password hashing with bcrypt (10 rounds)
-- Token expiry and refresh mechanism
+- JWT tokens with HTTP-only cookies
+- WebAuthn passkeys (FIDO2)
+- Password hashing with bcrypt
 - CORS restricted to known origins
 
 ### Data Privacy
 - Audio files deleted after transcription
 - No third-party analytics
-- User data export capability
+- User data export capability (GDPR)
 - Complete data deletion on request
 
 ### API Security
 - Rate limiting (100 req/15min per IP)
 - Helmet.js security headers
-- Input validation on all endpoints
-- Parameterised MongoDB queries (no injection)
-
-### File Upload Security
-- Max file size: 10MB
-- Allowed MIME types: audio/* only
-- Temporary storage with automatic cleanup
-- Multer disk storage with sanitised filenames
-
-## Scalability Considerations
-
-### Current Architecture (MVP)
-- Single server instance
-- Direct faster-whisper integration
-- Synchronous transcription
-
-### Future Scaling Path
-
-**Horizontal Scaling**:
-1. Add Redis for session storage
-2. Use job queue (Bull/BullMQ) for transcription
-3. Separate transcription service as microservice
-4. Load balancer across multiple backend instances
-
-**Database Scaling**:
-1. Add MongoDB read replicas
-2. Shard by userId for large datasets
-3. Add indexes on frequently queried fields
-
-**CDN & Caching**:
-1. CloudFlare CDN for frontend assets
-2. Redis cache for frequently accessed summaries
-3. Browser caching for chart data
+- Input validation (Zod, Joi)
+- Parameterized MongoDB queries
 
 ## Deployment Architecture
 
 ### Railway Configuration
 
 ```
-GitHub Repo
-    ↓ (Push to main)
-Railway Detects Changes
+GitHub Repo (main branch)
     ↓
-Parallel Builds:
-  ├─ Backend Service (Node.js)
-  └─ Frontend Service (Static)
+Tag pushed (v0.x.0)
     ↓
-Deploy to Production
+Railway detects tag
     ↓
-Health Checks Pass
+Parallel builds:
+  ├─ Backend (Docker)
+  └─ Frontend (Docker)
     ↓
-Traffic Routed to New Instances
+Health checks pass
+    ↓
+Zero-downtime deployment
 ```
 
 ### Environment Variables
 
-**Backend**:
-- `MONGODB_URI` - Database connection
-- `JWT_SECRET` - Token signing key
-- `ALLOWED_ORIGINS` - CORS whitelist
-- `WHISPER_MODEL_SIZE` - Model configuration
+**Backend**: `MONGODB_URI`, `JWT_SECRET`, `ALLOWED_ORIGINS`, `OPENAI_API_KEY`, `RP_ID`, `WEBAUTHN_ORIGIN`
 
-**Frontend**:
-- `VITE_API_URL` - Backend endpoint
-- `VITE_ENABLE_VOICE_RECORDING` - Feature flag
-- `VITE_ENABLE_NOTIFICATIONS` - Feature flag
+**Frontend**: `VITE_API_URL`, `VITE_ENV`
 
-## Error Handling Strategy
+See DEPLOYMENT.md for complete configuration.
 
-### Frontend
-1. Network errors → Retry with exponential backoff
-2. Auth errors → Redirect to login
-3. Validation errors → Inline form feedback
-4. Runtime errors → Error boundary with fallback UI
+## Scalability Considerations
 
-### Backend
-1. Validation errors → 400 with specific message
-2. Auth errors → 401/403 with clear reason
-3. Database errors → 500 with logged stack trace
-4. External service errors → 503 with retry guidance
+### Current (MVP)
+- Single Railway instance
+- Direct OpenAI API integration
+- MongoDB on Railway
 
-## Monitoring & Logging
+### Future Scaling Path
 
-### Backend Logging (Winston)
-- **Info**: Successful operations, startup events
-- **Warn**: Deprecated features, non-critical issues
-- **Error**: Exceptions, failed operations, stack traces
+**Horizontal Scaling**:
+1. Redis for session storage
+2. Job queue for async transcription
+3. Load balancer across instances
 
-### Log Storage
-- Development: Console output
-- Production: File-based logs (`logs/combined.log`, `logs/error.log`)
-- Future: Integrate with Railway logs or external service
+**Database Scaling**:
+1. MongoDB read replicas
+2. Sharding by userId
+3. Optimized indexes
 
-### Metrics to Monitor
-- API response times
-- Transcription success rate
-- Database query performance
-- Error rates by endpoint
-- Daily active users
-- Check-ins per day
+**Caching**:
+1. Redis for frequently accessed data
+2. CDN for frontend assets
+3. Browser caching
 
 ## Testing Strategy
 
-### Frontend
-- **Unit Tests**: Vitest for components and hooks
-- **Integration Tests**: Testing Library for user flows
-- **E2E Tests**: (Future) Playwright for critical paths
+- **Backend**: >80% coverage (Jest, Supertest)
+- **Frontend**: >70% coverage (Vitest, Testing Library)
+- **Manual**: Regression test plan for releases
+- **Responsive**: All viewports (375px - 2560px)
 
-### Backend
-- **Unit Tests**: Jest for services and utilities
-- **Integration Tests**: Supertest for API endpoints
-- **Database Tests**: In-memory MongoDB for isolation
+See TESTING.md for complete guide.
 
-### Coverage Targets
-- Backend: >80% coverage
-- Frontend: >70% coverage
-- Critical paths: 100% coverage
+## Performance Goals
 
-## Performance Optimisations
-
-### Frontend
-- Code splitting by route
-- Lazy loading for charts
-- Debounced API calls
-- Optimistic UI updates
-- Service Worker for offline capability
-
-### Backend
-- Database indexing on userId, timestamp
-- Response compression (gzip)
-- Connection pooling for MongoDB
-- Caching of aggregation results
-
-## Future Architecture Enhancements
-
-1. **Real-time Updates**: WebSocket support for live dashboards
-2. **Offline-First**: Service Workers with background sync
-3. **Mobile Apps**: React Native using same backend
-4. **ML Pipeline**: Separate service for pattern detection
-5. **Microservices**: Split transcription, analysis, and API services
-6. **Event Sourcing**: Audit log of all symptom changes
+- Dashboard load: <3 seconds
+- API response: <500ms (p95)
+- Chart render: <2 seconds
+- Check-in submit: <1 second
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2024-01-25
-**Maintainers**: Development Team
+**Last Updated**: 2025-11-29

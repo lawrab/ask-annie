@@ -33,15 +33,18 @@ export const AUTH_CONSTANTS = {
 
   /** Minimum password length for password-based auth */
   MIN_PASSWORD_LENGTH: 8,
+
+  /** WebAuthn challenge expiry time in minutes */
+  WEBAUTHN_CHALLENGE_EXPIRY_MINUTES: 5,
 } as const;
 
 // Validation Constraints
 export const VALIDATION_CONSTANTS = {
   /** Minimum username length */
-  MIN_USERNAME_LENGTH: 2,
+  MIN_USERNAME_LENGTH: 3,
 
   /** Maximum username length */
-  MAX_USERNAME_LENGTH: 50,
+  MAX_USERNAME_LENGTH: 30,
 
   /** Maximum length for check-in notes */
   MAX_NOTES_LENGTH: 5000,
@@ -123,6 +126,12 @@ export const TIME_WINDOWS = {
 
   /** Number of days for quarterly analysis */
   QUARTERLY_TREND_DAYS: 90,
+
+  /** Number of days for 2-week symptom average comparison */
+  TWO_WEEK_AVERAGE_DAYS: 14,
+
+  /** Minimum streak days to show consistency message */
+  MIN_STREAK_FOR_INSIGHT: 3,
 } as const;
 
 // Rate Limiting (Global)

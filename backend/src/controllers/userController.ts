@@ -5,6 +5,7 @@ import CheckIn from '../models/CheckIn';
 import MagicLinkToken from '../models/MagicLinkToken';
 import { logger } from '../utils/logger';
 import { sendDeletionConfirmationEmail } from '../services/emailService';
+import { AUTH_CONSTANTS } from '../constants';
 
 /**
  * GET /api/user/export
@@ -196,7 +197,9 @@ export async function deleteAccount(
     }
 
     // Check if token is expired (15 minutes)
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const fifteenMinutesAgo = new Date(
+      Date.now() - AUTH_CONSTANTS.MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000
+    );
     if (tokenDoc.createdAt < fifteenMinutesAgo) {
       await MagicLinkToken.deleteOne({ _id: tokenDoc._id });
       res.status(400).json({
@@ -280,10 +283,10 @@ export async function requestDeletion(
     }
 
     // Generate secure deletion token
-    const deletionToken = crypto.randomBytes(32).toString('hex');
+    const deletionToken = crypto.randomBytes(AUTH_CONSTANTS.TOKEN_LENGTH_BYTES).toString('hex');
 
     // Save token to database (expires in 15 minutes)
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + AUTH_CONSTANTS.MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000);
     await MagicLinkToken.create({
       email: user.email,
       token: deletionToken,

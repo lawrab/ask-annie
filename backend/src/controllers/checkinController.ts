@@ -7,6 +7,7 @@ import { parseSymptoms } from '../services/parsingService';
 import { generatePostCheckInInsight } from '../services/insightService';
 import { logger } from '../utils/logger';
 import fs from 'fs/promises';
+import { PAGINATION_CONSTANTS } from '../constants';
 
 /**
  * POST /api/checkins (voice)
@@ -248,7 +249,10 @@ export async function getCheckins(req: Request, res: Response, next: NextFunctio
     }
 
     // Pagination
-    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const limit = Math.min(
+      parseInt(req.query.limit as string) || PAGINATION_CONSTANTS.DEFAULT_PAGE_SIZE,
+      PAGINATION_CONSTANTS.MAX_PAGE_SIZE
+    );
     const offset = parseInt(req.query.offset as string) || 0;
 
     // Sorting

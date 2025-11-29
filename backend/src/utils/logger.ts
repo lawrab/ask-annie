@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { sanitizeFormat } from './sanitizeFormat';
 
 const logLevel = process.env.LOG_LEVEL || 'info';
 
@@ -8,6 +9,7 @@ export const logger = winston.createLogger({
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
+    sanitizeFormat(), // Automatically sanitize PHI/PII before logging
     winston.format.json()
   ),
   defaultMeta: { service: 'annies-health-journal-backend' },

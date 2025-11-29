@@ -24,18 +24,41 @@ export default function VoiceRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const mimeTypeRef = useRef<string>('audio/webm');
 
+  // Cleanup on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      // Cleanup on unmount
+      // Clear timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
+
+      // Stop MediaRecorder without triggering onstop handler
+      // (prevents setState on unmounted component and unwanted onRecordingComplete callback)
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.onstop = null; // Clear handler before stopping
+        mediaRecorderRef.current.ondataavailable = null; // Clear data handler too
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current = null;
+      }
+
+      // Stop all media tracks
       if (streamRef.current) {
-        const tracks = streamRef.current.getTracks?.();
+        const tracks = streamRef.current.getTracks?.(); // Defensive optional chaining
         tracks?.forEach((track) => track.stop());
+        streamRef.current = null;
       }
     };
   }, []);
+
+  // Revoke object URL when audioURL changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (audioURL && typeof URL.revokeObjectURL === 'function') {
+        URL.revokeObjectURL(audioURL);
+      }
+    };
+  }, [audioURL]);
 
   const startRecording = async () => {
     try {

@@ -45,7 +45,7 @@ export async function generateRegistrationOptions(
       userId,
       username: user.username,
       email: user.email,
-      existingCredentials: existingPasskeys as any[],
+      existingCredentials: existingPasskeys as IPasskey[],
     });
 
     // Store challenge for verification
@@ -207,7 +207,7 @@ export async function generateAuthenticationOptions(
 
     // Generate authentication options
     const options = await generatePasskeyAuthenticationOptions({
-      credentials: passkeys as any[],
+      credentials: passkeys as IPasskey[],
     });
 
     // Store challenge for verification
@@ -306,7 +306,7 @@ export async function verifyAuthentication(
     const verification = await verifyPasskeyAuthentication({
       response,
       expectedChallenge: challengeDoc.challenge,
-      credential: passkey as any,
+      credential: passkey as IPasskey,
     });
 
     if (!verification.verified) {
@@ -364,11 +364,7 @@ export async function verifyAuthentication(
  * List all registered passkeys for the authenticated user
  * Requires authentication
  */
-export async function listPasskeys(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function listPasskeys(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = (req.user as { id: string })!.id;
 

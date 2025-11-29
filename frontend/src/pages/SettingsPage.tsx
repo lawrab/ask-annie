@@ -254,7 +254,7 @@ export default function SettingsPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Passkeys</h3>
               <p className="text-gray-600 mb-4">
                 Passkeys provide secure, passwordless authentication using Face ID, Touch ID, or
-                your device's security features.
+                your device&apos;s security features.
               </p>
 
               {/* Browser support warning */}

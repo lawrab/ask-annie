@@ -103,14 +103,15 @@ annies-health-journal/
 
 ### 📖 Reference Documentation
 
-- [Design System](docs/DESIGN_SYSTEM.md) - UI components and design tokens
+**[→ Complete Documentation Index](docs/README.md)** - Full navigation to all documentation
+
+Key documents:
+- [Design System](docs/DESIGN_SYSTEM.md) - UI components, design tokens, and accessibility (WCAG 2.1 AA)
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and data models
 - [API Documentation](docs/API_DOCUMENTATION.md) - Endpoint specifications
-- [Development Guide](docs/DEVELOPMENT.md) - Environment setup
-- [Deployment Guide](docs/DEPLOYMENT.md) - Railway deployment
-- [Container Setup (Podman/Docker)](docs/DOCKER.md) - Container configuration
-- [Podman Specific Guide](docs/PODMAN.md) - Podman-specific instructions
-- [WCAG Compliance](docs/WCAG_COMPLIANCE.md) - Accessibility standards
+- [Testing Guide](docs/TESTING.md) - Automated, manual, and responsive testing
+- [Deployment Guide](docs/DEPLOYMENT.md) - Railway deployment and releases
+- [Containers Guide](docs/CONTAINERS.md) - Docker/Podman setup for local development
 - [UX Decisions](docs/UX_DECISIONS.md) - Design rationale
 
 ## Deployment

@@ -2,6 +2,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Validate environment variables immediately after loading
+import { validateEnv } from './config/env';
+validateEnv();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

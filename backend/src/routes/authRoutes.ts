@@ -25,6 +25,7 @@ import {
   magicLinkRequestSchema,
   magicLinkVerifySchema,
 } from '../utils/validation';
+import { AUTH_CONSTANTS } from '../constants';
 
 const router = Router();
 
@@ -34,8 +35,8 @@ const router = Router();
  * Disabled for localhost in development
  */
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  windowMs: AUTH_CONSTANTS.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
+  max: AUTH_CONSTANTS.MAX_MAGIC_LINK_REQUESTS,
   message: {
     success: false,
     error: 'Too many authentication attempts, please try again later',

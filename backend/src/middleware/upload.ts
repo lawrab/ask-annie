@@ -2,6 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import { Request } from 'express';
 import { logger } from '../utils/logger';
+import { UPLOAD_CONSTANTS } from '../constants';
 
 // Configure multer for audio file uploads
 const storage = multer.diskStorage({
@@ -39,6 +40,6 @@ export const audioUpload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size
+    fileSize: UPLOAD_CONSTANTS.MAX_AUDIO_FILE_SIZE,
   },
 });

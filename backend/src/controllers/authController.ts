@@ -6,6 +6,7 @@ import User from '../models/User';
 import MagicLinkToken from '../models/MagicLinkToken';
 import { sendMagicLinkEmail } from '../services/emailService';
 import { logger } from '../utils/logger';
+import { AUTH_CONSTANTS } from '../constants';
 
 /**
  * POST /api/auth/register
@@ -146,17 +147,19 @@ export async function requestMagicLink(
     logger.info('Magic link request', { email, usernameProvided: !!username });
 
     // Check rate limiting: max 3 requests per 15 minutes per email
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const fifteenMinutesAgo = new Date(
+      Date.now() - AUTH_CONSTANTS.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000
+    );
     const recentTokens = await MagicLinkToken.countDocuments({
       email,
       createdAt: { $gte: fifteenMinutesAgo },
     });
 
-    if (recentTokens >= 3) {
+    if (recentTokens >= AUTH_CONSTANTS.MAX_LOGIN_ATTEMPTS) {
       logger.warn('Magic link rate limit exceeded', { email, recentTokens });
       res.status(429).json({
         success: false,
-        error: 'Too many magic link requests. Please try again in 15 minutes.',
+        error: `Too many magic link requests. Please try again in ${AUTH_CONSTANTS.RATE_LIMIT_WINDOW_MINUTES} minutes.`,
       });
       return;
     }
@@ -189,7 +192,7 @@ export async function requestMagicLink(
     }
 
     // Generate secure random token
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(AUTH_CONSTANTS.TOKEN_LENGTH_BYTES).toString('hex');
 
     // Set expiration (15 minutes from now)
     const expiryMinutes = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || '15', 10);

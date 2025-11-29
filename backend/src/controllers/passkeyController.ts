@@ -11,6 +11,7 @@ import {
 } from '../services/webauthnService';
 import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
+import { AUTH_CONSTANTS } from '../constants';
 
 /**
  * POST /api/auth/passkey/registration-options
@@ -49,7 +50,9 @@ export async function generateRegistrationOptions(
     });
 
     // Store challenge for verification
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(
+      Date.now() + AUTH_CONSTANTS.WEBAUTHN_CHALLENGE_EXPIRY_MINUTES * 60 * 1000
+    );
     await WebAuthnChallenge.create({
       userId,
       challenge: options.challenge,
@@ -211,7 +214,9 @@ export async function generateAuthenticationOptions(
     });
 
     // Store challenge for verification
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(
+      Date.now() + AUTH_CONSTANTS.WEBAUTHN_CHALLENGE_EXPIRY_MINUTES * 60 * 1000
+    );
     await WebAuthnChallenge.create({
       userId: user._id,
       email: user.email,

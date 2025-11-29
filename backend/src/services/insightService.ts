@@ -1,5 +1,6 @@
 import CheckIn, { ICheckIn } from '../models/CheckIn';
 import { InsightCard } from '../types';
+import { VALIDATION_CONSTANTS, TIME_WINDOWS } from '../constants';
 
 /**
  * Milestone check-in counts that trigger special validation messages
@@ -152,7 +153,11 @@ export async function generateDataContextCard(
     if (isNaN(currentSeverity)) continue;
 
     // Compare to 14-day average
-    const average = await calculateSymptomAverage(userId, symptomName, 14);
+    const average = await calculateSymptomAverage(
+      userId,
+      symptomName,
+      TIME_WINDOWS.TWO_WEEK_AVERAGE_DAYS
+    );
 
     if (average !== null) {
       const difference = Math.abs(currentSeverity - average);
@@ -186,7 +191,7 @@ export async function generateDataContextCard(
   // Fallback: streak or milestone info
   const milestones = await getCheckInMilestones(userId);
 
-  if (milestones.currentStreak >= 3) {
+  if (milestones.currentStreak >= TIME_WINDOWS.MIN_STREAK_FOR_INSIGHT) {
     return {
       type: 'data_context',
       title: 'Consistency Win',
@@ -253,11 +258,11 @@ export async function generateValidationCard(
   }
 
   // High severity validation
-  if (maxSeverity >= 7) {
+  if (maxSeverity >= VALIDATION_CONSTANTS.HIGH_SEVERITY_THRESHOLD) {
     return {
       type: 'validation',
       title: 'You Showed Up',
-      message: `Managing a ${maxSeverity}/10 symptom day while staying consistent?\nThat takes real strength. We see you.`,
+      message: `Managing a ${maxSeverity}/${VALIDATION_CONSTANTS.MAX_SYMPTOM_SEVERITY} symptom day while staying consistent?\nThat takes real strength. We see you.`,
       icon: '💚',
       metadata: {
         maxSeverity,

@@ -1,53 +1,83 @@
-# Container Development Guide (Podman/Docker)
+# Container Development Guide
 
-This guide covers using Podman or Docker for local development with Annie's Health Journal.
+Guide for using Docker or Podman for local development with Annie's Health Journal.
 
 ## Container Runtime
 
 This project supports both **Podman** and **Docker**. The Makefile automatically detects which runtime you have installed.
 
-### Using Podman (Recommended for Linux)
+### Why Podman? (Recommended for Linux)
 
-Podman is a daemonless container engine that's compatible with Docker commands and doesn't require root privileges.
+- **Daemonless**: No background service required
+- **Rootless**: Run containers without root privileges
+- **Compatible**: Drop-in replacement for Docker
+- **Systemd Integration**: Native systemd support
+- **Security**: Better isolation and security model
 
-**Installation:**
+### Why Docker?
+
+- **Cross-platform**: Works on Windows, macOS, Linux
+- **Wide adoption**: Extensive ecosystem and tooling
+- **Desktop app**: Easy-to-use GUI available
+
+---
+
+## Installation
+
+### Podman
+
+**Fedora/RHEL/CentOS:**
 ```bash
-# Fedora/RHEL/CentOS
 sudo dnf install podman podman-compose
+```
 
-# Ubuntu/Debian
+**Ubuntu/Debian:**
+```bash
+sudo apt update
 sudo apt install podman podman-compose
+```
 
-# Arch Linux
+**Arch Linux:**
+```bash
 sudo pacman -S podman podman-compose
 ```
 
-**Verify installation:**
+**Verify:**
 ```bash
 podman --version
 podman-compose --version
 ```
 
-### Using Docker
+### Docker
 
-**Installation:**
+Follow official installation guide: https://docs.docker.com/engine/install/
+
+**Verify:**
 ```bash
-# Follow official Docker installation guide for your OS
-# https://docs.docker.com/engine/install/
+docker --version
+docker-compose --version
 ```
 
-**Note:** The Makefile will automatically use `podman-compose` if available, otherwise falls back to `docker-compose`.
+### Command Aliases (Optional)
+
+Make Podman a drop-in replacement for Docker:
+
+```bash
+echo "alias docker='podman'" >> ~/.bashrc
+echo "alias docker-compose='podman-compose'" >> ~/.bashrc
+source ~/.bashrc
+```
 
 ---
 
 ## Quick Start
 
-### Dependencies in Containers, App Runs Locally (Recommended)
+### Recommended Approach: Hybrid Development
 
-This is the **recommended approach** for Annie's Health Journal development:
+Run **dependencies in containers**, but **app code locally**:
 
 ```bash
-# 1. Start dependencies (MongoDB + Redis + Mongo Express)
+# 1. Start dependencies (MongoDB, Redis, Mongo Express)
 make deps-up
 
 # 2. Run backend and frontend locally
@@ -55,11 +85,11 @@ make dev
 ```
 
 **What runs where:**
-- ✅ **MongoDB** - Runs in Podman/Docker container
-- ✅ **Redis** - Runs in Podman/Docker container
-- ✅ **Mongo Express** - Runs in Podman/Docker container (web UI)
-- ⚡ **Backend (Node.js)** - Runs locally with `npm run dev`
-- ⚡ **Frontend (Vite)** - Runs locally with `npm run dev`
+- ✅ **MongoDB** - Container
+- ✅ **Redis** - Container
+- ✅ **Mongo Express** - Container (web UI)
+- ⚡ **Backend** - Local (`npm run dev`)
+- ⚡ **Frontend** - Local (`npm run dev`)
 
 **Advantages:**
 - Fast hot-reloading and HMR
@@ -84,18 +114,18 @@ make dev
 - **URL:** http://localhost:8081
 - **Username:** admin
 - **Password:** admin
-- **Purpose:** Database visualisation and management
+- **Purpose:** Database visualization and management
 
 ### Redis
 - **Port:** 6379
 - **Purpose:** Caching and session storage (future use)
 
-### Backend (when using full Docker)
+### Backend (Full Docker Mode)
 - **Port:** 3000
 - **URL:** http://localhost:3000
 - **API:** http://localhost:3000/api
 
-### Frontend (when using full Docker)
+### Frontend (Full Docker Mode)
 - **Port:** 5173
 - **URL:** http://localhost:5173
 
@@ -179,37 +209,144 @@ make help
 
 ---
 
-## Docker Compose Files
+## Common Workflows
 
-### docker-compose.yml
+### Starting Fresh Development Session
 
-Core services (MongoDB, Redis, Mongo Express):
-
-```yaml
-services:
-  mongodb:     # MongoDB 6
-  mongo-express:  # Web UI for MongoDB
-  redis:       # Redis 7 for caching
-```
-
-**Usage:**
 ```bash
-docker-compose up -d
+# Start dependencies
+make deps-up
+
+# Start local development servers
+cd backend && npm run dev
+
+# In another terminal
+cd frontend && npm run dev
 ```
 
-### docker-compose.dev.yml
+### Resetting Database
 
-Development services (backend, frontend):
-
-```yaml
-services:
-  backend:     # Express API with hot reload
-  frontend:    # Vite dev server with HMR
-```
-
-**Usage:**
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Stop and remove all data
+make deps-clean
+
+# Start fresh
+make deps-up
+```
+
+### Viewing MongoDB Data
+
+**Option 1: Mongo Express (Web UI)**
+```bash
+make db-ui
+# Opens http://localhost:8081 in browser
+```
+
+**Option 2: MongoDB Shell**
+```bash
+make db-shell
+
+# In the shell:
+db.checkins.find().pretty()
+db.users.find()
+```
+
+**Option 3: MongoDB Compass**
+```
+Connection string: mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin
+```
+
+### Debugging in Containers
+
+**View logs:**
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f mongodb
+docker-compose logs -f backend
+```
+
+**Access container shell:**
+```bash
+docker exec -it annies-health-journal-backend-dev sh
+docker exec -it annies-health-journal-mongodb sh
+```
+
+**Inspect network:**
+```bash
+docker network inspect annies-health-journal-network
+```
+
+---
+
+## Podman-Specific Features
+
+### Rootless Containers
+
+Podman runs rootless by default (as your user):
+
+```bash
+# Check if running rootless
+podman info | grep rootless
+
+# Run container as your user
+podman run --rm -it alpine sh
+```
+
+### Systemd Integration
+
+Run containers as systemd services:
+
+**Generate systemd unit:**
+```bash
+# Generate unit for MongoDB
+podman generate systemd --name annies-health-journal-mongodb --files
+
+# Move to systemd user directory
+mkdir -p ~/.config/systemd/user/
+mv container-annies-health-journal-mongodb.service ~/.config/systemd/user/
+
+# Enable and start
+systemctl --user daemon-reload
+systemctl --user enable --now container-annies-health-journal-mongodb
+```
+
+**Auto-start on boot:**
+```bash
+# Enable lingering (start user services on boot)
+loginctl enable-linger $USER
+```
+
+**Manage service:**
+```bash
+# Status
+systemctl --user status container-annies-health-journal-mongodb
+
+# Restart
+systemctl --user restart container-annies-health-journal-mongodb
+
+# Logs
+journalctl --user -u container-annies-health-journal-mongodb -f
+```
+
+### Volume Backup/Restore (Podman)
+
+**Create backup:**
+```bash
+podman run --rm \
+  -v annies-health-journal_mongodb_data:/data \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/mongodb-backup.tar.gz /data
+```
+
+**Restore backup:**
+```bash
+podman run --rm \
+  -v annies-health-journal_mongodb_data:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/mongodb-backup.tar.gz -C /
 ```
 
 ---
@@ -237,82 +374,6 @@ Set in `docker-compose.dev.yml`:
 environment:
   VITE_API_URL: http://localhost:3000/api
   VITE_ENV: development
-```
-
----
-
-## Common Workflows
-
-### Starting Fresh Development Session
-
-```bash
-# 1. Start dependencies
-make deps-up
-
-# 2. Start local development servers
-cd backend
-npm run dev
-
-# In another terminal
-cd frontend
-npm run dev
-```
-
-### Resetting Database
-
-```bash
-# Stop and remove all data
-make deps-clean
-
-# Start fresh
-make deps-up
-
-# Database is now empty
-```
-
-### Viewing MongoDB Data
-
-**Option 1: Mongo Express (Web UI)**
-```bash
-make db-ui
-# Opens http://localhost:8081 in browser
-```
-
-**Option 2: MongoDB Shell**
-```bash
-make db-shell
-
-# In the shell:
-db.checkins.find().pretty()
-db.users.find()
-```
-
-**Option 3: MongoDB Compass**
-```
-Connection string: mongodb://admin:admin123@localhost:27017/annies-health-journal?authSource=admin
-```
-
-### Debugging in Docker
-
-**View logs:**
-```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f mongodb
-docker-compose logs -f backend
-```
-
-**Access container shell:**
-```bash
-docker exec -it annies-health-journal-backend-dev sh
-docker exec -it annies-health-journal-mongodb sh
-```
-
-**Inspect network:**
-```bash
-docker network inspect annies-health-journal-network
 ```
 
 ---
@@ -393,83 +454,30 @@ docker volume rm annies-health-journal_mongodb_data
 docker-compose up -d mongodb
 ```
 
----
+### Podman: Permission Denied Errors
 
-## Production Docker Setup
+**Problem:** Cannot write to mounted volumes
 
-### Backend Dockerfile (Production)
+**Solution:**
+```bash
+# Use :Z flag for SELinux systems
+-v ./data:/data:Z
 
-Create `backend/Dockerfile`:
-
-```dockerfile
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-
-FROM node:18-alpine
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY package*.json ./
-
-EXPOSE 3000
-CMD ["npm", "start"]
+# Or set permissions
+chmod -R 755 ./data
 ```
 
-### Frontend Dockerfile (Production)
+### Podman: Compose Not Found
 
-Create `frontend/Dockerfile`:
+**Problem:** `podman-compose: command not found`
 
-```dockerfile
-FROM node:18-alpine AS builder
+**Solution:**
+```bash
+# Install podman-compose
+pip3 install podman-compose
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### Production Compose
-
-Create `docker-compose.prod.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
-    environment:
-      NODE_ENV: production
-      MONGODB_URI: ${MONGODB_URI}
-      JWT_SECRET: ${JWT_SECRET}
-    depends_on:
-      - mongodb
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - '80:80'
-    depends_on:
-      - backend
+# Or use podman native (experimental)
+podman compose up
 ```
 
 ---
@@ -478,7 +486,7 @@ services:
 
 ### Development
 
-1. **Use dependencies in Docker, app locally** for best DX
+1. **Use dependencies in Docker, app locally** for best developer experience
 2. **Use named volumes** for data persistence
 3. **Use health checks** to ensure services are ready
 4. **Mount source code as volumes** for hot reload
@@ -492,6 +500,13 @@ services:
 4. **Set resource limits** for containers
 5. **Use secrets management** for sensitive data
 
+### Security (Podman)
+
+1. **Run rootless** (default behavior)
+2. **Use SELinux labels** (:Z flag) on SELinux systems
+3. **Drop capabilities** when not needed
+4. **Enable user namespaces** for better isolation
+
 ### General
 
 - Keep Dockerfiles simple and readable
@@ -501,15 +516,61 @@ services:
 
 ---
 
+## Useful Commands
+
+### Docker/Podman
+
+```bash
+# System information
+podman info
+docker info
+
+# Clean up everything
+podman system prune -af --volumes
+docker system prune -af --volumes
+
+# Check resource usage
+podman stats
+docker stats
+
+# Inspect container
+podman inspect <container>
+docker inspect <container>
+
+# View container processes
+podman top <container>
+docker top <container>
+```
+
+### Podman-Specific
+
+```bash
+# Export container filesystem
+podman export <container> > filesystem.tar
+
+# Generate Kubernetes YAML
+podman generate kube <container> > app.yaml
+
+# Generate systemd unit
+podman generate systemd --name <container> --files
+```
+
+---
+
 ## Resources
 
+### Docker
 - [Docker Documentation](https://docs.docker.com)
 - [Docker Compose Reference](https://docs.docker.com/compose/compose-file/)
 - [MongoDB Docker Hub](https://hub.docker.com/_/mongo)
 - [Node.js Docker Best Practices](https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md)
 
+### Podman
+- [Podman Documentation](https://docs.podman.io)
+- [Podman Compose GitHub](https://github.com/containers/podman-compose)
+- [Podman vs Docker](https://docs.podman.io/en/latest/markdown/podman-docker.1.html)
+- [Rootless Tutorial](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md)
+
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2024-01-25
-**Maintained By:** Development Team
+**Last Updated**: 2025-11-29

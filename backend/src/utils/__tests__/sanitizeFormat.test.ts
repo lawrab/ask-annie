@@ -14,7 +14,7 @@ describe('sanitizeFormat', () => {
   });
 
   // Helper to transform log info with sanitization
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Test helper needs to accept arbitrary test data
+
   function sanitize(logInfo: any): any {
     const formatter = sanitizeFormat();
     const result = formatter.transform(logInfo as TransformableInfo);

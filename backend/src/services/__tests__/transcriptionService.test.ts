@@ -296,7 +296,7 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -333,7 +333,7 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -368,7 +368,7 @@ describe('TranscriptionService', () => {
 
       // Mock fs.createReadStream to avoid file read errors
       const mockStream = { pipe: jest.fn(), on: jest.fn() };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       jest.spyOn(fs, 'createReadStream').mockReturnValueOnce(mockStream as any);
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports

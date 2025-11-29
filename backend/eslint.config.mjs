@@ -35,6 +35,13 @@ export default tseslint.config(
     },
   },
   {
+    // Allow 'any' in test files
+    files: ['**/*.test.ts', '**/__tests__/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     ignores: ['dist/', 'node_modules/', '*.js', '*.mjs'],
   }
 );

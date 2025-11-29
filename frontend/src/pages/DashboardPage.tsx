@@ -7,17 +7,15 @@ import type {
   QuickStatsResponse,
   CheckIn,
 } from '../services/api';
-import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { CheckInCard } from '../components/CheckInCard';
+import { Header } from '../components/Header';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   // Section A: Daily Momentum
   const [statusData, setStatusData] = useState<DailyStatusResponse['data'] | null>(null);
@@ -181,37 +179,11 @@ export default function DashboardPage() {
     return `${displayHours}:${minutes} ${period}`;
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const groupedCheckIns = groupCheckInsByDate(checkIns);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Annie&apos;s Health Journal</h1>
-              <p className="text-indigo-100">Welcome, {user?.username}!</p>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={() => navigate('/trends')} variant="secondary" size="small">
-                Trends
-              </Button>
-              <Button onClick={() => navigate('/settings')} variant="secondary" size="small">
-                Settings
-              </Button>
-              <Button onClick={handleLogout} variant="secondary" size="small">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header currentPage="dashboard" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

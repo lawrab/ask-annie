@@ -45,4 +45,10 @@ export default tseslint.config({ ignores: ['dist', 'coverage', 'storybook-static
     ],
     'react/prop-types': 'off',
   },
+}, {
+  // Allow 'any' in test files
+  files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'off',
+  },
 }, prettierConfig, storybook.configs["flat/recommended"]);

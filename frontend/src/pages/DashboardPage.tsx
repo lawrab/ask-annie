@@ -202,6 +202,9 @@ export default function DashboardPage() {
               <Button onClick={() => navigate('/trends')} variant="secondary" size="small">
                 Trends
               </Button>
+              <Button onClick={() => navigate('/settings')} variant="secondary" size="small">
+                Settings
+              </Button>
               <Button onClick={handleLogout} variant="secondary" size="small">
                 Logout
               </Button>

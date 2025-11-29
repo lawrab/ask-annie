@@ -2,13 +2,14 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 /**
  * Magic Link Token document interface
- * Used for passwordless authentication via email
+ * Used for passwordless authentication via email and account deletion confirmation
  */
 export interface IMagicLinkToken extends Document {
   email: string;
   token: string;
   expiresAt: Date;
   used: boolean;
+  purpose: 'authentication' | 'account-deletion';
   username?: string; // Optional username for new user registration
   createdAt: Date;
 }
@@ -36,11 +37,18 @@ const magicLinkTokenSchema = new Schema<IMagicLinkToken>(
     expiresAt: {
       type: Date,
       required: [true, 'Expiration date is required'],
-      index: true,
+      // Index created via TTL index below (line 71)
     },
     used: {
       type: Boolean,
       default: false,
+      index: true,
+    },
+    purpose: {
+      type: String,
+      enum: ['authentication', 'account-deletion'],
+      default: 'authentication',
+      required: [true, 'Purpose is required'],
       index: true,
     },
     username: {

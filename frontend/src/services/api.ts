@@ -324,4 +324,65 @@ export const analysisApi = {
   },
 };
 
+// User API
+export interface ExportDataResponse {
+  exportDate: string;
+  exportVersion: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    createdAt: string;
+    updatedAt: string;
+    notificationTimes: string[];
+    notificationsEnabled: boolean;
+  };
+  checkIns: Array<{
+    id: string;
+    timestamp: string;
+    type: 'manual' | 'voice';
+    transcription: string;
+    structured: {
+      symptoms: Record<string, SymptomValue>;
+      activities: string[];
+      triggers: string[];
+      notes?: string;
+    };
+    flaggedForDoctor: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  symptoms: string[];
+  activities: string[];
+  triggers: string[];
+  statistics: {
+    totalCheckIns: number;
+    totalSymptoms: number;
+    totalActivities: number;
+    totalTriggers: number;
+    accountAgeDays: number;
+    firstCheckIn: string | null;
+    lastCheckIn: string | null;
+  };
+}
+
+export interface RequestDeletionResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  deletionToken?: string; // Only in development
+}
+
+export const userApi = {
+  exportData: async (): Promise<ExportDataResponse> => {
+    const response = await apiClient.get<ExportDataResponse>('/user/export');
+    return response.data;
+  },
+
+  requestDeletion: async (): Promise<RequestDeletionResponse> => {
+    const response = await apiClient.post<RequestDeletionResponse>('/user/request-deletion');
+    return response.data;
+  },
+};
+
 export default apiClient;

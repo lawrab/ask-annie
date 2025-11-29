@@ -9,6 +9,8 @@ import MagicLinkVerifyPage from './pages/MagicLinkVerifyPage';
 import DashboardPage from './pages/DashboardPage';
 import CheckInPage from './pages/CheckInPage';
 import TrendsPage from './pages/TrendsPage';
+import SettingsPage from './pages/SettingsPage';
+import DeleteAccountPage from './pages/DeleteAccountPage';
 import DesignSystemPage from './pages/DesignSystemPage';
 
 function App() {
@@ -51,6 +53,22 @@ function App() {
           element={
             <ProtectedRoute>
               <TrendsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account/delete"
+          element={
+            <ProtectedRoute>
+              <DeleteAccountPage />
             </ProtectedRoute>
           }
         />

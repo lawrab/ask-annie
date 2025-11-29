@@ -19,9 +19,7 @@ describe('Analysis Service', () => {
     jest.clearAllMocks();
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockFind = (mockCheckIns: any[]) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (CheckIn.find as any).mockReturnValue({
       sort: jest.fn(async () => mockCheckIns),
     });
@@ -371,7 +369,6 @@ describe('Analysis Service', () => {
 
   describe('analyzeTrendForSymptom', () => {
     it('should return null when no check-ins exist', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => []),
       });
@@ -382,7 +379,6 @@ describe('Analysis Service', () => {
     });
 
     it('should return null when symptom has no numeric data', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -398,7 +394,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate trend for single day with single value', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -424,7 +419,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate daily average for multiple values per day', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -452,7 +446,6 @@ describe('Analysis Service', () => {
     });
 
     it('should group data by date across multiple days', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -480,7 +473,6 @@ describe('Analysis Service', () => {
     });
 
     it('should sort data points by date', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -508,7 +500,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate statistics correctly', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -537,7 +528,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate median for even number of values', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -569,7 +559,6 @@ describe('Analysis Service', () => {
       const symptomsMap = new Map();
       symptomsMap.set('pain_level', 5);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -587,7 +576,6 @@ describe('Analysis Service', () => {
     });
 
     it('should filter out non-numeric values', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -618,7 +606,6 @@ describe('Analysis Service', () => {
     });
 
     it('should round daily average to 2 decimal places', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -643,7 +630,6 @@ describe('Analysis Service', () => {
     });
 
     it('should handle check-ins with null symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -666,7 +652,6 @@ describe('Analysis Service', () => {
     });
 
     it('should handle check-ins with undefined symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -689,7 +674,6 @@ describe('Analysis Service', () => {
     });
 
     it('should return null when all check-ins have null symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -709,7 +693,6 @@ describe('Analysis Service', () => {
     });
 
     it('should handle mix of null, undefined, and valid symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn(async () => [
           {
@@ -743,7 +726,6 @@ describe('Analysis Service', () => {
 
   describe('calculateStreak', () => {
     it('should return zero stats for user with no check-ins', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -771,7 +753,6 @@ describe('Analysis Service', () => {
       const threeDaysAgo = new Date(twoDaysAgo);
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 1);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -790,7 +771,6 @@ describe('Analysis Service', () => {
     });
 
     it('should handle broken streaks correctly', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -815,7 +795,6 @@ describe('Analysis Service', () => {
       fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
       fiveDaysAgo.setHours(12, 0, 0, 0);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -833,7 +812,6 @@ describe('Analysis Service', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -851,7 +829,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate total days from first to last check-in', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -868,7 +845,6 @@ describe('Analysis Service', () => {
     });
 
     it('should calculate longest streak across entire history', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -894,7 +870,6 @@ describe('Analysis Service', () => {
       yesterday.setDate(yesterday.getDate() - 1);
       yesterday.setHours(12, 0, 0, 0);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -910,7 +885,6 @@ describe('Analysis Service', () => {
     });
 
     it('should return last log date correctly', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -929,7 +903,6 @@ describe('Analysis Service', () => {
 
   describe('calculateQuickStats', () => {
     it('should return empty stats for user with no check-ins', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockResolvedValue([]);
 
       const result = await calculateQuickStats(userId, 7);
@@ -972,7 +945,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         // First call is for current period, second for previous
         callCount++;
@@ -1018,7 +990,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1056,7 +1027,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1096,7 +1066,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1136,7 +1105,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1176,7 +1144,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1209,7 +1176,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1225,7 +1191,6 @@ describe('Analysis Service', () => {
     });
 
     it('should handle custom days parameter', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockResolvedValue([]);
 
       const result = await calculateQuickStats(userId, 14);
@@ -1242,7 +1207,6 @@ describe('Analysis Service', () => {
 
       const currentCheckIns = [{ structured: { symptoms: symptomsMap } }];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1271,7 +1235,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1300,7 +1263,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1329,7 +1291,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1355,7 +1316,6 @@ describe('Analysis Service', () => {
         { structured: { symptoms: { headache: { severity: 9 } } } },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1380,7 +1340,6 @@ describe('Analysis Service', () => {
         { structured: { symptoms: { headache: { severity: 5 } } } },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1423,7 +1382,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1458,7 +1416,6 @@ describe('Analysis Service', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1481,7 +1438,6 @@ describe('Analysis Service', () => {
       const currentCheckIns = [{ structured: { symptoms: null } }];
       const previousCheckIns = [{ structured: { symptoms: undefined } }];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.find as any).mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
@@ -1503,7 +1459,6 @@ describe('Analysis Service', () => {
 
     describe('latestCheckIn functionality', () => {
       it('should return undefined latestCheckIn when no check-ins exist', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockResolvedValue([]);
 
         const result = await calculateQuickStats(userId, 7);
@@ -1528,7 +1483,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1584,7 +1538,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1635,7 +1588,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1670,7 +1622,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1705,7 +1656,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1740,7 +1690,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1770,7 +1719,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1798,7 +1746,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1830,7 +1777,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1865,7 +1811,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -1896,7 +1841,6 @@ describe('Analysis Service', () => {
           },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (CheckIn.find as any).mockImplementation(() => {
           callCount++;
           if (callCount === 1) {

@@ -21,14 +21,14 @@ describe('insightService', () => {
   });
 
   // Helper function to mock CheckIn.find with chained methods
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const mockFindChain = (data: any[], methods: string[] = ['select', 'lean']) => {
     const chain: Record<string, jest.Mock> = {};
 
     methods.forEach((method, index) => {
       if (index === methods.length - 1) {
         // Last method in chain returns the data
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         chain[method] = jest.fn(async () => data as any);
       } else {
         // Intermediate methods return the chain
@@ -36,7 +36,6 @@ describe('insightService', () => {
       }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (CheckIn.find as any).mockReturnValue(chain);
   };
 
@@ -112,7 +111,6 @@ describe('insightService', () => {
 
   describe('getCheckInMilestones', () => {
     it('should return correct check-in count', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const mockCheckIns = [
@@ -129,7 +127,6 @@ describe('insightService', () => {
     });
 
     it('should detect milestone at specific counts', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(10);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -143,7 +140,6 @@ describe('insightService', () => {
     });
 
     it('should not detect milestone at non-milestone counts', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(2);
 
       const mockCheckIns = [{ timestamp: new Date() }, { timestamp: new Date() }];
@@ -163,7 +159,6 @@ describe('insightService', () => {
       const twoDaysAgo = new Date(today);
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const mockCheckIns = [
@@ -180,7 +175,6 @@ describe('insightService', () => {
     });
 
     it('should return zero streak for no check-ins', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(0);
 
       mockFindChain([], ['select', 'sort', 'lean']);
@@ -195,7 +189,6 @@ describe('insightService', () => {
 
   describe('generateDataContextCard', () => {
     it('should generate card when symptom is significantly below average', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -213,7 +206,6 @@ describe('insightService', () => {
 
       mockFindChain(mockCheckIns);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
@@ -226,7 +218,6 @@ describe('insightService', () => {
     });
 
     it('should generate card when symptom is significantly above average', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -243,7 +234,6 @@ describe('insightService', () => {
 
       mockFindChain(mockCheckIns);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(2);
 
       const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
@@ -257,7 +247,6 @@ describe('insightService', () => {
     it('should generate streak card as fallback', async () => {
       const today = new Date();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -285,7 +274,6 @@ describe('insightService', () => {
 
       mockFindChain(mockCheckIns, ['select', 'sort', 'lean']);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(4);
 
       const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
@@ -296,7 +284,6 @@ describe('insightService', () => {
     });
 
     it('should return null if no significant context', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -308,7 +295,6 @@ describe('insightService', () => {
       // No historical data
       mockFindChain([], ['select', 'sort', 'lean']);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(1);
 
       const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
@@ -317,7 +303,6 @@ describe('insightService', () => {
     });
 
     it('should return null if no symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -334,7 +319,6 @@ describe('insightService', () => {
     it('should handle Map-based symptoms correctly', async () => {
       const symptomsMap = new Map([['headache', { severity: 4 }]]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -352,7 +336,6 @@ describe('insightService', () => {
 
       mockFindChain(mockCheckIns);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const card = await generateDataContextCard(userId.toString(), mockCurrentCheckIn);
@@ -367,7 +350,6 @@ describe('insightService', () => {
 
   describe('generateValidationCard', () => {
     it('should generate milestone card at milestone count', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -376,7 +358,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(10);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -391,7 +372,6 @@ describe('insightService', () => {
     });
 
     it('should generate high severity validation for severe symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -400,7 +380,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -416,7 +395,6 @@ describe('insightService', () => {
     });
 
     it('should generate default validation for normal symptoms', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -425,7 +403,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(1);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -440,7 +417,6 @@ describe('insightService', () => {
     });
 
     it('should handle no symptoms gracefully', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -449,7 +425,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(1);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -468,7 +443,6 @@ describe('insightService', () => {
         ['fatigue', { severity: 6 }],
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -477,7 +451,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const mockCheckIns = [{ timestamp: new Date() }];
@@ -495,7 +468,6 @@ describe('insightService', () => {
 
   describe('generatePostCheckInInsight', () => {
     it('should return data context card when available', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -504,7 +476,6 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.findById as any).mockResolvedValue(mockCurrentCheckIn);
 
       // Mock historical high severity
@@ -515,7 +486,6 @@ describe('insightService', () => {
 
       mockFindChain(mockCheckIns, ['select', 'sort', 'lean']);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(3);
 
       const insight = await generatePostCheckInInsight(userId.toString(), checkInId.toString());
@@ -525,7 +495,6 @@ describe('insightService', () => {
     });
 
     it('should fallback to validation card when no data context', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -534,13 +503,11 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.findById as any).mockResolvedValue(mockCurrentCheckIn);
 
       // No historical data
       mockFindChain([], ['select', 'sort', 'lean']);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(1);
 
       const insight = await generatePostCheckInInsight(userId.toString(), checkInId.toString());
@@ -550,7 +517,6 @@ describe('insightService', () => {
     });
 
     it('should throw error if check-in not found', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.findById as any).mockResolvedValue(null);
 
       await expect(
@@ -559,7 +525,6 @@ describe('insightService', () => {
     });
 
     it('should always return an insight', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockCurrentCheckIn: any = {
         _id: checkInId,
         userId,
@@ -568,12 +533,10 @@ describe('insightService', () => {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.findById as any).mockResolvedValue(mockCurrentCheckIn);
 
       mockFindChain([], ['select', 'sort', 'lean']);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CheckIn.countDocuments as any).mockResolvedValue(1);
 
       const insight = await generatePostCheckInInsight(userId.toString(), checkInId.toString());

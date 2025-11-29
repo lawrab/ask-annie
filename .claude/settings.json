@@ -18,10 +18,6 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/docs-reminder.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/wave-progress.sh"
           }
         ]
       }

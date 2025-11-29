@@ -11,11 +11,11 @@ import {
   isPlatformAuthenticatorAvailable,
   getBrowserDeviceName,
 } from '../utils/passkeys';
+import { Header } from '../components/Header';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -60,11 +60,6 @@ export default function SettingsPage() {
 
     init();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const handleExportData = async () => {
     try {
@@ -203,28 +198,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
-              <p className="text-indigo-100">Manage your account and privacy</p>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={() => navigate('/dashboard')} variant="secondary" size="small">
-                Dashboard
-              </Button>
-              <Button onClick={() => navigate('/trends')} variant="secondary" size="small">
-                Trends
-              </Button>
-              <Button onClick={handleLogout} variant="secondary" size="small">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header currentPage="settings" title="Settings" subtitle="Manage your account and privacy" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

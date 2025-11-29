@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { analysisApi } from '../services/api';
 import type { SymptomsAnalysisResponse, SymptomTrendResponse } from '../services/api';
-import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { Card } from '../components/ui/Card';
 import { SymptomChart } from '../components/charts/SymptomChart';
 import { QuickStatsCard } from '../components/dashboard/QuickStatsCard';
+import { Header } from '../components/Header';
 
 export default function TrendsPage() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   // Symptoms list state
   const [symptoms, setSymptoms] = useState<SymptomsAnalysisResponse['data']>([]);
@@ -78,11 +76,6 @@ export default function TrendsPage() {
     fetchTrendData();
   }, [selectedSymptom, selectedDays]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   // Calculate trend direction
   const getTrendDirection = (): 'improving' | 'worsening' | 'stable' => {
     if (!trendData?.dataPoints || trendData.dataPoints.length < 2) return 'stable';
@@ -109,28 +102,7 @@ export default function TrendsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Annie&apos;s Health Journal</h1>
-              <p className="text-indigo-100">Welcome, {user?.username}!</p>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={() => navigate('/dashboard')} variant="secondary" size="small">
-                Dashboard
-              </Button>
-              <Button onClick={() => navigate('/settings')} variant="secondary" size="small">
-                Settings
-              </Button>
-              <Button onClick={handleLogout} variant="secondary" size="small">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header currentPage="trends" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

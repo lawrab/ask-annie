@@ -98,18 +98,20 @@ export default function CheckInPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Annie&apos;s Health Journal</h1>
-              <p className="text-indigo-100">Hi, {user?.username}!</p>
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex justify-between items-center gap-4">
+            <div className="min-w-0 flex-shrink">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">Annie&apos;s Health Journal</h1>
+              <p className="text-indigo-100 text-sm sm:text-base truncate">Hi, {user?.username}!</p>
             </div>
             <Button
               onClick={() => navigate('/dashboard')}
               variant="secondary"
               size="small"
+              className="whitespace-nowrap flex-shrink-0"
             >
-              ← Back to Dashboard
+              <span className="hidden sm:inline">← Back to Dashboard</span>
+              <span className="sm:hidden">←</span>
             </Button>
           </div>
         </div>

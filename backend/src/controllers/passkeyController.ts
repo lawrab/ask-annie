@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
-import Passkey from '../models/Passkey';
+import Passkey, { IPasskey } from '../models/Passkey';
 import WebAuthnChallenge from '../models/WebAuthnChallenge';
 import { logger } from '../utils/logger';
 import {
@@ -45,7 +45,7 @@ export async function generateRegistrationOptions(
       userId,
       username: user.username,
       email: user.email,
-      existingCredentials: existingPasskeys as IPasskey[],
+      existingCredentials: existingPasskeys as unknown as IPasskey[],
     });
 
     // Store challenge for verification
@@ -207,7 +207,7 @@ export async function generateAuthenticationOptions(
 
     // Generate authentication options
     const options = await generatePasskeyAuthenticationOptions({
-      credentials: passkeys as IPasskey[],
+      credentials: passkeys as unknown as IPasskey[],
     });
 
     // Store challenge for verification
@@ -306,7 +306,7 @@ export async function verifyAuthentication(
     const verification = await verifyPasskeyAuthentication({
       response,
       expectedChallenge: challengeDoc.challenge,
-      credential: passkey as IPasskey,
+      credential: passkey as unknown as IPasskey,
     });
 
     if (!verification.verified) {

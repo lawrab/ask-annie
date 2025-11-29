@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Change to project root (works regardless of where Claude Code runs from)
+cd "$(dirname "$0")/../.." || exit 0
+
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'

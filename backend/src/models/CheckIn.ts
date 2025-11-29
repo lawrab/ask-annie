@@ -20,6 +20,21 @@ export interface IStructured {
 }
 
 /**
+ * Plain check-in data (without Mongoose Document methods)
+ * Use this type when working with .lean() results
+ */
+export interface ICheckInData {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  timestamp: Date;
+  rawTranscript: string;
+  structured: IStructured;
+  flaggedForDoctor: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * CheckIn document interface extending Mongoose Document
  */
 export interface ICheckIn extends Document {

@@ -68,6 +68,7 @@ Built as a dedication to Annie Rabbets.
 - Push directly to main (use PRs)
 - Skip tests or ignore failing tests
 - Use `@ts-ignore` or `any` types without good reason
+- DO NOT reference AI or Claude in commit messages or PRs
 
 ## Project Structure
 ```

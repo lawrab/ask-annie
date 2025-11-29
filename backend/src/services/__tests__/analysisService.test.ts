@@ -20,7 +20,7 @@ describe('Analysis Service', () => {
   });
 
   const mockFind = (mockCheckIns: any[]) => {
-    (CheckIn.find as any).mockReturnValue({
+    (CheckIn.find as jest.Mock).mockReturnValue({
       sort: jest.fn(async () => mockCheckIns),
     });
   };
@@ -369,9 +369,7 @@ describe('Analysis Service', () => {
 
   describe('analyzeTrendForSymptom', () => {
     it('should return null when no check-ins exist', async () => {
-      (CheckIn.find as any).mockReturnValue({
-        sort: jest.fn(async () => []),
-      });
+      mockFind([]);
 
       const result = await analyzeTrendForSymptom(userId, 'pain_level', 14);
 

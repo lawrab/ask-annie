@@ -272,24 +272,35 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
   return (
     <>
       <Card variant="default">
-        {/* Header: Timestamp + Flagged Badge */}
+        {/* Header: Timestamp + Flagged Badge + Collapse */}
         <div className="flex justify-between items-start mb-4">
-          <div>
+          <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">
               {formatTimestamp(checkIn.timestamp)}
             </span>
-            {mode !== 'expanded' && (
-              <Button
-                variant="link"
-                size="small"
-                onClick={toggleExpanded}
-                className="ml-2 text-xs"
-              >
-                Show less
-              </Button>
-            )}
+            {isFlagged && <Badge variant="warning">Flagged for Doctor</Badge>}
           </div>
-          {isFlagged && <Badge variant="warning">Flagged for Doctor</Badge>}
+          {mode !== 'expanded' && (
+            <button
+              onClick={toggleExpanded}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+              aria-label="Collapse check-in"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Raw Transcript */}

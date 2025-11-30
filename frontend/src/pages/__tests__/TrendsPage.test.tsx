@@ -777,7 +777,7 @@ describe('TrendsPage', () => {
   });
 
   describe('Navigation', () => {
-    it('navigates to dashboard when Dashboard button clicked', async () => {
+    it('navigates to dashboard when title clicked', async () => {
       const user = userEvent.setup();
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(mockSymptomsData);
       vi.mocked(analysisApi.getSymptomTrend).mockResolvedValue(mockTrendData);
@@ -789,16 +789,16 @@ describe('TrendsPage', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+        expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
       });
 
-      const dashboardButton = screen.getByRole('button', { name: /dashboard/i });
-      await user.click(dashboardButton);
+      const title = screen.getByText("Annie's Health Journal");
+      await user.click(title);
 
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
 
-    it('logout button calls logout and navigates to login', async () => {
+    it('logout from profile menu calls logout and navigates to login', async () => {
       const user = userEvent.setup();
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(mockSymptomsData);
       vi.mocked(analysisApi.getSymptomTrend).mockResolvedValue(mockTrendData);
@@ -809,11 +809,20 @@ describe('TrendsPage', () => {
         </MemoryRouter>
       );
 
+      // Open profile dropdown
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /user menu/i })).toBeInTheDocument();
       });
 
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
+      const profileButton = screen.getByRole('button', { name: /user menu/i });
+      await user.click(profileButton);
+
+      // Click logout in dropdown
+      await waitFor(() => {
+        expect(screen.getByText('Logout')).toBeInTheDocument();
+      });
+
+      const logoutButton = screen.getByText('Logout');
       await user.click(logoutButton);
 
       expect(mockLogout).toHaveBeenCalled();

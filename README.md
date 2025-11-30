@@ -175,6 +175,16 @@ The app is designed to be deployed on Railway with automatic CI/CD from GitHub. 
 - ✅ Reusable CheckInCard component (Issue #21, PR #93 merged)
 - 📋 Doctor summary generation (Issue #20)
 
+### v0.4.0 - Mobile UX & Stability Release
+- ✅ Sticky bottom controls for mobile voice recording (PR #184)
+- ✅ Prevent empty/hallucinated check-ins via GPT content validation (PR #184)
+- ✅ Dashboard redesign with improved layout (PR #180)
+- ✅ Trends page fixes and improvements (PR #180)
+- ✅ Firefox fixed positioning fixes via React Portals (PR #184)
+- ✅ Improved error message display in UI (PR #184)
+- ✅ Check-in guidance for better user onboarding (PR #182)
+- ✅ Symptom and activity name formatting (PR #183)
+
 ### v0.3.0-alpha - Family Alpha Release (Phase 1 Complete ✅)
 - ✅ Magic link passwordless authentication (Issue #157, PRs #163, #164, #167)
 - ✅ Account deletion with email confirmation (Issue #160, PR #172)

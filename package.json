@@ -1,6 +1,6 @@
 {
   "name": "annies-health-journal",
-  "version": "0.3.0-alpha",
+  "version": "0.4.0",
   "description": "Your daily health companion. Track symptoms, spot patterns, empower your health.",
   "private": true,
   "workspaces": [

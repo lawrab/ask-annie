@@ -92,12 +92,13 @@ describe('VoiceRecorder - MIME Type Detection', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Recording')).toBeInTheDocument();
+        // May have 2 elements (desktop + mobile sticky)
+        expect(screen.getAllByText('Recording').length).toBeGreaterThan(0);
       },
       { timeout: 10000 }
     );
 
-    const stopButton = screen.getByRole('button', { name: /stop/i });
+    const stopButton = screen.getAllByRole('button', { name: /stop/i })[0];
     await user.click(stopButton);
 
     await waitFor(
@@ -131,12 +132,13 @@ describe('VoiceRecorder - MIME Type Detection', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Recording')).toBeInTheDocument();
+        // May have 2 elements (desktop + mobile sticky)
+        expect(screen.getAllByText('Recording').length).toBeGreaterThan(0);
       },
       { timeout: 10000 }
     );
 
-    const stopButton = screen.getByRole('button', { name: /stop/i });
+    const stopButton = screen.getAllByRole('button', { name: /stop/i })[0];
     await user.click(stopButton);
 
     await waitFor(
@@ -169,12 +171,13 @@ describe('VoiceRecorder - MIME Type Detection', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Recording')).toBeInTheDocument();
+        // May have 2 elements (desktop + mobile sticky)
+        expect(screen.getAllByText('Recording').length).toBeGreaterThan(0);
       },
       { timeout: 10000 }
     );
 
-    const stopButton = screen.getByRole('button', { name: /stop/i });
+    const stopButton = screen.getAllByRole('button', { name: /stop/i })[0];
     await user.click(stopButton);
 
     await waitFor(

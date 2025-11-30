@@ -251,9 +251,9 @@ describe('CheckinController', () => {
     describe('Database Errors', () => {
       it('should handle database save errors', async () => {
         // Arrange
-        const mockTranscript = 'Test transcript';
+        const mockTranscript = 'I have a headache';
         const mockParsed = {
-          symptoms: {},
+          symptoms: { headache: { severity: 5 } },
           activities: [],
           triggers: [],
           notes: mockTranscript,
@@ -283,10 +283,10 @@ describe('CheckinController', () => {
     describe('File Cleanup', () => {
       it('should continue if cleanup fails after successful save', async () => {
         // Arrange
-        const mockTranscript = 'Test transcript';
+        const mockTranscript = 'I went for a walk today';
         const mockParsed = {
           symptoms: {},
-          activities: [],
+          activities: ['walking'],
           triggers: [],
           notes: mockTranscript,
         };
@@ -333,52 +333,44 @@ describe('CheckinController', () => {
     });
 
     describe('Integration Scenarios', () => {
-      it('should handle empty transcript', async () => {
-        // Arrange
-        const mockTranscript = '';
+      it('should reject check-in when no meaningful content is extracted', async () => {
+        // Arrange - GPT returns empty parsed result (hallucinated transcript or gibberish)
+        const mockTranscript = '시청해주셔서 감사합니다'; // Korean hallucination
         const mockParsed = {
           symptoms: {},
           activities: [],
           triggers: [],
-          notes: '',
-        };
-        const mockCheckIn = {
-          _id: '507f191e810c19729de860ea',
-          timestamp: new Date(),
-          rawTranscript: mockTranscript,
-          structured: mockParsed,
-          save: jest.fn().mockResolvedValue(true),
+          notes: '', // No notes either
         };
 
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
         (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
-        (CheckIn as any).mockImplementation(() => mockCheckIn);
 
         // Act
         await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
 
-        // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(201);
+        // Assert - should return 400 with user-friendly error
+        expect(mockRes.status).toHaveBeenCalledWith(400);
         expect(mockRes.json).toHaveBeenCalledWith(
           expect.objectContaining({
-            success: true,
-            data: expect.objectContaining({
-              checkIn: expect.objectContaining({
-                rawTranscript: '',
-              }),
+            success: false,
+            error: expect.objectContaining({
+              message: expect.stringContaining('No health information'),
             }),
           })
         );
+        // Should not attempt to save
+        expect(CheckIn).not.toHaveBeenCalled();
       });
 
-      it('should handle transcript with no recognized symptoms', async () => {
-        // Arrange
-        const mockTranscript = 'Just a normal day, nothing special';
+      it('should save check-in with activities but no symptoms', async () => {
+        // Arrange - valid check-in with activities
+        const mockTranscript = 'Went for a walk today';
         const mockParsed = {
           symptoms: {},
-          activities: [],
+          activities: ['walking'],
           triggers: [],
           notes: mockTranscript,
         };
@@ -399,7 +391,7 @@ describe('CheckinController', () => {
         // Act
         await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
 
-        // Assert
+        // Assert - should succeed because activities were extracted
         expect(mockRes.status).toHaveBeenCalledWith(201);
         expect(mockRes.json).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -407,7 +399,7 @@ describe('CheckinController', () => {
             data: expect.objectContaining({
               checkIn: expect.objectContaining({
                 structured: expect.objectContaining({
-                  symptoms: {},
+                  activities: ['walking'],
                 }),
               }),
             }),

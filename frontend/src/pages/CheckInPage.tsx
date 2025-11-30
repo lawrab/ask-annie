@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { checkInsApi, InsightCard } from '../services/api';
 import VoiceRecorder, { VoiceRecorderHandle } from '../components/VoiceRecorder';
@@ -44,12 +45,18 @@ export default function CheckInPage() {
   }, []);
 
   const handleStartRecordingFromGuidance = useCallback(() => {
+    // Clear any previous recording
+    setAudioBlob(null);
     // Switch to voice mode if not already
     setMode('voice');
     // Trigger recording via ref (with small delay to ensure component is mounted)
     setTimeout(() => {
       voiceRecorderRef.current?.startRecording();
     }, 100);
+  }, []);
+
+  const handleStopRecordingFromGuidance = useCallback(() => {
+    voiceRecorderRef.current?.stopRecording();
   }, []);
 
   const handleStartManualFromGuidance = useCallback(() => {
@@ -118,8 +125,8 @@ export default function CheckInPage() {
     <div className="min-h-screen bg-gray-50">
       <Header currentPage="checkin" subtitle="Create Check-in" />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      {/* Main Content - add bottom padding on mobile when sticky controls are visible */}
+      <main className={`container mx-auto px-4 py-8 ${(isRecording || audioBlob) ? 'pb-24 sm:pb-8' : ''}`}>
         <div className="max-w-2xl mx-auto">
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
@@ -128,6 +135,7 @@ export default function CheckInPage() {
           <CheckInGuidance
             className="mb-6"
             onStartRecording={handleStartRecordingFromGuidance}
+            onStopRecording={handleStopRecordingFromGuidance}
             onStartManual={handleStartManualFromGuidance}
             isRecording={isRecording}
           />
@@ -141,8 +149,9 @@ export default function CheckInPage() {
                 onError={handleVoiceError}
                 onRecordingStateChange={handleRecordingStateChange}
               />
+              {/* Desktop submit button - inline */}
               {audioBlob && (
-                <div className="mt-4">
+                <div className="hidden sm:block mt-4">
                   <Button
                     onClick={handleVoiceSubmit}
                     variant="primary"
@@ -153,6 +162,21 @@ export default function CheckInPage() {
                     Submit Check-In
                   </Button>
                 </div>
+              )}
+              {/* Mobile submit button - sticky bottom via portal */}
+              {audioBlob && createPortal(
+                <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
+                  <Button
+                    onClick={handleVoiceSubmit}
+                    variant="primary"
+                    size="medium"
+                    fullWidth
+                    loading={isSubmitting}
+                  >
+                    Submit Check-In
+                  </Button>
+                </div>,
+                document.body
               )}
             </>
           )}

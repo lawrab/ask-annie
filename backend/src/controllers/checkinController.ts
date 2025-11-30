@@ -44,7 +44,7 @@ export async function createVoiceCheckin(
     // Step 1: Transcribe audio
     logger.info('Starting transcription');
     const transcriptionResult = await transcribeAudio(audioFilePath);
-    const rawTranscript = transcriptionResult.text;
+    const rawTranscript = transcriptionResult.text?.trim() || '';
 
     logger.info('Transcription completed', {
       transcriptLength: rawTranscript.length,
@@ -66,6 +66,24 @@ export async function createVoiceCheckin(
       hasNotes,
       checkInType: symptomCount > 0 ? 'with-symptoms' : 'activities-only',
     });
+
+    // Check if GPT extracted any meaningful health content
+    // Notes alone doesn't count - it's just the raw transcript echoed back
+    // We need at least one symptom, activity, or trigger to save
+    const hasMeaningfulContent = symptomCount > 0 || activityCount > 0 || triggerCount > 0;
+    if (!hasMeaningfulContent) {
+      logger.info('Rejected check-in: no symptoms, activities, or triggers extracted', {
+        rawTranscript,
+      });
+      res.status(400).json({
+        success: false,
+        error: {
+          message:
+            'No health information could be extracted from the recording. Please describe your symptoms, activities, or triggers and try again.',
+        },
+      });
+      return;
+    }
 
     // Step 3: Save to database
     logger.info('Attempting to save check-in', {

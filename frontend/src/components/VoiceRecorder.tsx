@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { createPortal } from 'react-dom';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob) => void;
@@ -80,6 +81,11 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
   }));
 
   const startRecording = async () => {
+    // Reset any previous recording state
+    setAudioURL(null);
+    setRecordingTime(0);
+    chunksRef.current = [];
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -192,6 +198,57 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Recording control buttons component - reused in both inline and sticky
+  const RecordingControls = ({ className = '' }: { className?: string }) => (
+    <div className={`flex items-center justify-between ${className}`}>
+      {/* Left: Timer and status */}
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+        <span className="text-2xl font-mono text-gray-900">
+          {formatTime(recordingTime)}
+        </span>
+        <span className="text-sm text-gray-500">
+          {isPaused ? 'Paused' : 'Recording'}
+        </span>
+      </div>
+
+      {/* Right: Control buttons */}
+      <div className="flex gap-2">
+        {!isPaused ? (
+          <>
+            <button
+              onClick={pauseRecording}
+              className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+            >
+              Pause
+            </button>
+            <button
+              onClick={stopRecording}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+            >
+              Stop
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={resumeRecording}
+              className="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+            >
+              Resume
+            </button>
+            <button
+              onClick={stopRecording}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+            >
+              Stop
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {permissionDenied && (
@@ -201,59 +258,19 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
         </div>
       )}
 
-      {/* Recording Controls - only show when actively recording */}
+      {/* Inline Recording Controls - hidden on mobile when recording */}
       {!audioURL && isRecording && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-          <div className="flex items-center justify-between">
-            {/* Left: Timer and status */}
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-2xl font-mono text-gray-900">
-                {formatTime(recordingTime)}
-              </span>
-              <span className="text-sm text-gray-500">
-                {isPaused ? 'Paused' : 'Recording'}
-              </span>
-            </div>
-
-            {/* Right: Control buttons */}
-            <div className="flex gap-2">
-              {!isPaused && (
-                <>
-                  <button
-                    onClick={pauseRecording}
-                    className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm font-medium transition-colors"
-                  >
-                    Pause
-                  </button>
-                  <button
-                    onClick={stopRecording}
-                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
-                  >
-                    Stop
-                  </button>
-                </>
-              )}
-
-              {isPaused && (
-                <>
-                  <button
-                    onClick={resumeRecording}
-                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors"
-                  >
-                    Resume
-                  </button>
-                  <button
-                    onClick={stopRecording}
-                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
-                  >
-                    Stop
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+        <div className="hidden sm:block bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <RecordingControls />
         </div>
+      )}
+
+      {/* Sticky Bottom Recording Controls - mobile only via portal */}
+      {!audioURL && isRecording && createPortal(
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
+          <RecordingControls />
+        </div>,
+        document.body
       )}
 
       {/* Audio Preview */}

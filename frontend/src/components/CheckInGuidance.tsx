@@ -6,6 +6,7 @@ import { formatDisplayName } from '../utils/string';
 interface CheckInGuidanceProps {
   className?: string;
   onStartRecording?: () => void;
+  onStopRecording?: () => void;
   onStartManual?: () => void;
   isRecording?: boolean;
 }
@@ -17,6 +18,7 @@ interface CheckInGuidanceProps {
 export default function CheckInGuidance({
   className = '',
   onStartRecording,
+  onStopRecording,
   onStartManual,
   isRecording = false,
 }: CheckInGuidanceProps) {
@@ -83,28 +85,27 @@ export default function CheckInGuidance({
           </h3>
           {(onStartRecording || onStartManual) && (
             <div className="flex gap-2">
-              {onStartRecording && (
+              {(onStartRecording || (isRecording && onStopRecording)) && (
                 <button
-                  onClick={onStartRecording}
-                  disabled={isRecording}
+                  onClick={isRecording ? onStopRecording : onStartRecording}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     isRecording
-                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      ? 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg'
                       : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-md hover:shadow-lg'
-                  } disabled:opacity-50`}
+                  }`}
                 >
                   <span className="flex items-center gap-1.5">
                     {isRecording ? (
                       <>
-                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        Recording...
+                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        Stop Recording
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                         </svg>
-                        Start Voice Check-in
+                        <span className="whitespace-nowrap">Voice Check-in</span>
                       </>
                     )}
                   </span>

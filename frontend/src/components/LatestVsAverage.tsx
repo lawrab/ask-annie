@@ -1,7 +1,7 @@
 import { ArrowUp, ArrowDown, Equal, type LucideIcon } from 'lucide-react';
 import { Card } from './ui/Card';
 import { cn } from '../utils/cn';
-import { capitalize, formatNumber } from '../utils/string';
+import { formatDisplayName, formatNumber } from '../utils/string';
 
 // Types
 export type TrendDirection = 'above' | 'below' | 'equal';
@@ -61,7 +61,7 @@ function SymptomComparisonCard({ symptom }: SymptomComparisonCardProps) {
     <div className={cn('rounded-lg p-4', bgColor)}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-semibold text-gray-900">{capitalize(symptom.name)}</p>
+          <p className="font-semibold text-gray-900">{formatDisplayName(symptom.name)}</p>
           <p className="text-sm text-gray-600">
             Now: <span className="font-medium">{formatNumber(symptom.latestValue)}</span>
             {' · '}

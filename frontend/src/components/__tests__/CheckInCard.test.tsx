@@ -226,9 +226,9 @@ describe('CheckInCard', () => {
 
       render(<CheckInCard checkIn={checkIn} mode="expanded" />);
 
-      expect(screen.getByText('headache: 8')).toBeInTheDocument();
-      expect(screen.getByText('fatigue: 5')).toBeInTheDocument();
-      expect(screen.getByText('nausea: 3')).toBeInTheDocument();
+      expect(screen.getByText('Headache: 8')).toBeInTheDocument();
+      expect(screen.getByText('Fatigue: 5')).toBeInTheDocument();
+      expect(screen.getByText('Nausea: 3')).toBeInTheDocument();
     });
 
     it('displays symptom location when available', () => {
@@ -269,15 +269,15 @@ describe('CheckInCard', () => {
       const checkIn = createMockCheckIn();
       render(<CheckInCard checkIn={checkIn} mode="expanded" />);
 
-      expect(screen.getByText('walking')).toBeInTheDocument();
-      expect(screen.getByText('reading')).toBeInTheDocument();
+      expect(screen.getByText('Walking')).toBeInTheDocument();
+      expect(screen.getByText('Reading')).toBeInTheDocument();
     });
 
     it('displays triggers with error badges', () => {
       const checkIn = createMockCheckIn();
       render(<CheckInCard checkIn={checkIn} mode="expanded" />);
 
-      expect(screen.getByText('stress')).toBeInTheDocument();
+      expect(screen.getByText('Stress')).toBeInTheDocument();
     });
 
     it('displays full notes', () => {
@@ -509,7 +509,7 @@ describe('CheckInCard', () => {
 
       const { container } = render(<CheckInCard checkIn={checkIn} />);
 
-      const dot = container.querySelector('[aria-label*="headache severity"]');
+      const dot = container.querySelector('[aria-label*="Headache severity"]');
       expect(dot).toBeInTheDocument();
     });
 

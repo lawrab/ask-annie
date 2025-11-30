@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Badge, Button, ConfirmDialog } from './ui';
 import { CheckIn, SymptomValue } from '../services/api';
 import { cn } from '../utils/cn';
+import { formatDisplayName } from '../utils/string';
 import type { BadgeProps } from './ui/Badge';
 
 interface CheckInCardProps {
@@ -103,7 +104,7 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
 
     // Fallback: show symptom names if available
     if (symptoms.length > 0) {
-      const symptomNames = symptoms.map(([name]) => name).slice(0, 3);
+      const symptomNames = symptoms.map(([name]) => formatDisplayName(name)).slice(0, 3);
       const text = symptomNames.join(', ');
       return symptoms.length > 3 ? `${text}, +${symptoms.length - 3} more` : text;
     }
@@ -209,8 +210,8 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
                         <div
                           key={symptom}
                           className={cn('w-3 h-3 rounded-full', bgColor)}
-                          title={`${symptom}: ${severity} (${getSeverityLabel(severity)})`}
-                          aria-label={`${symptom} severity ${severity}`}
+                          title={`${formatDisplayName(symptom)}: ${severity} (${getSeverityLabel(severity)})`}
+                          aria-label={`${formatDisplayName(symptom)} severity ${severity}`}
                         />
                       );
                     })}
@@ -325,9 +326,9 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
                   <Badge
                     key={symptom}
                     variant={getSeverityVariant(value.severity)}
-                    aria-label={`${symptom} ${getSeverityLabel(value.severity)} ${value.severity}`}
+                    aria-label={`${formatDisplayName(symptom)} ${getSeverityLabel(value.severity)} ${value.severity}`}
                   >
-                    {symptom}: {value.severity}
+                    {formatDisplayName(symptom)}: {value.severity}
                     {value.location && ` (${value.location})`}
                   </Badge>
                 ))}
@@ -344,7 +345,7 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
               <div className="flex flex-wrap gap-2">
                 {checkIn.structured.activities.map((activity) => (
                   <Badge key={activity} variant="success">
-                    {activity}
+                    {formatDisplayName(activity)}
                   </Badge>
                 ))}
               </div>
@@ -360,7 +361,7 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
               <div className="flex flex-wrap gap-2">
                 {checkIn.structured.triggers.map((trigger) => (
                   <Badge key={trigger} variant="error">
-                    {trigger}
+                    {formatDisplayName(trigger)}
                   </Badge>
                 ))}
               </div>
@@ -390,7 +391,7 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
                   .filter(([, value]) => value.notes)
                   .map(([symptom, value]) => (
                     <p key={symptom} className="text-sm text-gray-600">
-                      <span className="font-medium">{symptom}:</span>{' '}
+                      <span className="font-medium">{formatDisplayName(symptom)}:</span>{' '}
                       {value.notes}
                     </p>
                   ))}

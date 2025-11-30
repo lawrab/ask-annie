@@ -8,6 +8,7 @@ import { Card } from '../components/ui/Card';
 import { SymptomChart } from '../components/charts/SymptomChart';
 import { QuickStatsCard } from '../components/dashboard/QuickStatsCard';
 import { Header } from '../components/Header';
+import { formatDisplayName } from '../utils/string';
 
 export default function TrendsPage() {
   const navigate = useNavigate();
@@ -179,7 +180,7 @@ export default function TrendsPage() {
                     >
                       {symptoms.map((symptom) => (
                         <option key={symptom.name} value={symptom.name}>
-                          {symptom.name} {symptom.average !== undefined ? `(avg: ${symptom.average.toFixed(1)})` : ''}
+                          {formatDisplayName(symptom.name)} {symptom.average !== undefined ? `(avg: ${symptom.average.toFixed(1)})` : ''}
                         </option>
                       ))}
                     </select>
@@ -224,11 +225,11 @@ export default function TrendsPage() {
                 <>
                   <Card variant="default" padding="default">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      {selectedSymptom} - Severity Over Time
+                      {formatDisplayName(selectedSymptom)} - Severity Over Time
                     </h3>
                     <SymptomChart
                       data={trendData.dataPoints}
-                      symptomName={selectedSymptom}
+                      symptomName={formatDisplayName(selectedSymptom)}
                       dateRange={trendData.dateRange}
                       onDateClick={(date) => {
                         console.log('Clicked date:', date);

@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react';
 import { checkInsApi, CheckInContext } from '../services/api';
+import { Button } from './ui/Button';
 
 interface CheckInGuidanceProps {
   className?: string;
+  onStartRecording?: () => void;
+  isRecording?: boolean;
 }
 
 /**
  * Pre-check-in guidance panel showing personalized context to help users
  * provide comprehensive and consistent check-ins with proper severity scoring.
  */
-export default function CheckInGuidance({ className = '' }: CheckInGuidanceProps) {
+export default function CheckInGuidance({
+  className = '',
+  onStartRecording,
+  isRecording = false,
+}: CheckInGuidanceProps) {
   const [context, setContext] = useState<CheckInContext | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +145,34 @@ export default function CheckInGuidance({ className = '' }: CheckInGuidanceProps
             <span role="img" aria-label="fire" className="text-lg">🔥</span>
             <span className="font-medium">{context.streak.message}</span>
           </div>
+        )}
+
+        {/* Quick Check-in Button */}
+        {onStartRecording && (
+          <Button
+            onClick={onStartRecording}
+            variant="primary"
+            size="large"
+            fullWidth
+            disabled={isRecording}
+            className="mt-2"
+          >
+            <span className="flex items-center justify-center gap-2">
+              {isRecording ? (
+                <>
+                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                  Recording...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                  Start Voice Check-in
+                </>
+              )}
+            </span>
+          </Button>
         )}
       </div>
     </div>

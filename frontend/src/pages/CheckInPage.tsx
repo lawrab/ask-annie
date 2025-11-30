@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '../stores/authStore';
 import { checkInsApi, InsightCard } from '../services/api';
-import VoiceRecorder from '../components/VoiceRecorder';
+import VoiceRecorder, { VoiceRecorderHandle } from '../components/VoiceRecorder';
 import ManualCheckInForm from '../components/ManualCheckInForm';
 import CheckInGuidance from '../components/CheckInGuidance';
 import { Button } from '../components/ui/Button';
@@ -32,10 +32,24 @@ export default function CheckInPage() {
   const [error, setError] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [insight, setInsight] = useState<InsightCard | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const voiceRecorderRef = useRef<VoiceRecorderHandle>(null);
 
   const handleVoiceRecordingComplete = (blob: Blob) => {
     setAudioBlob(blob);
   };
+
+  const handleRecordingStateChange = useCallback((recording: boolean) => {
+    setIsRecording(recording);
+  }, []);
+
+  const handleStartRecordingFromGuidance = useCallback(() => {
+    // Switch to voice mode if not already
+    setMode('voice');
+    // Trigger recording via ref
+    voiceRecorderRef.current?.startRecording();
+  }, []);
 
   const handleVoiceSubmit = async () => {
     if (!audioBlob) {
@@ -129,7 +143,11 @@ export default function CheckInPage() {
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
 
           {/* Pre-Check-In Guidance */}
-          <CheckInGuidance className="mb-6" />
+          <CheckInGuidance
+            className="mb-6"
+            onStartRecording={handleStartRecordingFromGuidance}
+            isRecording={isRecording}
+          />
 
           {/* Mode Toggle */}
           <div className="flex space-x-2 mb-6">
@@ -155,8 +173,10 @@ export default function CheckInPage() {
           {mode === 'voice' && (
             <>
               <VoiceRecorder
+                ref={voiceRecorderRef}
                 onRecordingComplete={handleVoiceRecordingComplete}
                 onError={handleVoiceError}
+                onRecordingStateChange={handleRecordingStateChange}
               />
               {audioBlob && (
                 <div className="mt-4">

@@ -1,17 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob) => void;
   onError?: (error: string) => void;
+  onRecordingStateChange?: (isRecording: boolean) => void;
+}
+
+export interface VoiceRecorderHandle {
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+  isRecording: boolean;
 }
 
 // NOTE: This component has lower test coverage due to Web Audio API (MediaRecorder/getUserMedia)
 // being extremely difficult to mock properly in jsdom. The implementation is functional and
 // tested manually. See skipped tests in VoiceRecorder.test.tsx for details.
-export default function VoiceRecorder({
-  onRecordingComplete,
-  onError,
-}: VoiceRecorderProps) {
+const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(function VoiceRecorder(
+  { onRecordingComplete, onError, onRecordingStateChange },
+  ref
+) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -59,6 +66,18 @@ export default function VoiceRecorder({
       }
     };
   }, [audioURL]);
+
+  // Notify parent of recording state changes
+  useEffect(() => {
+    onRecordingStateChange?.(isRecording);
+  }, [isRecording, onRecordingStateChange]);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    startRecording: () => startRecording(),
+    stopRecording: () => stopRecording(),
+    isRecording,
+  }));
 
   const startRecording = async () => {
     try {
@@ -278,4 +297,6 @@ export default function VoiceRecorder({
       )}
     </div>
   );
-}
+});
+
+export default VoiceRecorder;

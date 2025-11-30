@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 interface CheckInGuidanceProps {
   className?: string;
   onStartRecording?: () => void;
+  onStartManual?: () => void;
   isRecording?: boolean;
 }
 
@@ -15,6 +16,7 @@ interface CheckInGuidanceProps {
 export default function CheckInGuidance({
   className = '',
   onStartRecording,
+  onStartManual,
   isRecording = false,
 }: CheckInGuidanceProps) {
   const [context, setContext] = useState<CheckInContext | null>(null);
@@ -71,12 +73,56 @@ export default function CheckInGuidance({
 
   return (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${className}`}>
-      {/* Header */}
+      {/* Header with Action Buttons */}
       <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <span role="img" aria-label="clipboard">📋</span>
-          Your Check-In Guide
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <span role="img" aria-label="clipboard">📋</span>
+            Your Check-In Guide
+          </h3>
+          {(onStartRecording || onStartManual) && (
+            <div className="flex gap-2">
+              {onStartRecording && (
+                <Button
+                  onClick={onStartRecording}
+                  variant="primary"
+                  size="small"
+                  disabled={isRecording}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {isRecording ? (
+                      <>
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        Recording
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        Voice
+                      </>
+                    )}
+                  </span>
+                </Button>
+              )}
+              {onStartManual && (
+                <Button
+                  onClick={onStartManual}
+                  variant="secondary"
+                  size="small"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Manual
+                  </span>
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-6 space-y-5">
@@ -145,34 +191,6 @@ export default function CheckInGuidance({
             <span role="img" aria-label="fire" className="text-lg">🔥</span>
             <span className="font-medium">{context.streak.message}</span>
           </div>
-        )}
-
-        {/* Quick Check-in Button */}
-        {onStartRecording && (
-          <Button
-            onClick={onStartRecording}
-            variant="primary"
-            size="large"
-            fullWidth
-            disabled={isRecording}
-            className="mt-2"
-          >
-            <span className="flex items-center justify-center gap-2">
-              {isRecording ? (
-                <>
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                  Recording...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                  Start Voice Check-in
-                </>
-              )}
-            </span>
-          </Button>
         )}
       </div>
     </div>

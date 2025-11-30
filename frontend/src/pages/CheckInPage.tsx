@@ -47,8 +47,14 @@ export default function CheckInPage() {
   const handleStartRecordingFromGuidance = useCallback(() => {
     // Switch to voice mode if not already
     setMode('voice');
-    // Trigger recording via ref
-    voiceRecorderRef.current?.startRecording();
+    // Trigger recording via ref (with small delay to ensure component is mounted)
+    setTimeout(() => {
+      voiceRecorderRef.current?.startRecording();
+    }, 100);
+  }, []);
+
+  const handleStartManualFromGuidance = useCallback(() => {
+    setMode('manual');
   }, []);
 
   const handleVoiceSubmit = async () => {
@@ -142,32 +148,13 @@ export default function CheckInPage() {
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
 
-          {/* Pre-Check-In Guidance */}
+          {/* Pre-Check-In Guidance with Action Buttons */}
           <CheckInGuidance
             className="mb-6"
             onStartRecording={handleStartRecordingFromGuidance}
+            onStartManual={handleStartManualFromGuidance}
             isRecording={isRecording}
           />
-
-          {/* Mode Toggle */}
-          <div className="flex space-x-2 mb-6">
-            <Button
-              onClick={() => setMode('voice')}
-              variant={mode === 'voice' ? 'primary' : 'secondary'}
-              size="medium"
-              fullWidth
-            >
-              Voice Recording
-            </Button>
-            <Button
-              onClick={() => setMode('manual')}
-              variant={mode === 'manual' ? 'primary' : 'secondary'}
-              size="medium"
-              fullWidth
-            >
-              Manual Entry
-            </Button>
-          </div>
 
           {/* Voice Mode */}
           {mode === 'voice' && (

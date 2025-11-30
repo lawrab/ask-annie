@@ -40,12 +40,12 @@ describe('MagicLinkVerifyPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation((selector: any) => {
       const state = {
         setUser: mockSetUser,
         setToken: mockSetToken,
       };
-      return selector(state as ReturnType<typeof useAuthStore>);
+      return selector(state);
     });
   });
 

@@ -57,6 +57,8 @@ export default defineConfig({
         '**/*.d.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
+        'src/App.tsx', // Just routes, not business logic
+        'src/pages/DesignSystemPage.tsx', // Design showcase, not business logic
       ],
       // Thresholds accounting for Web Audio API mocking limitations
       // VoiceRecorder and voice-related CheckInPage code are hard to test in jsdom

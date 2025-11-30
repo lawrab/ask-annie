@@ -60,6 +60,10 @@ export interface TrendStatistics {
  */
 export interface TrendAnalysis {
   symptom: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
   dataPoints: TrendDataPoint[];
   statistics: TrendStatistics;
 }

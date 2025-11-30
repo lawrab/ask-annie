@@ -264,11 +264,14 @@ describe('API Client', () => {
         const mockResponse = {
           data: {
             success: true,
-            data: [
-              { name: 'Headache', count: 10, averageSeverity: 6.5 },
-              { name: 'Fatigue', count: 8, averageSeverity: 5.0 },
-              { name: 'Nausea', count: 5, averageSeverity: 4.2 },
-            ],
+            data: {
+              symptoms: [
+                { name: 'Headache', count: 10, percentage: 100, type: 'numeric', average: 6.5, min: 3, max: 9 },
+                { name: 'Fatigue', count: 8, percentage: 80, type: 'numeric', average: 5.0, min: 2, max: 8 },
+                { name: 'Nausea', count: 5, percentage: 50, type: 'numeric', average: 4.2, min: 1, max: 7 },
+              ],
+              totalCheckins: 10,
+            },
           },
         };
 
@@ -277,17 +280,17 @@ describe('API Client', () => {
         const result = await analysisApi.getSymptomsAnalysis();
 
         expect(result.success).toBe(true);
-        expect(result.data).toHaveLength(3);
-        expect(result.data[0].name).toBe('Headache');
-        expect(result.data[0].count).toBe(10);
-        expect(result.data[0].averageSeverity).toBe(6.5);
+        expect(result.data.symptoms).toHaveLength(3);
+        expect(result.data.symptoms[0].name).toBe('Headache');
+        expect(result.data.symptoms[0].count).toBe(10);
+        expect(result.data.symptoms[0].average).toBe(6.5);
       });
 
       it('should make GET request to /analysis/symptoms', async () => {
         const mockResponse = {
           data: {
             success: true,
-            data: [],
+            data: { symptoms: [], totalCheckins: 0 },
           },
         };
 
@@ -302,7 +305,7 @@ describe('API Client', () => {
         const mockResponse = {
           data: {
             success: true,
-            data: [],
+            data: { symptoms: [], totalCheckins: 0 },
           },
         };
 
@@ -311,7 +314,7 @@ describe('API Client', () => {
         const result = await analysisApi.getSymptomsAnalysis();
 
         expect(result.success).toBe(true);
-        expect(result.data).toHaveLength(0);
+        expect(result.data.symptoms).toHaveLength(0);
       });
     });
 
@@ -327,9 +330,9 @@ describe('API Client', () => {
                 end: '2025-01-14',
               },
               dataPoints: [
-                { date: '2025-01-08', value: 7 },
-                { date: '2025-01-09', value: 6 },
-                { date: '2025-01-10', value: 5 },
+                { date: '2025-01-08', value: 7, count: 1 },
+                { date: '2025-01-09', value: 6, count: 1 },
+                { date: '2025-01-10', value: 5, count: 1 },
               ],
               statistics: {
                 average: 6.0,

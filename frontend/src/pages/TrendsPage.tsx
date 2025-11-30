@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { analysisApi } from '../services/api';
-import type { SymptomsAnalysisResponse, SymptomTrendResponse } from '../services/api';
+import type { SymptomStats, SymptomTrendResponse } from '../services/api';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { Card } from '../components/ui/Card';
@@ -13,7 +13,7 @@ export default function TrendsPage() {
   const navigate = useNavigate();
 
   // Symptoms list state
-  const [symptoms, setSymptoms] = useState<SymptomsAnalysisResponse['data']>([]);
+  const [symptoms, setSymptoms] = useState<SymptomStats[]>([]);
   const [isLoadingSymptoms, setIsLoadingSymptoms] = useState(true);
   const [symptomsError, setSymptomsError] = useState<string | null>(null);
 
@@ -33,10 +33,10 @@ export default function TrendsPage() {
 
         const response = await analysisApi.getSymptomsAnalysis();
 
-        if (response.success && response.data.length > 0) {
-          setSymptoms(response.data);
+        if (response.success && response.data.symptoms.length > 0) {
+          setSymptoms(response.data.symptoms);
           // Auto-select the first symptom
-          setSelectedSymptom(response.data[0].name);
+          setSelectedSymptom(response.data.symptoms[0].name);
         } else {
           setSymptoms([]);
         }
@@ -179,7 +179,7 @@ export default function TrendsPage() {
                     >
                       {symptoms.map((symptom) => (
                         <option key={symptom.name} value={symptom.name}>
-                          {symptom.name} (avg: {symptom.averageSeverity.toFixed(1)})
+                          {symptom.name} {symptom.average !== undefined ? `(avg: ${symptom.average.toFixed(1)})` : ''}
                         </option>
                       ))}
                     </select>

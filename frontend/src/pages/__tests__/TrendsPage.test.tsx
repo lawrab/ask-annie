@@ -64,11 +64,14 @@ describe('TrendsPage', () => {
 
   const mockSymptomsData: SymptomsAnalysisResponse = {
     success: true,
-    data: [
-      { name: 'Headache', count: 10, averageSeverity: 6.5 },
-      { name: 'Fatigue', count: 8, averageSeverity: 5.0 },
-      { name: 'Nausea', count: 5, averageSeverity: 4.2 },
-    ],
+    data: {
+      symptoms: [
+        { name: 'Headache', count: 10, percentage: 100, type: 'numeric', average: 6.5, min: 3, max: 9 },
+        { name: 'Fatigue', count: 8, percentage: 80, type: 'numeric', average: 5.0, min: 2, max: 8 },
+        { name: 'Nausea', count: 5, percentage: 50, type: 'numeric', average: 4.2, min: 1, max: 7 },
+      ],
+      totalCheckins: 10,
+    },
   };
 
   const mockTrendData: SymptomTrendResponse = {
@@ -80,13 +83,13 @@ describe('TrendsPage', () => {
         end: '2025-01-14',
       },
       dataPoints: [
-        { date: '2025-01-08', value: 7 },
-        { date: '2025-01-09', value: 6 },
-        { date: '2025-01-10', value: 5 },
-        { date: '2025-01-11', value: 6 },
-        { date: '2025-01-12', value: 5 },
-        { date: '2025-01-13', value: 4 },
-        { date: '2025-01-14', value: 3 },
+        { date: '2025-01-08', value: 7, count: 1 },
+        { date: '2025-01-09', value: 6, count: 1 },
+        { date: '2025-01-10', value: 5, count: 1 },
+        { date: '2025-01-11', value: 6, count: 1 },
+        { date: '2025-01-12', value: 5, count: 1 },
+        { date: '2025-01-13', value: 4, count: 1 },
+        { date: '2025-01-14', value: 3, count: 1 },
       ],
       statistics: {
         average: 5.14,
@@ -315,7 +318,7 @@ describe('TrendsPage', () => {
     it('shows empty state when no symptoms available', async () => {
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue({
         success: true,
-        data: [],
+        data: { symptoms: [], totalCheckins: 0 },
       });
 
       render(
@@ -333,7 +336,7 @@ describe('TrendsPage', () => {
     it('shows create check-in button in empty state', async () => {
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue({
         success: true,
-        data: [],
+        data: { symptoms: [], totalCheckins: 0 },
       });
 
       render(
@@ -351,7 +354,7 @@ describe('TrendsPage', () => {
       const user = userEvent.setup();
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue({
         success: true,
-        data: [],
+        data: { symptoms: [], totalCheckins: 0 },
       });
 
       render(
@@ -593,12 +596,12 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 8 },
-            { date: '2025-01-09', value: 7 },
-            { date: '2025-01-10', value: 6 },
-            { date: '2025-01-11', value: 5 },
-            { date: '2025-01-12', value: 4 },
-            { date: '2025-01-13', value: 3 },
+            { date: '2025-01-08', value: 8, count: 1 },
+            { date: '2025-01-09', value: 7, count: 1 },
+            { date: '2025-01-10', value: 6, count: 1 },
+            { date: '2025-01-11', value: 5, count: 1 },
+            { date: '2025-01-12', value: 4, count: 1 },
+            { date: '2025-01-13', value: 3, count: 1 },
           ],
         },
       };
@@ -622,12 +625,12 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 3 },
-            { date: '2025-01-09', value: 4 },
-            { date: '2025-01-10', value: 5 },
-            { date: '2025-01-11', value: 6 },
-            { date: '2025-01-12', value: 7 },
-            { date: '2025-01-13', value: 8 },
+            { date: '2025-01-08', value: 3, count: 1 },
+            { date: '2025-01-09', value: 4, count: 1 },
+            { date: '2025-01-10', value: 5, count: 1 },
+            { date: '2025-01-11', value: 6, count: 1 },
+            { date: '2025-01-12', value: 7, count: 1 },
+            { date: '2025-01-13', value: 8, count: 1 },
           ],
         },
       };
@@ -651,12 +654,12 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 5 },
-            { date: '2025-01-09', value: 5 },
-            { date: '2025-01-10', value: 5 },
-            { date: '2025-01-11', value: 5 },
-            { date: '2025-01-12', value: 5 },
-            { date: '2025-01-13', value: 5 },
+            { date: '2025-01-08', value: 5, count: 1 },
+            { date: '2025-01-09', value: 5, count: 1 },
+            { date: '2025-01-10', value: 5, count: 1 },
+            { date: '2025-01-11', value: 5, count: 1 },
+            { date: '2025-01-12', value: 5, count: 1 },
+            { date: '2025-01-13', value: 5, count: 1 },
           ],
         },
       };
@@ -680,10 +683,10 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 5.0 },
-            { date: '2025-01-09', value: 5.1 },
-            { date: '2025-01-10', value: 5.2 },
-            { date: '2025-01-11', value: 5.3 },
+            { date: '2025-01-08', value: 5.0, count: 1 },
+            { date: '2025-01-09', value: 5.1, count: 1 },
+            { date: '2025-01-10', value: 5.2, count: 1 },
+            { date: '2025-01-11', value: 5.3, count: 1 },
           ],
         },
       };
@@ -706,7 +709,7 @@ describe('TrendsPage', () => {
         ...mockTrendData,
         data: {
           ...mockTrendData.data,
-          dataPoints: [{ date: '2025-01-08', value: 5 }],
+          dataPoints: [{ date: '2025-01-08', value: 5, count: 1 }],
         },
       };
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(mockSymptomsData);
@@ -729,8 +732,8 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 8 },
-            { date: '2025-01-09', value: 3 },
+            { date: '2025-01-08', value: 8, count: 1 },
+            { date: '2025-01-09', value: 3, count: 1 },
           ],
         },
       };
@@ -755,8 +758,8 @@ describe('TrendsPage', () => {
         data: {
           ...mockTrendData.data,
           dataPoints: [
-            { date: '2025-01-08', value: 3 },
-            { date: '2025-01-09', value: 8 },
+            { date: '2025-01-08', value: 3, count: 1 },
+            { date: '2025-01-09', value: 8, count: 1 },
           ],
         },
       };
@@ -777,7 +780,7 @@ describe('TrendsPage', () => {
   });
 
   describe('Navigation', () => {
-    it('navigates to dashboard when Dashboard button clicked', async () => {
+    it('navigates to dashboard when title clicked', async () => {
       const user = userEvent.setup();
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(mockSymptomsData);
       vi.mocked(analysisApi.getSymptomTrend).mockResolvedValue(mockTrendData);
@@ -789,16 +792,16 @@ describe('TrendsPage', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+        expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
       });
 
-      const dashboardButton = screen.getByRole('button', { name: /dashboard/i });
-      await user.click(dashboardButton);
+      const title = screen.getByText("Annie's Health Journal");
+      await user.click(title);
 
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
 
-    it('logout button calls logout and navigates to login', async () => {
+    it('logout from profile menu calls logout and navigates to login', async () => {
       const user = userEvent.setup();
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(mockSymptomsData);
       vi.mocked(analysisApi.getSymptomTrend).mockResolvedValue(mockTrendData);
@@ -809,11 +812,20 @@ describe('TrendsPage', () => {
         </MemoryRouter>
       );
 
+      // Open profile dropdown
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /user menu/i })).toBeInTheDocument();
       });
 
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
+      const profileButton = screen.getByRole('button', { name: /user menu/i });
+      await user.click(profileButton);
+
+      // Click logout in dropdown
+      await waitFor(() => {
+        expect(screen.getByText('Logout')).toBeInTheDocument();
+      });
+
+      const logoutButton = screen.getByText('Logout');
       await user.click(logoutButton);
 
       expect(mockLogout).toHaveBeenCalled();
@@ -864,7 +876,7 @@ describe('TrendsPage', () => {
     it('handles API returning success: false', async () => {
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue({
         success: false,
-        data: [],
+        data: { symptoms: [], totalCheckins: 0 },
       } as SymptomsAnalysisResponse);
 
       render(
@@ -881,9 +893,12 @@ describe('TrendsPage', () => {
     it('handles very long symptom names', async () => {
       const longSymptomData: SymptomsAnalysisResponse = {
         success: true,
-        data: [
-          { name: 'Very Long Symptom Name That Should Still Display Correctly', count: 10, averageSeverity: 6.5 },
-        ],
+        data: {
+          symptoms: [
+            { name: 'Very Long Symptom Name That Should Still Display Correctly', count: 10, percentage: 100, type: 'numeric', average: 6.5, min: 3, max: 9 },
+          ],
+          totalCheckins: 10,
+        },
       };
       vi.mocked(analysisApi.getSymptomsAnalysis).mockResolvedValue(longSymptomData);
       vi.mocked(analysisApi.getSymptomTrend).mockResolvedValue(mockTrendData);

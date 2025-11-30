@@ -8,7 +8,12 @@
 import { Types } from 'mongoose';
 import CheckIn, { ICheckIn } from '../../models/CheckIn';
 import { SymptomsAnalysis, SymptomStats, SymptomValueType } from './types';
-import { determineSymptomType, calculateNumericStats, getUniqueValues } from './utils';
+import {
+  determineSymptomType,
+  calculateNumericStats,
+  getUniqueValues,
+  extractSeverity,
+} from './utils';
 
 /**
  * Analyze symptoms from all user check-ins
@@ -81,7 +86,10 @@ export async function analyzeSymptomsForUser(
     };
 
     if (type === SymptomValueType.NUMERIC) {
-      const numericValues = values as number[];
+      // Extract severity values from SymptomValue objects or direct numbers
+      const numericValues = values
+        .map((v) => extractSeverity(v))
+        .filter((v): v is number => v !== null);
       const { min, max, average } = calculateNumericStats(numericValues);
       stat.min = min;
       stat.max = max;

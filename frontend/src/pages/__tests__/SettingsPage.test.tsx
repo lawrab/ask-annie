@@ -115,16 +115,15 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Delete Account')).toBeInTheDocument();
   });
 
-  it('should have navigation buttons', () => {
+  it('should have navigation elements', () => {
     render(
       <MemoryRouter>
         <SettingsPage />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /trends/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /user menu/i })).toBeInTheDocument();
   });
 
   describe('Export Data', () => {
@@ -342,7 +341,7 @@ describe('SettingsPage', () => {
   });
 
   describe('Navigation', () => {
-    it('should navigate to dashboard when dashboard button is clicked', async () => {
+    it('should navigate to dashboard when title is clicked', async () => {
       const user = userEvent.setup();
 
       render(
@@ -351,8 +350,9 @@ describe('SettingsPage', () => {
         </MemoryRouter>
       );
 
-      const dashboardButton = screen.getByRole('button', { name: /dashboard/i });
-      await user.click(dashboardButton);
+      // SettingsPage has custom title "Settings"
+      const title = screen.getByRole('heading', { level: 1 });
+      await user.click(title);
 
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
@@ -372,7 +372,7 @@ describe('SettingsPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/trends');
     });
 
-    it('should logout and navigate to login when logout button is clicked', async () => {
+    it('should logout and navigate to login when logout is clicked from profile menu', async () => {
       const user = userEvent.setup();
 
       render(
@@ -381,7 +381,16 @@ describe('SettingsPage', () => {
         </MemoryRouter>
       );
 
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
+      // Open profile dropdown
+      const profileButton = screen.getByRole('button', { name: /user menu/i });
+      await user.click(profileButton);
+
+      // Click logout in dropdown
+      await waitFor(() => {
+        expect(screen.getByText('Logout')).toBeInTheDocument();
+      });
+
+      const logoutButton = screen.getByText('Logout');
       await user.click(logoutButton);
 
       expect(mockLogout).toHaveBeenCalled();

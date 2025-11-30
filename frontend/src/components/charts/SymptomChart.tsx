@@ -13,7 +13,7 @@ import { format, parseISO } from 'date-fns';
 export interface SymptomChartProps {
   data: Array<{ date: string; value: number }> | null | undefined;
   symptomName: string;
-  dateRange: { start: string; end: string };
+  dateRange?: { start: string; end: string };
   onDateClick?: (date: string) => void;
 }
 

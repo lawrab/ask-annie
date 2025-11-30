@@ -13,6 +13,7 @@ import {
   calculateMedian,
   calculateStandardDeviation,
   formatDateKey,
+  extractSeverity,
 } from './utils';
 
 /**
@@ -68,15 +69,18 @@ export async function analyzeTrendForSymptom(
   checkIns.forEach((checkIn: ICheckIn) => {
     const value = getSymptomValue(checkIn, symptomName);
 
-    if (typeof value === 'number' && !isNaN(value)) {
+    // Extract severity from SymptomValue object or use direct number
+    const severity = extractSeverity(value);
+
+    if (severity !== null) {
       const dateKey = formatDateKey(new Date(checkIn.timestamp));
 
       if (!dateMap.has(dateKey)) {
         dateMap.set(dateKey, []);
       }
 
-      dateMap.get(dateKey)!.push(value);
-      allValues.push(value);
+      dateMap.get(dateKey)!.push(severity);
+      allValues.push(severity);
     }
   });
 
@@ -106,6 +110,10 @@ export async function analyzeTrendForSymptom(
 
   return {
     symptom: symptomName,
+    dateRange: {
+      start: startDate.toISOString().split('T')[0],
+      end: endDate.toISOString().split('T')[0],
+    },
     dataPoints,
     statistics: {
       average,

@@ -118,8 +118,8 @@ export default function CheckInPage() {
     <div className="min-h-screen bg-gray-50">
       <Header currentPage="checkin" subtitle="Create Check-in" />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      {/* Main Content - add bottom padding on mobile when recording for sticky controls */}
+      <main className={`container mx-auto px-4 py-8 ${isRecording ? 'pb-24 sm:pb-8' : ''}`}>
         <div className="max-w-2xl mx-auto">
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}

@@ -334,43 +334,68 @@ describe('CheckinController', () => {
 
     describe('Integration Scenarios', () => {
       it('should handle empty transcript', async () => {
-        // Arrange
+        // Arrange - empty transcript means no speech was detected
         const mockTranscript = '';
-        const mockParsed = {
-          symptoms: {},
-          activities: [],
-          triggers: [],
-          notes: '',
-        };
-        const mockCheckIn = {
-          _id: '507f191e810c19729de860ea',
-          timestamp: new Date(),
-          rawTranscript: mockTranscript,
-          structured: mockParsed,
-          save: jest.fn().mockResolvedValue(true),
-        };
 
         (transcribeAudio as jest.Mock).mockResolvedValue({
           text: mockTranscript,
         });
-        (parseSymptoms as jest.Mock).mockResolvedValue(mockParsed);
-        (CheckIn as any).mockImplementation(() => mockCheckIn);
+
+        // Act
+        await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert - should return 400 with user-friendly error
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: false,
+            error: expect.objectContaining({
+              message: expect.stringContaining('No speech detected'),
+            }),
+          })
+        );
+        // Should not attempt to parse or save
+        expect(parseSymptoms).not.toHaveBeenCalled();
+      });
+
+      it('should reject hallucinated transcripts (Korean text)', async () => {
+        // Arrange - Whisper often hallucinates Korean when given silence
+        const hallucinatedTranscript = '시청해주셔서 감사합니다.';
+
+        (transcribeAudio as jest.Mock).mockResolvedValue({
+          text: hallucinatedTranscript,
+        });
+
+        // Act
+        await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
+
+        // Assert - should return 400 with user-friendly error
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: false,
+            error: expect.objectContaining({
+              message: expect.stringContaining('No speech detected'),
+            }),
+          })
+        );
+        expect(parseSymptoms).not.toHaveBeenCalled();
+      });
+
+      it('should reject hallucinated transcripts (emoji only)', async () => {
+        // Arrange - Whisper sometimes outputs just emojis
+        const emojiTranscript = '🙏🙏🙏';
+
+        (transcribeAudio as jest.Mock).mockResolvedValue({
+          text: emojiTranscript,
+        });
 
         // Act
         await createVoiceCheckin(mockReq as Request, mockRes as Response, mockNext);
 
         // Assert
-        expect(mockRes.status).toHaveBeenCalledWith(201);
-        expect(mockRes.json).toHaveBeenCalledWith(
-          expect.objectContaining({
-            success: true,
-            data: expect.objectContaining({
-              checkIn: expect.objectContaining({
-                rawTranscript: '',
-              }),
-            }),
-          })
-        );
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(parseSymptoms).not.toHaveBeenCalled();
       });
 
       it('should handle transcript with no recognized symptoms', async () => {

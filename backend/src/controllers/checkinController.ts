@@ -11,6 +11,47 @@ import fs from 'fs/promises';
 import { PAGINATION_CONSTANTS } from '../constants';
 
 /**
+ * Detects if a transcript is likely hallucinated by Whisper (common with silence/noise).
+ * Whisper tends to hallucinate Korean, Japanese, Chinese text, or just emojis when given silence.
+ */
+function isLikelyHallucinatedTranscript(transcript: string): boolean {
+  if (!transcript || transcript.length === 0) return true;
+
+  // Remove whitespace for analysis
+  const cleaned = transcript.replace(/\s/g, '');
+  if (cleaned.length === 0) return true;
+
+  // Count ASCII letters (a-z, A-Z)
+  const asciiLetters = (transcript.match(/[a-zA-Z]/g) || []).length;
+  const totalChars = cleaned.length;
+
+  // If less than 30% ASCII letters, likely hallucinated (Korean, Japanese, emojis, etc.)
+  const asciiRatio = asciiLetters / totalChars;
+  if (asciiRatio < 0.3) return true;
+
+  // Common Whisper hallucination patterns
+  const hallucinationPatterns = [
+    /^thanks?\s*(for\s*)?(watching|listening)/i,
+    /^subscribe/i,
+    /^please\s*(like|subscribe)/i,
+    /감사합니다/,  // Korean "thank you"
+    /시청/,        // Korean "watching"
+    /ありがとう/,   // Japanese "thank you"
+    /謝謝/,        // Chinese "thank you"
+  ];
+
+  for (const pattern of hallucinationPatterns) {
+    if (pattern.test(transcript)) return true;
+  }
+
+  // If it's just emojis and punctuation
+  const onlyEmojisAndPunctuation = /^[\p{Emoji}\p{P}\s]+$/u.test(transcript);
+  if (onlyEmojisAndPunctuation) return true;
+
+  return false;
+}
+
+/**
  * POST /api/checkins (voice)
  * Accepts audio file, transcribes it, parses symptoms, and stores check-in
  */
@@ -44,11 +85,29 @@ export async function createVoiceCheckin(
     // Step 1: Transcribe audio
     logger.info('Starting transcription');
     const transcriptionResult = await transcribeAudio(audioFilePath);
-    const rawTranscript = transcriptionResult.text;
+    const rawTranscript = transcriptionResult.text?.trim() || '';
 
     logger.info('Transcription completed', {
       transcriptLength: rawTranscript.length,
     });
+
+    // Check for empty or hallucinated transcription (no real speech detected)
+    // Whisper can hallucinate text like Korean/Japanese or just emojis when given silence
+    const isHallucinated = isLikelyHallucinatedTranscript(rawTranscript);
+
+    if (!rawTranscript || isHallucinated) {
+      logger.info('Rejected transcript as empty or hallucinated', {
+        rawTranscript,
+        isHallucinated,
+      });
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'No speech detected in the recording. Please try again and speak clearly into your microphone.',
+        },
+      });
+      return;
+    }
 
     // Step 2: Parse symptoms from transcript
     logger.info('Starting symptom parsing');

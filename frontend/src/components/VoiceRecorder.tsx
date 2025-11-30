@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { createPortal } from 'react-dom';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob) => void;
@@ -264,11 +265,12 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
         </div>
       )}
 
-      {/* Sticky Bottom Recording Controls - mobile only */}
-      {!audioURL && isRecording && (
+      {/* Sticky Bottom Recording Controls - mobile only via portal */}
+      {!audioURL && isRecording && createPortal(
         <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
           <RecordingControls />
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Audio Preview */}

@@ -139,6 +139,7 @@ export interface CheckInContext {
     timestamp: string;
     timeAgo: string;
     symptoms: LastCheckInSymptom[];
+    notes?: string;
   };
   recentSymptoms: RecentSymptom[];
   streak: StreakInfo;

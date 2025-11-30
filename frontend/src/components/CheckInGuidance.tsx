@@ -83,28 +83,31 @@ export default function CheckInGuidance({
           {(onStartRecording || onStartManual) && (
             <div className="flex gap-2">
               {onStartRecording && (
-                <Button
+                <button
                   onClick={onStartRecording}
-                  variant="primary"
-                  size="small"
                   disabled={isRecording}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    isRecording
+                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-md hover:shadow-lg'
+                  } disabled:opacity-50`}
                 >
                   <span className="flex items-center gap-1.5">
                     {isRecording ? (
                       <>
                         <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        Recording
+                        Recording...
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                         </svg>
-                        Voice
+                        Start Voice Check-in
                       </>
                     )}
                   </span>
-                </Button>
+                </button>
               )}
               {onStartManual && (
                 <Button
@@ -136,16 +139,28 @@ export default function CheckInGuidance({
                   <span className="font-medium">Last check-in</span>
                   <span className="text-gray-400">({context.lastCheckIn.timeAgo}):</span>
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {context.lastCheckIn.symptoms.map((symptom) => (
-                    <span
-                      key={symptom.name}
-                      className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100"
-                    >
-                      {symptom.name} <span className="ml-1 text-blue-500">{symptom.severity}/10</span>
-                    </span>
-                  ))}
-                </div>
+                {context.lastCheckIn.symptoms.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {context.lastCheckIn.symptoms.slice(0, 5).map((symptom) => (
+                      <span
+                        key={symptom.name}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                      >
+                        {symptom.name} <span className="ml-1 text-blue-500">{symptom.severity}/10</span>
+                      </span>
+                    ))}
+                    {context.lastCheckIn.symptoms.length > 5 && (
+                      <span className="text-sm text-gray-400">
+                        +{context.lastCheckIn.symptoms.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                )}
+                {context.lastCheckIn.notes && (
+                  <p className="text-sm text-gray-500 italic">
+                    &ldquo;{context.lastCheckIn.notes}&rdquo;
+                  </p>
+                )}
               </div>
             )}
 
@@ -157,7 +172,7 @@ export default function CheckInGuidance({
                   <span className="font-medium">Your symptoms to update:</span>
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {context.recentSymptoms.map((symptom) => (
+                  {context.recentSymptoms.slice(0, 5).map((symptom) => (
                     <span
                       key={symptom.name}
                       className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${getTrendStyles(symptom.trend)}`}
@@ -166,6 +181,11 @@ export default function CheckInGuidance({
                       <span className="ml-1.5">{getTrendIcon(symptom.trend)}</span>
                     </span>
                   ))}
+                  {context.recentSymptoms.length > 5 && (
+                    <span className="text-sm text-gray-400">
+                      +{context.recentSymptoms.length - 5} more
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -202,29 +222,41 @@ export default function CheckInGuidance({
  */
 function NewUserGuidance() {
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-gray-600 flex items-center gap-2">
-        <span role="img" aria-label="wave">👋</span>
-        <span className="font-medium">Welcome! Here&apos;s what to include:</span>
-      </p>
-      <ul className="text-sm text-gray-600 space-y-2 ml-1">
-        <li className="flex items-start gap-2">
-          <span className="text-indigo-500 mt-0.5">•</span>
-          Symptoms you&apos;re experiencing
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-indigo-500 mt-0.5">•</span>
-          <span>Rate each symptom <strong>1-10</strong> (1 = mild, 10 = severe)</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-indigo-500 mt-0.5">•</span>
-          Any activities or triggers
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-indigo-500 mt-0.5">•</span>
-          How you&apos;re feeling overall
-        </li>
-      </ul>
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm text-gray-700 flex items-center gap-2 font-medium">
+          <span role="img" aria-label="wave">👋</span>
+          Welcome to your first check-in!
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          The easiest way is to tap <strong>&quot;Start Voice Check-in&quot;</strong> and simply talk about how you&apos;re feeling.
+        </p>
+      </div>
+
+      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">Example</p>
+        <p className="text-sm text-gray-600 italic">
+          &quot;I have a headache, about a 6 out of 10. Also feeling some fatigue, maybe a 4. I didn&apos;t sleep well last night and skipped breakfast.&quot;
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Tips for better tracking</p>
+        <ul className="text-sm text-gray-600 space-y-1.5">
+          <li className="flex items-start gap-2">
+            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span>Rate symptoms <strong>1-10</strong> so we can track changes over time</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-emerald-500 mt-0.5">✓</span>
+            Mention activities, food, sleep, or stress that might be related
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-emerald-500 mt-0.5">✓</span>
+            Check in daily for the best insights
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

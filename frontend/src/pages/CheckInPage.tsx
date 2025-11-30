@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuthStore } from '../stores/authStore';
 import { checkInsApi, InsightCard } from '../services/api';
 import VoiceRecorder, { VoiceRecorderHandle } from '../components/VoiceRecorder';
 import ManualCheckInForm from '../components/ManualCheckInForm';
 import CheckInGuidance from '../components/CheckInGuidance';
+import { Header } from '../components/Header';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import PostCheckInInsight from '../components/PostCheckInInsight';
@@ -25,7 +25,6 @@ interface StructuredCheckInData {
 // CheckInPage.test.tsx for voice-related tests that are skipped.
 export default function CheckInPage() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
 
   const [mode, setMode] = useState<CheckInMode>('voice');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,34 +116,11 @@ export default function CheckInPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 py-4 sm:py-6">
-          <div className="flex justify-between items-center gap-4">
-            <div className="min-w-0 flex-shrink">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">Annie&apos;s Health Journal</h1>
-              <p className="text-indigo-100 text-sm sm:text-base truncate">Hi, {user?.username}!</p>
-            </div>
-            <Button
-              onClick={() => navigate('/dashboard')}
-              variant="secondary"
-              size="small"
-              className="whitespace-nowrap flex-shrink-0"
-            >
-              <span className="hidden sm:inline">← Back to Dashboard</span>
-              <span className="sm:hidden">←</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header currentPage="checkin" subtitle="Create Check-in" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Create Check-in
-          </h2>
-
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
 

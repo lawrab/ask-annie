@@ -44,6 +44,7 @@ export interface CheckInContext {
     timestamp: string;
     timeAgo: string;
     symptoms: LastCheckInSymptom[];
+    notes?: string;
   };
   recentSymptoms: RecentSymptom[];
   streak: StreakInfo;
@@ -254,11 +255,16 @@ export async function getCheckInContext(userId: string | Types.ObjectId): Promis
   let lastCheckInContext: CheckInContext['lastCheckIn'] | undefined;
   if (lastCheckIn) {
     const symptoms = extractSymptomsFromCheckIn(lastCheckIn);
-    if (symptoms.length > 0) {
+    // Include context even without symptoms if there are notes or rawTranscript
+    const notes = lastCheckIn.structured?.notes || lastCheckIn.rawTranscript || '';
+    const truncatedNotes = notes.length > 100 ? `${notes.substring(0, 100)}...` : notes;
+
+    if (symptoms.length > 0 || notes) {
       lastCheckInContext = {
         timestamp: lastCheckIn.timestamp.toISOString(),
         timeAgo: formatTimeAgo(new Date(lastCheckIn.timestamp)),
         symptoms,
+        notes: truncatedNotes || undefined,
       };
     }
   }

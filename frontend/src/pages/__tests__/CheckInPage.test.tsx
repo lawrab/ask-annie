@@ -138,8 +138,7 @@ describe('CheckInPage', () => {
     );
 
     expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
-    expect(screen.getByText('Hi, testuser!')).toBeInTheDocument();
-    expect(screen.getByText('Create Check-in')).toBeInTheDocument();
+    expect(screen.getByText('Create Check-in')).toBeInTheDocument(); // Subtitle in header
   });
 
   it('should show voice mode by default', async () => {
@@ -158,16 +157,12 @@ describe('CheckInPage', () => {
     });
 
     // Voice and Manual buttons should be in the guidance card header
+    // These are the primary action buttons - clicking Voice starts recording directly
     const voiceButton = screen.getByRole('button', { name: /voice/i });
     const manualButton = screen.getByRole('button', { name: /manual/i });
 
     expect(voiceButton).toBeInTheDocument();
     expect(manualButton).toBeInTheDocument();
-
-    // Voice mode should show the Start Recording button in the VoiceRecorder
-    expect(
-      screen.getByRole('button', { name: /start recording/i })
-    ).toBeInTheDocument();
   });
 
   it.skip('should switch to manual mode', async () => {

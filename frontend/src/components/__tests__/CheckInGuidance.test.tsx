@@ -173,15 +173,14 @@ describe('CheckInGuidance', () => {
       render(<CheckInGuidance />);
 
       await waitFor(() => {
-        expect(screen.getByText("Welcome! Here's what to include:")).toBeInTheDocument();
+        expect(screen.getByText('Welcome to your first check-in!')).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Symptoms you're experiencing")).toBeInTheDocument();
-      // The "Rate each symptom" text appears in both the list and the scoring reminder
-      // Just verify the list item mentioning symptoms exists
-      expect(screen.getByText('1-10')).toBeInTheDocument(); // In the list: "Rate each symptom 1-10"
-      expect(screen.getByText('Any activities or triggers')).toBeInTheDocument();
-      expect(screen.getByText("How you're feeling overall")).toBeInTheDocument();
+      // Check for example section
+      expect(screen.getByText('Example')).toBeInTheDocument();
+      // Check for tips section
+      expect(screen.getByText('Tips for better tracking')).toBeInTheDocument();
+      expect(screen.getByText('Check in daily for the best insights')).toBeInTheDocument();
     });
 
     it('should still show the scoring reminder for new users', async () => {
@@ -196,7 +195,7 @@ describe('CheckInGuidance', () => {
       render(<CheckInGuidance />);
 
       await waitFor(() => {
-        expect(screen.getByText("Welcome! Here's what to include:")).toBeInTheDocument();
+        expect(screen.getByText('Welcome to your first check-in!')).toBeInTheDocument();
       });
 
       // Should not show any streak text
@@ -238,7 +237,7 @@ describe('CheckInGuidance', () => {
       render(<CheckInGuidance />);
 
       await waitFor(() => {
-        expect(screen.getByText("Welcome! Here's what to include:")).toBeInTheDocument();
+        expect(screen.getByText('Welcome to your first check-in!')).toBeInTheDocument();
       });
 
       consoleSpy.mockRestore();

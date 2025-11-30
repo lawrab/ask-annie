@@ -201,96 +201,72 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
         </div>
       )}
 
-      {/* Recording Controls */}
-      {!audioURL && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex flex-col items-center space-y-4">
-            {/* Recording indicator */}
-            {isRecording && (
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-lg font-semibold text-gray-900">
-                  {isPaused ? 'Paused' : 'Recording'}
-                </span>
-              </div>
-            )}
-
-            {/* Timer */}
-            <div className="text-4xl font-mono text-gray-900">
-              {formatTime(recordingTime)}
+      {/* Recording Controls - only show when actively recording */}
+      {!audioURL && isRecording && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center justify-between">
+            {/* Left: Timer and status */}
+            <div className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-2xl font-mono text-gray-900">
+                {formatTime(recordingTime)}
+              </span>
+              <span className="text-sm text-gray-500">
+                {isPaused ? 'Paused' : 'Recording'}
+              </span>
             </div>
 
-            {/* Control buttons */}
-            <div className="flex space-x-3">
-              {!isRecording && (
-                <button
-                  onClick={startRecording}
-                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors"
-                >
-                  Start Recording
-                </button>
-              )}
-
-              {isRecording && !isPaused && (
+            {/* Right: Control buttons */}
+            <div className="flex gap-2">
+              {!isPaused && (
                 <>
                   <button
                     onClick={pauseRecording}
-                    className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md font-medium transition-colors"
+                    className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm font-medium transition-colors"
                   >
                     Pause
                   </button>
                   <button
                     onClick={stopRecording}
-                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors"
+                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
                   >
                     Stop
                   </button>
                 </>
               )}
 
-              {isRecording && isPaused && (
+              {isPaused && (
                 <>
                   <button
                     onClick={resumeRecording}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors"
                   >
                     Resume
                   </button>
                   <button
                     onClick={stopRecording}
-                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors"
+                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
                   >
                     Stop
                   </button>
                 </>
               )}
             </div>
-
-            {/* Instructions */}
-            {!isRecording && (
-              <p className="text-sm text-gray-600 text-center max-w-md">
-                Click &quot;Start Recording&quot; to record your check-in. Describe
-                your symptoms, how you&apos;re feeling, and any activities or
-                triggers.
-              </p>
-            )}
           </div>
         </div>
       )}
 
       {/* Audio Preview */}
       {audioURL && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Recording Preview
-          </h3>
-          <audio controls src={audioURL} className="w-full mb-4" />
-          <div className="flex justify-center space-x-3">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Preview:</span>
+            <audio controls src={audioURL} className="flex-1 h-10" />
             <button
               onClick={resetRecording}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm font-medium transition-colors"
+              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition-colors"
             >
-              Record Again
+              Re-record
             </button>
           </div>
         </div>

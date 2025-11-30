@@ -13,8 +13,9 @@ describe('ManualCheckInForm', () => {
     expect(screen.getByLabelText(/activities/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/triggers/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/additional notes/i)).toBeInTheDocument();
+    // Submit button shows "Add at least one symptom" when no symptoms added
     expect(
-      screen.getByRole('button', { name: /submit check-in/i })
+      screen.getByRole('button', { name: /add at least one symptom/i })
     ).toBeInTheDocument();
   });
 
@@ -25,7 +26,7 @@ describe('ManualCheckInForm', () => {
     render(<ManualCheckInForm onSubmit={mockOnSubmit} />);
 
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
 
     await user.type(symptomInput, 'headache');
     await user.click(addButton);
@@ -40,7 +41,7 @@ describe('ManualCheckInForm', () => {
     render(<ManualCheckInForm onSubmit={mockOnSubmit} />);
 
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
 
     await user.type(symptomInput, 'headache');
     await user.click(addButton);
@@ -62,7 +63,7 @@ describe('ManualCheckInForm', () => {
 
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
     const severitySlider = screen.getByRole('slider') as HTMLInputElement;
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
 
     await user.type(symptomInput, 'pain');
     // Set slider value directly instead of clear + type
@@ -82,7 +83,7 @@ describe('ManualCheckInForm', () => {
 
     // Add symptom
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
     await user.type(symptomInput, 'headache');
     await user.click(addButton);
 
@@ -120,7 +121,7 @@ describe('ManualCheckInForm', () => {
 
     // Add symptom
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
     await user.type(symptomInput, 'nausea');
     await user.click(addButton);
 
@@ -154,7 +155,7 @@ describe('ManualCheckInForm', () => {
 
     // Add symptom only
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
     await user.type(symptomInput, 'fatigue');
     await user.click(addButton);
 
@@ -178,7 +179,7 @@ describe('ManualCheckInForm', () => {
 
     render(<ManualCheckInForm onSubmit={mockOnSubmit} />);
 
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
     await user.click(addButton);
 
     // No symptom should be added
@@ -192,7 +193,7 @@ describe('ManualCheckInForm', () => {
     render(<ManualCheckInForm onSubmit={mockOnSubmit} />);
 
     const symptomInput = screen.getByPlaceholderText(/symptom name/i);
-    const addButton = screen.getByRole('button', { name: /add/i });
+    const addButton = screen.getByRole('button', { name: /add symptom/i });
 
     // Add first symptom
     await user.type(symptomInput, 'headache');

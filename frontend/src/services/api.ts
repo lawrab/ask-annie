@@ -31,13 +31,20 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError<{ success: false; error: { message: string } }>) => {
     if (error.response?.status === 401) {
       // Clear token and redirect to login on unauthorized
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
+    // Extract server error message if available
+    const serverMessage = error.response?.data?.error?.message;
+    if (serverMessage) {
+      return Promise.reject(new Error(serverMessage));
+    }
+
     return Promise.reject(error);
   }
 );

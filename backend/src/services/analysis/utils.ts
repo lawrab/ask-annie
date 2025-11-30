@@ -59,6 +59,21 @@ export function calculateNumericStats(values: number[]): {
 }
 
 /**
+ * Check if a value is numeric (direct number or SymptomValue with severity)
+ */
+function isNumericValue(v: unknown): boolean {
+  if (typeof v === 'number' && !isNaN(v)) {
+    return true;
+  }
+  // Check for SymptomValue object with severity
+  if (v && typeof v === 'object' && 'severity' in v) {
+    const severity = (v as { severity: unknown }).severity;
+    return typeof severity === 'number' && !isNaN(severity);
+  }
+  return false;
+}
+
+/**
  * Determine the type of a symptom based on its values
  */
 export function determineSymptomType(values: unknown[]): SymptomValueType {
@@ -73,7 +88,7 @@ export function determineSymptomType(values: unknown[]): SymptomValueType {
     return SymptomValueType.BOOLEAN;
   }
 
-  const allNumeric = validValues.every((v) => typeof v === 'number' && !isNaN(v as number));
+  const allNumeric = validValues.every(isNumericValue);
   if (allNumeric) {
     return SymptomValueType.NUMERIC;
   }
@@ -90,10 +105,15 @@ export function getUniqueValues(values: unknown[]): unknown[] {
 }
 
 /**
- * Extract severity from a symptom value object
- * Handles both direct numeric values and SymptomValue objects
+ * Extract severity from a symptom value
+ * Handles both direct numeric values and SymptomValue objects { severity: number }
  */
 export function extractSeverity(value: unknown): number | null {
+  // Handle direct number values (backward compatibility)
+  if (typeof value === 'number' && !isNaN(value)) {
+    return value;
+  }
+  // Handle SymptomValue objects with severity property
   if (value && typeof value === 'object' && 'severity' in value) {
     const severity = (value as { severity: number }).severity;
     if (typeof severity === 'number' && !isNaN(severity)) {

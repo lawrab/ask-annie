@@ -8,6 +8,8 @@ import { LatestVsAverage } from '../components/LatestVsAverage';
 import { CheckInCTA } from '../components/CheckInCTA';
 import { RecentCheckIns } from '../components/RecentCheckIns';
 
+const RECENT_CHECKINS_LIMIT = 5;
+
 export default function DashboardPage() {
   // Health summary data
   const [statsData, setStatsData] = useState<QuickStatsResponse['data'] | null>(null);
@@ -42,14 +44,14 @@ export default function DashboardPage() {
     fetchStatsData();
   }, []);
 
-  // Fetch recent check-ins
+  // Fetch recent check-ins (limit + 1 to know if there are more)
   useEffect(() => {
     const fetchCheckIns = async () => {
       try {
         setIsLoadingCheckIns(true);
         setCheckInsError(null);
 
-        const response = await checkInsApi.getAll();
+        const response = await checkInsApi.getAll({ limit: RECENT_CHECKINS_LIMIT + 1 });
 
         if (response.success) {
           setCheckIns(response.data.checkIns);
@@ -74,43 +76,52 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 sm:py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Check-in CTA - Primary action at top */}
-          <CheckInCTA
-            lastCheckInTime={lastCheckInTime}
-            isLoading={isLoadingCheckIns}
-          />
+        <div className="max-w-6xl mx-auto">
+          {/* Two-column layout on desktop, single column on mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Primary focus */}
+            <div className="space-y-6">
+              {/* Check-in CTA - Primary action */}
+              <CheckInCTA
+                lastCheckInTime={lastCheckInTime}
+                isLoading={isLoadingCheckIns}
+              />
 
-          {/* Health Summary - "How am I doing?" */}
-          {statsError && <Alert type="error">{statsError}</Alert>}
+              {/* Health Summary - "How am I doing?" */}
+              {statsError && <Alert type="error">{statsError}</Alert>}
 
-          {!statsError && (
-            <HealthSummary
-              averageSeverity={statsData?.averageSeverity.current ?? 0}
-              trend={statsData?.averageSeverity.trend ?? 'stable'}
-              topSymptoms={statsData?.topSymptoms ?? []}
-              isLoading={isLoadingStats}
-            />
-          )}
+              {!statsError && (
+                <HealthSummary
+                  averageSeverity={statsData?.averageSeverity.current ?? 0}
+                  trend={statsData?.averageSeverity.trend ?? 'stable'}
+                  topSymptoms={statsData?.topSymptoms ?? []}
+                  isLoading={isLoadingStats}
+                />
+              )}
+            </div>
 
-          {/* Latest vs Average comparison */}
-          {!statsError && statsData?.latestCheckIn && (
-            <LatestVsAverage
-              symptoms={statsData.latestCheckIn.symptoms}
-              isLoading={isLoadingStats}
-            />
-          )}
+            {/* Right Column - Context & History */}
+            <div className="space-y-6">
+              {/* Latest vs Average comparison */}
+              {!statsError && statsData?.latestCheckIn && (
+                <LatestVsAverage
+                  symptoms={statsData.latestCheckIn.symptoms}
+                  isLoading={isLoadingStats}
+                />
+              )}
 
-          {/* Recent Check-ins */}
-          {checkInsError && <Alert type="error">{checkInsError}</Alert>}
+              {/* Recent Check-ins */}
+              {checkInsError && <Alert type="error">{checkInsError}</Alert>}
 
-          {!checkInsError && (
-            <RecentCheckIns
-              checkIns={checkIns}
-              limit={5}
-              isLoading={isLoadingCheckIns}
-            />
-          )}
+              {!checkInsError && (
+                <RecentCheckIns
+                  checkIns={checkIns}
+                  limit={RECENT_CHECKINS_LIMIT}
+                  isLoading={isLoadingCheckIns}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </div>

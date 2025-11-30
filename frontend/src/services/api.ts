@@ -202,13 +202,23 @@ export interface QuickStatsResponse {
 }
 
 // Symptoms Analysis Types
+export interface SymptomStats {
+  name: string;
+  count: number;
+  percentage: number;
+  type: 'numeric' | 'categorical' | 'boolean';
+  min?: number;
+  max?: number;
+  average?: number;
+  values?: unknown[];
+}
+
 export interface SymptomsAnalysisResponse {
   success: boolean;
-  data: Array<{
-    name: string;
-    count: number;
-    averageSeverity: number;
-  }>;
+  data: {
+    symptoms: SymptomStats[];
+    totalCheckins: number;
+  };
 }
 
 // Symptom Trend Types
@@ -223,6 +233,7 @@ export interface SymptomTrendResponse {
     dataPoints: Array<{
       date: string;
       value: number;
+      count: number;
     }>;
     statistics: {
       average: number;

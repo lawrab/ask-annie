@@ -1,27 +1,97 @@
-import { ArrowUp, ArrowDown, Equal } from 'lucide-react';
+import { ArrowUp, ArrowDown, Equal, type LucideIcon } from 'lucide-react';
 import { Card } from './ui/Card';
 import { cn } from '../utils/cn';
+import { capitalize, formatNumber } from '../utils/string';
+
+// Types
+export type TrendDirection = 'above' | 'below' | 'equal';
 
 export interface SymptomComparison {
   name: string;
   latestValue: number;
   averageValue: number;
-  trend: 'above' | 'below' | 'equal';
+  trend: TrendDirection;
 }
 
 export interface LatestVsAverageProps {
-  /**
-   * Symptoms from latest check-in compared to averages
-   */
   symptoms: SymptomComparison[];
-  /**
-   * Whether data is loading
-   */
   isLoading?: boolean;
-  /**
-   * Additional CSS classes
-   */
   className?: string;
+}
+
+// Configuration for trend display
+interface TrendConfig {
+  bgColor: string;
+  textColor: string;
+  statusText: string;
+  Icon: LucideIcon;
+}
+
+const TREND_CONFIG: Record<TrendDirection, TrendConfig> = {
+  above: {
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    statusText: 'Higher than usual',
+    Icon: ArrowUp,
+  },
+  below: {
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    statusText: 'Lower than usual',
+    Icon: ArrowDown,
+  },
+  equal: {
+    bgColor: 'bg-gray-50',
+    textColor: 'text-gray-600',
+    statusText: 'About normal',
+    Icon: Equal,
+  },
+};
+
+// Sub-components
+interface SymptomComparisonCardProps {
+  symptom: SymptomComparison;
+}
+
+function SymptomComparisonCard({ symptom }: SymptomComparisonCardProps) {
+  const config = TREND_CONFIG[symptom.trend];
+  const { bgColor, textColor, statusText, Icon } = config;
+
+  return (
+    <div className={cn('rounded-lg p-4', bgColor)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-gray-900">{capitalize(symptom.name)}</p>
+          <p className="text-sm text-gray-600">
+            Now: <span className="font-medium">{formatNumber(symptom.latestValue)}</span>
+            {' · '}
+            Avg: <span className="font-medium">{formatNumber(symptom.averageValue)}</span>
+          </p>
+        </div>
+        <div className={cn('flex items-center gap-1.5 px-3 py-1 rounded-full', bgColor, textColor)}>
+          <Icon className="h-4 w-4" />
+          <span className="text-sm font-medium">{statusText}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LatestVsAverageSkeleton({ className }: { className?: string }) {
+  return (
+    <Card variant="default" className={cn('p-6', className)}>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Latest vs Your Average</h3>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-100 rounded h-12" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 /**
@@ -33,20 +103,7 @@ export function LatestVsAverage({
   className,
 }: LatestVsAverageProps) {
   if (isLoading) {
-    return (
-      <Card variant="default" className={cn('p-6', className)}>
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Latest vs Your Average</h3>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-gray-100 rounded h-12"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-    );
+    return <LatestVsAverageSkeleton className={className} />;
   }
 
   if (symptoms.length === 0) {
@@ -56,57 +113,10 @@ export function LatestVsAverage({
   return (
     <Card variant="default" className={cn('p-6', className)}>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Latest vs Your Average</h3>
-
       <div className="grid gap-3">
-        {symptoms.map((symptom) => {
-          const capitalizedName =
-            symptom.name.charAt(0).toUpperCase() + symptom.name.slice(1);
-
-          const isAbove = symptom.trend === 'above';
-          const isBelow = symptom.trend === 'below';
-
-          const bgColor = isAbove
-            ? 'bg-red-50'
-            : isBelow
-            ? 'bg-emerald-50'
-            : 'bg-gray-50';
-
-          const textColor = isAbove
-            ? 'text-red-700'
-            : isBelow
-            ? 'text-emerald-700'
-            : 'text-gray-600';
-
-          const statusText = isAbove
-            ? 'Higher than usual'
-            : isBelow
-            ? 'Lower than usual'
-            : 'About normal';
-
-          const Icon = isAbove ? ArrowUp : isBelow ? ArrowDown : Equal;
-
-          return (
-            <div
-              key={symptom.name}
-              className={cn('rounded-lg p-4', bgColor)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900">{capitalizedName}</p>
-                  <p className="text-sm text-gray-600">
-                    Now: <span className="font-medium">{symptom.latestValue}</span>
-                    {' · '}
-                    Avg: <span className="font-medium">{symptom.averageValue.toFixed(1)}</span>
-                  </p>
-                </div>
-                <div className={cn('flex items-center gap-1.5 px-3 py-1 rounded-full', bgColor, textColor)}>
-                  <Icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{statusText}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {symptoms.map((symptom) => (
+          <SymptomComparisonCard key={symptom.name} symptom={symptom} />
+        ))}
       </div>
     </Card>
   );

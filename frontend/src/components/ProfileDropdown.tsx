@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { Settings, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { cn } from '../utils/cn';
+import { getInitial } from '../utils/string';
 
 export interface ProfileDropdownProps {
   /**
@@ -31,7 +32,7 @@ export function ProfileDropdown({ className }: ProfileDropdownProps) {
   };
 
   // Get user initial for avatar
-  const userInitial = user?.username?.charAt(0).toUpperCase() || 'U';
+  const userInitial = getInitial(user?.username);
 
   return (
     <Menu as="div" className={cn('relative', className)}>

@@ -172,6 +172,7 @@ describe('Analysis Controller', () => {
     it('should return trend data with default days parameter', async () => {
       const mockTrend = {
         symptom: 'pain_level',
+        dateRange: { start: '2024-01-01', end: '2024-01-14' },
         dataPoints: [
           { date: '2024-01-01', value: 5, count: 2 },
           { date: '2024-01-02', value: 6.5, count: 3 },
@@ -203,6 +204,7 @@ describe('Analysis Controller', () => {
 
       const mockTrend = {
         symptom: 'pain_level',
+        dateRange: { start: '2024-01-01', end: '2024-01-30' },
         dataPoints: [],
         statistics: {
           average: 0,

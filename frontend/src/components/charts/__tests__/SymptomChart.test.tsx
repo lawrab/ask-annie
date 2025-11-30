@@ -36,11 +36,11 @@ vi.mock('date-fns', () => ({
 
 describe('SymptomChart', () => {
   const mockData = [
-    { date: '2025-01-10', value: 5 },
-    { date: '2025-01-11', value: 6 },
-    { date: '2025-01-12', value: 7 },
-    { date: '2025-01-13', value: 4 },
-    { date: '2025-01-14', value: 8 },
+    { date: '2025-01-10', value: 5, count: 1 },
+    { date: '2025-01-11', value: 6, count: 1 },
+    { date: '2025-01-12', value: 7, count: 1 },
+    { date: '2025-01-13', value: 4, count: 1 },
+    { date: '2025-01-14', value: 8, count: 1 },
   ];
 
   const defaultProps = {
@@ -119,7 +119,7 @@ describe('SymptomChart', () => {
 
   describe('Date formatting', () => {
     it('handles invalid dates gracefully', () => {
-      const invalidData = [{ date: 'invalid-date', value: 5 }];
+      const invalidData = [{ date: 'invalid-date', value: 5, count: 1 }];
 
       render(<SymptomChart {...defaultProps} data={invalidData} />);
 
@@ -175,7 +175,7 @@ describe('SymptomChart', () => {
 
   describe('Edge cases', () => {
     it('handles single data point', () => {
-      const singleData = [{ date: '2025-01-15', value: 5 }];
+      const singleData = [{ date: '2025-01-15', value: 5, count: 1 }];
 
       render(<SymptomChart {...defaultProps} data={singleData} />);
 
@@ -184,8 +184,8 @@ describe('SymptomChart', () => {
 
     it('handles data with extreme values', () => {
       const extremeData = [
-        { date: '2025-01-15', value: 1 },
-        { date: '2025-01-16', value: 10 },
+        { date: '2025-01-15', value: 1, count: 1 },
+        { date: '2025-01-16', value: 10, count: 1 },
       ];
 
       render(<SymptomChart {...defaultProps} data={extremeData} />);

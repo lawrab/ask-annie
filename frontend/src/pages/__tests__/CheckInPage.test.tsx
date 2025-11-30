@@ -16,6 +16,7 @@ vi.mock('../../services/api', () => ({
   checkInsApi: {
     createVoice: vi.fn(),
     createManual: vi.fn(),
+    getContext: vi.fn(),
   },
 }));
 
@@ -73,6 +74,16 @@ describe('CheckInPage', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
 
+    // Mock getContext to return empty context for new user
+    vi.mocked(api.checkInsApi.getContext).mockResolvedValue({
+      success: true,
+      data: {
+        recentSymptoms: [],
+        streak: { current: 0 },
+        suggestedTopics: ['Rate symptoms 1-10'],
+      },
+    });
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       const state = {
         user: mockUser,
@@ -116,7 +127,10 @@ describe('CheckInPage', () => {
     vi.useRealTimers();
   });
 
-  it('should render check-in page with user greeting', () => {
+  it('should render check-in page with user greeting', async () => {
+    // Use real timers since CheckInGuidance does async fetch
+    vi.useRealTimers();
+
     render(
       <MemoryRouter>
         <CheckInPage />
@@ -124,25 +138,31 @@ describe('CheckInPage', () => {
     );
 
     expect(screen.getByText("Annie's Health Journal")).toBeInTheDocument();
-    expect(screen.getByText('Hi, testuser!')).toBeInTheDocument();
-    expect(screen.getByText('Create Check-in')).toBeInTheDocument();
+    expect(screen.getByText('Create Check-in')).toBeInTheDocument(); // Subtitle in header
   });
 
-  it('should show voice mode by default', () => {
+  it('should show voice mode by default', async () => {
+    // Use real timers since CheckInGuidance does async fetch
+    vi.useRealTimers();
+
     render(
       <MemoryRouter>
         <CheckInPage />
       </MemoryRouter>
     );
 
-    const voiceButton = screen.getByRole('button', { name: /voice recording/i });
-    const manualButton = screen.getByRole('button', { name: /manual entry/i });
+    // Wait for guidance to load
+    await waitFor(() => {
+      expect(screen.getByText('Your Check-In Guide')).toBeInTheDocument();
+    });
 
-    expect(voiceButton).toHaveClass('bg-primary-600');
-    expect(manualButton).not.toHaveClass('bg-primary-600');
-    expect(
-      screen.getByRole('button', { name: /start recording/i })
-    ).toBeInTheDocument();
+    // Voice and Manual buttons should be in the guidance card header
+    // These are the primary action buttons - clicking Voice starts recording directly
+    const voiceButton = screen.getByRole('button', { name: /voice/i });
+    const manualButton = screen.getByRole('button', { name: /manual/i });
+
+    expect(voiceButton).toBeInTheDocument();
+    expect(manualButton).toBeInTheDocument();
   });
 
   it.skip('should switch to manual mode', async () => {

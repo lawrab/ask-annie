@@ -92,12 +92,39 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
   const symptoms = Object.entries(checkIn.structured.symptoms) as [string, SymptomValue][];
   const topSymptoms = symptoms.slice(0, 3);
 
-  // Truncate notes for compact mode
-  const notesSnippet = checkIn.structured.notes
-    ? checkIn.structured.notes.length > 60
-      ? `${checkIn.structured.notes.substring(0, 60)}...`
-      : checkIn.structured.notes
-    : '';
+  // Truncate notes for compact mode, with fallback for empty notes
+  const getNotesSnippet = (): string => {
+    // If there are notes, use them
+    if (checkIn.structured.notes) {
+      return checkIn.structured.notes.length > 60
+        ? `${checkIn.structured.notes.substring(0, 60)}...`
+        : checkIn.structured.notes;
+    }
+
+    // Fallback: show symptom names if available
+    if (symptoms.length > 0) {
+      const symptomNames = symptoms.map(([name]) => name).slice(0, 3);
+      const text = symptomNames.join(', ');
+      return symptoms.length > 3 ? `${text}, +${symptoms.length - 3} more` : text;
+    }
+
+    // Fallback: show activities/triggers summary
+    const parts: string[] = [];
+    if (checkIn.structured.activities.length > 0) {
+      parts.push(`${checkIn.structured.activities.length} activit${checkIn.structured.activities.length === 1 ? 'y' : 'ies'}`);
+    }
+    if (checkIn.structured.triggers.length > 0) {
+      parts.push(`${checkIn.structured.triggers.length} trigger${checkIn.structured.triggers.length === 1 ? '' : 's'}`);
+    }
+    if (parts.length > 0) {
+      return parts.join(', ');
+    }
+
+    // Final fallback
+    return 'No details recorded';
+  };
+
+  const notesSnippet = getNotesSnippet();
 
   // Handle expand/collapse
   const toggleExpanded = () => {
@@ -160,27 +187,33 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
 
             {/* Symptom dots + notes snippet */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              {/* Severity dots */}
-              {topSymptoms.length > 0 && (
+              {/* Severity dots - only show if symptoms have valid severity */}
+              {topSymptoms.length > 0 && topSymptoms.some(([, v]) => v && v.severity != null) && (
                 <div className="flex gap-1.5 shrink-0" aria-label="Symptoms">
-                  {topSymptoms.map(([symptom, value]) => {
-                    const variant = getSeverityVariant(value.severity);
-                    const bgColor =
-                      variant === 'success'
-                        ? 'bg-emerald-500'
-                        : variant === 'warning'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500';
+                  {topSymptoms
+                    .filter(([, v]) => v && v.severity != null)
+                    .map(([symptom, value]) => {
+                      // Handle both number and string severity values
+                      const severity = typeof value.severity === 'number'
+                        ? value.severity
+                        : parseInt(String(value.severity), 10) || 5;
+                      const variant = getSeverityVariant(severity);
+                      const bgColor =
+                        variant === 'success'
+                          ? 'bg-emerald-500'
+                          : variant === 'warning'
+                          ? 'bg-amber-500'
+                          : 'bg-red-500';
 
-                    return (
-                      <div
-                        key={symptom}
-                        className={cn('w-3 h-3 rounded-full', bgColor)}
-                        title={`${symptom}: ${value.severity} (${getSeverityLabel(value.severity)})`}
-                        aria-label={`${symptom} severity ${value.severity}`}
-                      />
-                    );
-                  })}
+                      return (
+                        <div
+                          key={symptom}
+                          className={cn('w-3 h-3 rounded-full', bgColor)}
+                          title={`${symptom}: ${severity} (${getSeverityLabel(severity)})`}
+                          aria-label={`${symptom} severity ${severity}`}
+                        />
+                      );
+                    })}
                   {symptoms.length > 3 && (
                     <span className="text-xs text-gray-400 ml-0.5">
                       +{symptoms.length - 3}
@@ -189,12 +222,10 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
                 </div>
               )}
 
-              {/* Notes snippet */}
-              {notesSnippet && (
-                <p className="text-sm text-gray-600 truncate flex-1">
-                  &ldquo;{notesSnippet}&rdquo;
-                </p>
-              )}
+              {/* Notes snippet - always show since we have fallback text */}
+              <p className="text-sm text-gray-600 truncate flex-1">
+                {checkIn.structured.notes ? `"${notesSnippet}"` : notesSnippet}
+              </p>
             </div>
 
             {/* Flag indicator + expand icon */}
@@ -241,24 +272,35 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
   return (
     <>
       <Card variant="default">
-        {/* Header: Timestamp + Flagged Badge */}
+        {/* Header: Timestamp + Flagged Badge + Collapse */}
         <div className="flex justify-between items-start mb-4">
-          <div>
+          <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">
               {formatTimestamp(checkIn.timestamp)}
             </span>
-            {mode !== 'expanded' && (
-              <Button
-                variant="link"
-                size="small"
-                onClick={toggleExpanded}
-                className="ml-2 text-xs"
-              >
-                Show less
-              </Button>
-            )}
+            {isFlagged && <Badge variant="warning">Flagged for Doctor</Badge>}
           </div>
-          {isFlagged && <Badge variant="warning">Flagged for Doctor</Badge>}
+          {mode !== 'expanded' && (
+            <button
+              onClick={toggleExpanded}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+              aria-label="Collapse check-in"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Raw Transcript */}

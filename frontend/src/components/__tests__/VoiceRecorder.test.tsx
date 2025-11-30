@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import VoiceRecorder from '../VoiceRecorder';
+import { createRef } from 'react';
+import VoiceRecorder, { VoiceRecorderHandle } from '../VoiceRecorder';
 
 // Mock MediaRecorder
 class MockMediaRecorder {
@@ -82,11 +83,12 @@ describe('VoiceRecorder - MIME Type Detection', () => {
   it('should use audio/webm;codecs=opus when supported', async () => {
     const user = userEvent.setup({ delay: null });
     const mockOnRecordingComplete = vi.fn();
+    const ref = createRef<VoiceRecorderHandle>();
 
-    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+    render(<VoiceRecorder ref={ref} onRecordingComplete={mockOnRecordingComplete} />);
 
-    const startButton = screen.getByRole('button', { name: /start recording/i });
-    await user.click(startButton);
+    // Start recording via ref (simulating guidance card Voice button)
+    await ref.current?.startRecording();
 
     await waitFor(
       () => {
@@ -112,6 +114,7 @@ describe('VoiceRecorder - MIME Type Detection', () => {
   it('should fall back to audio/mp4 when webm not supported', async () => {
     const user = userEvent.setup({ delay: null });
     const mockOnRecordingComplete = vi.fn();
+    const ref = createRef<VoiceRecorderHandle>();
 
     // Mock isTypeSupported to return false for webm formats
     const originalIsTypeSupported = MockMediaRecorder.isTypeSupported;
@@ -121,10 +124,10 @@ describe('VoiceRecorder - MIME Type Detection', () => {
       return false;
     });
 
-    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+    render(<VoiceRecorder ref={ref} onRecordingComplete={mockOnRecordingComplete} />);
 
-    const startButton = screen.getByRole('button', { name: /start recording/i });
-    await user.click(startButton);
+    // Start recording via ref
+    await ref.current?.startRecording();
 
     await waitFor(
       () => {
@@ -153,15 +156,16 @@ describe('VoiceRecorder - MIME Type Detection', () => {
   it('should use default audio/webm when no MIME types supported', async () => {
     const user = userEvent.setup({ delay: null });
     const mockOnRecordingComplete = vi.fn();
+    const ref = createRef<VoiceRecorderHandle>();
 
     // Mock isTypeSupported to return false for all formats
     const originalIsTypeSupported = MockMediaRecorder.isTypeSupported;
     MockMediaRecorder.isTypeSupported = vi.fn(() => false);
 
-    render(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
+    render(<VoiceRecorder ref={ref} onRecordingComplete={mockOnRecordingComplete} />);
 
-    const startButton = screen.getByRole('button', { name: /start recording/i });
-    await user.click(startButton);
+    // Start recording via ref
+    await ref.current?.startRecording();
 
     await waitFor(
       () => {

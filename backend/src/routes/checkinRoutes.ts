@@ -7,6 +7,7 @@ import {
   createManualCheckin,
   getCheckins,
   getStatus,
+  getContext,
 } from '../controllers/checkinController';
 import { manualCheckinSchema } from '../utils/validation';
 
@@ -27,6 +28,14 @@ router.get('/', authenticate, getCheckins);
  * Requires authentication - returns authenticated user's status
  */
 router.get('/status', authenticate, getStatus);
+
+/**
+ * GET /api/checkins/context
+ * Get pre-check-in context for guidance panel
+ * Returns: last check-in summary, recent symptoms with trends, streak info
+ * Requires authentication - returns authenticated user's context
+ */
+router.get('/context', authenticate, getContext);
 
 /**
  * POST /api/checkins

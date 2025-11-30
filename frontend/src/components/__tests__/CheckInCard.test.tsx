@@ -306,7 +306,7 @@ describe('CheckInCard', () => {
       expect(screen.queryByText('Notes:')).not.toBeInTheDocument();
     });
 
-    it('collapses when Show less is clicked', async () => {
+    it('collapses when collapse button is clicked', async () => {
       const user = userEvent.setup();
       const checkIn = createMockCheckIn();
       render(<CheckInCard checkIn={checkIn} defaultExpanded={true} />);
@@ -314,19 +314,19 @@ describe('CheckInCard', () => {
       // Should be expanded initially
       expect(screen.getByText(/feeling tired with a headache/i)).toBeInTheDocument();
 
-      // Click "Show less"
-      const showLessButton = screen.getByText('Show less');
-      await user.click(showLessButton);
+      // Click collapse button
+      const collapseButton = screen.getByRole('button', { name: /collapse check-in/i });
+      await user.click(collapseButton);
 
       // Should be collapsed
       expect(screen.queryByText(/feeling tired with a headache/i)).not.toBeInTheDocument();
     });
 
-    it('does not show Show less button when mode is expanded', () => {
+    it('does not show collapse button when mode is expanded', () => {
       const checkIn = createMockCheckIn();
       render(<CheckInCard checkIn={checkIn} mode="expanded" />);
 
-      expect(screen.queryByText('Show less')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /collapse check-in/i })).not.toBeInTheDocument();
     });
   });
 

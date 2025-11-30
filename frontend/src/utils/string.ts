@@ -28,3 +28,20 @@ export function getInitial(str: string | undefined | null, fallback: string = 'U
 export function formatNumber(value: number, decimals: number = 1): string {
   return value.toFixed(decimals);
 }
+
+/**
+ * Format a snake_case or underscore-separated string for display
+ * Converts to Title Case with spaces
+ * @example formatDisplayName('joint_pain') => 'Joint Pain'
+ * @example formatDisplayName('back_pain') => 'Back Pain'
+ * @example formatDisplayName('headache') => 'Headache'
+ * @example formatDisplayName('Back Pain') => 'Back Pain' (preserves already-formatted)
+ */
+export function formatDisplayName(str: string): string {
+  if (!str) return '';
+  // Split on underscores or spaces, then title case each word
+  return str
+    .split(/[_\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}

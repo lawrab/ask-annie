@@ -1,6 +1,7 @@
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { Card } from './ui/Card';
 import { cn } from '../utils/cn';
+import { formatDisplayName } from '../utils/string';
 
 export interface TopSymptom {
   name: string;
@@ -126,7 +127,7 @@ export function HealthSummary({
                   key={symptom.name}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full text-sm text-gray-700"
                 >
-                  <span className="capitalize">{symptom.name}</span>
+                  <span>{formatDisplayName(symptom.name)}</span>
                   {symptom.avgSeverity !== null && (
                     <span className="text-gray-500">({symptom.avgSeverity.toFixed(1)})</span>
                   )}

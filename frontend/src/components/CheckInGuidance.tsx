@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { checkInsApi, CheckInContext } from '../services/api';
 import { Button } from './ui/Button';
+import { formatDisplayName } from '../utils/string';
 
 interface CheckInGuidanceProps {
   className?: string;
@@ -165,7 +166,7 @@ export default function CheckInGuidance({
                         key={symptom.name}
                         className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100"
                       >
-                        {symptom.name} <span className="ml-1 text-blue-500">{symptom.severity}/10</span>
+                        {formatDisplayName(symptom.name)} <span className="ml-1 text-blue-500">{symptom.severity}/10</span>
                       </span>
                     ))}
                     {context.lastCheckIn.symptoms.length > 5 && (
@@ -196,7 +197,7 @@ export default function CheckInGuidance({
                       key={symptom.name}
                       className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${getTrendStyles(symptom.trend)}`}
                     >
-                      {symptom.name}
+                      {formatDisplayName(symptom.name)}
                       <span className="ml-1.5">{getTrendIcon(symptom.trend)}</span>
                     </span>
                   ))}

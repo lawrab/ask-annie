@@ -116,6 +116,40 @@ export interface ErrorResponse {
   error: string;
 }
 
+// Check-In Context Types (for pre-check-in guidance)
+export interface LastCheckInSymptom {
+  name: string;
+  severity: number;
+}
+
+export interface RecentSymptom {
+  name: string;
+  frequency: number;
+  avgSeverity: number;
+  trend: 'improving' | 'worsening' | 'stable';
+}
+
+export interface StreakInfo {
+  current: number;
+  message?: string;
+}
+
+export interface CheckInContext {
+  lastCheckIn?: {
+    timestamp: string;
+    timeAgo: string;
+    symptoms: LastCheckInSymptom[];
+  };
+  recentSymptoms: RecentSymptom[];
+  streak: StreakInfo;
+  suggestedTopics: string[];
+}
+
+export interface CheckInContextResponse {
+  success: boolean;
+  data: CheckInContext;
+}
+
 // Daily Status Types
 export interface DailyStatusResponse {
   success: boolean;
@@ -307,6 +341,11 @@ export const checkInsApi = {
 
   getStatus: async (): Promise<DailyStatusResponse> => {
     const response = await apiClient.get<DailyStatusResponse>('/checkins/status');
+    return response.data;
+  },
+
+  getContext: async (): Promise<CheckInContextResponse> => {
+    const response = await apiClient.get<CheckInContextResponse>('/checkins/context');
     return response.data;
   },
 };

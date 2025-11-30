@@ -5,6 +5,7 @@ import User from '../models/User';
 import { transcribeAudio } from '../services/transcriptionService';
 import { parseSymptoms } from '../services/parsingService';
 import { generatePostCheckInInsight } from '../services/insightService';
+import { getCheckInContext } from '../services/checkinContextService';
 import { logger } from '../utils/logger';
 import fs from 'fs/promises';
 import { PAGINATION_CONSTANTS } from '../constants';
@@ -518,6 +519,37 @@ export async function getStatus(req: Request, res: Response, next: NextFunction)
     });
   } catch (error) {
     logger.error('Error fetching check-in status', { error });
+    next(error);
+  }
+}
+
+/**
+ * GET /api/checkins/context
+ * Returns pre-check-in context to help users provide comprehensive check-ins
+ * Includes: last check-in summary, recent symptoms with trends, streak info
+ */
+export async function getContext(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    // Get userId from authenticated user
+    const userId = (req.user as { id: string })!.id;
+
+    logger.info('Fetching check-in context', { userId });
+
+    const context = await getCheckInContext(userId);
+
+    logger.info('Check-in context retrieved', {
+      userId,
+      hasLastCheckIn: !!context.lastCheckIn,
+      recentSymptomsCount: context.recentSymptoms.length,
+      currentStreak: context.streak.current,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: context,
+    });
+  } catch (error) {
+    logger.error('Error fetching check-in context', { error });
     next(error);
   }
 }

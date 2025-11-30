@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { checkInsApi, InsightCard } from '../services/api';
 import VoiceRecorder from '../components/VoiceRecorder';
 import ManualCheckInForm from '../components/ManualCheckInForm';
+import CheckInGuidance from '../components/CheckInGuidance';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import PostCheckInInsight from '../components/PostCheckInInsight';
@@ -126,6 +127,9 @@ export default function CheckInPage() {
 
           {/* Error Message */}
           {error && <Alert type="error" className="mb-6">{error}</Alert>}
+
+          {/* Pre-Check-In Guidance */}
+          <CheckInGuidance className="mb-6" />
 
           {/* Mode Toggle */}
           <div className="flex space-x-2 mb-6">

@@ -131,6 +131,25 @@ export default function CheckInGuidance({
       <div className="p-6 space-y-5">
         {hasHistory ? (
           <>
+            {/* Best Practice Tips for Returning Users */}
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">For a great check-in</p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500">✓</span>
+                  <span>Compare each symptom to last time: <strong>better, worse, or same?</strong></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500">✓</span>
+                  <span>Mention any <strong>new symptoms</strong> or ones that resolved</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500">✓</span>
+                  <span>Note what might have <strong>helped or triggered</strong> changes</span>
+                </li>
+              </ul>
+            </div>
+
             {/* Last Check-In Context */}
             {context.lastCheckIn && (
               <div>

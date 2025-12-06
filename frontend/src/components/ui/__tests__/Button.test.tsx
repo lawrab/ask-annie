@@ -31,14 +31,14 @@ describe('Button', () => {
     it('renders primary variant by default', () => {
       render(<Button>Primary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-primary-600');
+      expect(button).toHaveClass('bg-rose');
     });
 
     it('renders secondary variant', () => {
       render(<Button variant="secondary">Secondary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('border');
-      expect(button).toHaveClass('bg-white');
+      expect(button).toHaveClass('border-2');
+      expect(button).toHaveClass('bg-transparent');
     });
 
     it('renders tertiary variant', () => {

@@ -747,7 +747,7 @@ describe('TrendsPage', () => {
       );
 
       await waitFor(() => {
-        const trendElement = container.querySelector('.text-green-600');
+        const trendElement = container.querySelector('.text-sage');
         expect(trendElement).toBeInTheDocument();
       });
     });
@@ -773,7 +773,7 @@ describe('TrendsPage', () => {
       );
 
       await waitFor(() => {
-        const trendElement = container.querySelector('.text-red-600');
+        const trendElement = container.querySelector('.text-coral');
         expect(trendElement).toBeInTheDocument();
       });
     });

@@ -25,19 +25,19 @@ describe('Card', () => {
 
     it('renders elevated variant with shadow', () => {
       const { container } = render(<Card variant="elevated">Content</Card>);
-      expect(container.firstChild).toHaveClass('shadow-md');
+      expect(container.firstChild).toHaveClass('shadow-card');
     });
 
     it('renders outlined variant with border', () => {
       const { container } = render(<Card variant="outlined">Content</Card>);
       expect(container.firstChild).toHaveClass('border');
-      expect(container.firstChild).toHaveClass('border-gray-200');
+      expect(container.firstChild).toHaveClass('border-rose/20');
     });
 
     it('renders interactive variant', () => {
       const { container } = render(<Card variant="interactive">Content</Card>);
-      expect(container.firstChild).toHaveClass('shadow-md');
-      expect(container.firstChild).toHaveClass('hover:shadow-lg');
+      expect(container.firstChild).toHaveClass('shadow-card');
+      expect(container.firstChild).toHaveClass('hover:shadow-lifted');
       expect(container.firstChild).toHaveClass('cursor-pointer');
     });
   });
@@ -188,7 +188,7 @@ describe('Card', () => {
       const { container } = render(<Card interactive>Content</Card>);
       expect(container.firstChild).toHaveClass('focus:outline-none');
       expect(container.firstChild).toHaveClass('focus:ring-2');
-      expect(container.firstChild).toHaveClass('focus:ring-primary-500');
+      expect(container.firstChild).toHaveClass('focus:ring-sage');
     });
 
     it('forwards ref correctly', () => {

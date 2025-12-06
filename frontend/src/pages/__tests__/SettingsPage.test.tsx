@@ -79,6 +79,14 @@ describe('SettingsPage', () => {
     vi.mocked(useAuthStore).mockImplementation((selector: any) =>
       selector ? selector(mockState) : mockState
     );
+
+    // Set up passkey mocks - needed for all tests since SettingsPage loads passkeys on mount
+    vi.mocked(isPasskeySupported).mockReturnValue(true);
+    vi.mocked(isPlatformAuthenticatorAvailable).mockResolvedValue(true);
+    vi.mocked(passkeysApi.list).mockResolvedValue({
+      success: true,
+      data: [],
+    });
   });
 
   afterEach(() => {

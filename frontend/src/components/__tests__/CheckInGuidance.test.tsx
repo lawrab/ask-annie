@@ -116,7 +116,7 @@ describe('CheckInGuidance', () => {
       // Find the trend chip with improving indicator - go to parent span (the chip itself)
       const improvingIndicator = screen.getByText('↓');
       const chip = improvingIndicator.parentElement;
-      expect(chip).toHaveClass('bg-green-50', 'text-green-700');
+      expect(chip).toHaveClass('bg-sage-light/30', 'text-sage');
     });
 
     it('should apply correct styles for worsening trend', async () => {
@@ -129,7 +129,7 @@ describe('CheckInGuidance', () => {
 
       // Back Pain text is directly in the chip span
       const backPainChip = screen.getByText('Back Pain').closest('span');
-      expect(backPainChip).toHaveClass('bg-red-50', 'text-red-700');
+      expect(backPainChip).toHaveClass('bg-coral/10', 'text-coral');
     });
 
     it('should apply correct styles for stable trend', async () => {
@@ -143,7 +143,7 @@ describe('CheckInGuidance', () => {
       // Find the stable trend indicator - go to parent span (the chip itself)
       const stableIndicator = screen.getByText('→');
       const chip = stableIndicator.parentElement;
-      expect(chip).toHaveClass('bg-gray-50', 'text-gray-700');
+      expect(chip).toHaveClass('bg-cream', 'text-walnut');
     });
 
     it('should always display the scoring reminder', async () => {

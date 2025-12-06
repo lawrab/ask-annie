@@ -126,13 +126,13 @@ describe('Input', () => {
       render(<Input disabled />);
       const input = screen.getByRole('textbox');
       expect(input).toBeDisabled();
-      expect(input).toHaveClass('disabled:bg-gray-100');
+      expect(input).toHaveClass('disabled:bg-mist');
     });
 
     it('applies normal styling when no error', () => {
       render(<Input />);
       const input = screen.getByRole('textbox');
-      expect(input).toHaveClass('border-gray-300');
+      expect(input).toHaveClass('border-walnut-200');
       expect(input).toHaveAttribute('aria-invalid', 'false');
     });
   });
@@ -223,7 +223,7 @@ describe('Input', () => {
     it('has proper focus styles', () => {
       render(<Input />);
       const input = screen.getByRole('textbox');
-      expect(input).toHaveClass('focus:ring-primary-500');
+      expect(input).toHaveClass('focus:ring-sage');
     });
   });
 

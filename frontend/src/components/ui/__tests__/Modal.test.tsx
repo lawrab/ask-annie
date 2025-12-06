@@ -275,7 +275,7 @@ describe('ConfirmDialog', () => {
     it('applies primary variant by default', () => {
       render(<ConfirmDialog {...defaultProps} />);
       const confirmButton = screen.getByRole('button', { name: 'Confirm' });
-      expect(confirmButton).toHaveClass('bg-primary-600');
+      expect(confirmButton).toHaveClass('bg-rose');
     });
 
     it('applies danger variant', () => {

@@ -102,7 +102,7 @@ export default function TrendsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-cream">
       <Header currentPage="trends" />
 
       {/* Main Content */}
@@ -110,8 +110,8 @@ export default function TrendsPage() {
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Page Header */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Symptom Trends</h2>
-            <p className="text-gray-600 mt-1">
+            <h2 className="text-2xl font-bold text-walnut">Symptom Trends</h2>
+            <p className="text-walnut-muted mt-1">
               Analyze your symptom patterns over time to identify trends and triggers
             </p>
           </div>
@@ -119,8 +119,8 @@ export default function TrendsPage() {
           {/* Loading State for Symptoms */}
           {isLoadingSymptoms && (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <p className="mt-2 text-gray-600">Loading symptoms...</p>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta"></div>
+              <p className="mt-2 text-walnut-muted">Loading symptoms...</p>
             </div>
           )}
 
@@ -131,7 +131,7 @@ export default function TrendsPage() {
           {!isLoadingSymptoms && !symptomsError && symptoms.length === 0 && (
             <Card variant="default" className="p-12 text-center">
               <svg
-                className="mx-auto h-12 w-12 text-gray-400"
+                className="mx-auto h-12 w-12 text-walnut-muted"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -143,8 +143,8 @@ export default function TrendsPage() {
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-900">No symptoms tracked yet</h3>
-              <p className="mt-1 text-gray-500">
+              <h3 className="mt-2 text-lg font-medium text-walnut">No symptoms tracked yet</h3>
+              <p className="mt-1 text-walnut-muted">
                 Start recording check-ins to see symptom trends and patterns.
               </p>
               <Button
@@ -168,7 +168,7 @@ export default function TrendsPage() {
                   <div className="flex-1">
                     <label
                       htmlFor="symptom-select"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-walnut mb-1"
                     >
                       Symptom
                     </label>
@@ -176,7 +176,7 @@ export default function TrendsPage() {
                       id="symptom-select"
                       value={selectedSymptom}
                       onChange={(e) => setSelectedSymptom(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      className="w-full px-3 py-2 border border-walnut-200 rounded-lg text-walnut focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                     >
                       {symptoms.map((symptom) => (
                         <option key={symptom.name} value={symptom.name}>
@@ -190,7 +190,7 @@ export default function TrendsPage() {
                   <div className="flex-1">
                     <label
                       htmlFor="days-select"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-walnut mb-1"
                     >
                       Time Range
                     </label>
@@ -198,7 +198,7 @@ export default function TrendsPage() {
                       id="days-select"
                       value={selectedDays}
                       onChange={(e) => setSelectedDays(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      className="w-full px-3 py-2 border border-walnut-200 rounded-lg text-walnut focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                     >
                       <option value={7}>Last 7 days</option>
                       <option value={14}>Last 14 days</option>
@@ -212,8 +212,8 @@ export default function TrendsPage() {
               {/* Loading State for Trend */}
               {isLoadingTrend && (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                  <p className="mt-2 text-gray-600">Loading trend data...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta"></div>
+                  <p className="mt-2 text-walnut-muted">Loading trend data...</p>
                 </div>
               )}
 
@@ -224,7 +224,7 @@ export default function TrendsPage() {
               {!isLoadingTrend && !trendError && trendData && (
                 <>
                   <Card variant="default" padding="default">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-lg font-semibold text-walnut mb-4">
                       {formatDisplayName(selectedSymptom)} - Severity Over Time
                     </h3>
                     <SymptomChart
@@ -249,15 +249,15 @@ export default function TrendsPage() {
 
                     <Card variant="default" padding="default">
                       <div className="space-y-2">
-                        <h3 className="text-sm font-semibold text-gray-700">
+                        <h3 className="text-sm font-semibold text-walnut">
                           Severity Range
                         </h3>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-bold text-gray-900">
+                          <span className="text-3xl font-bold text-walnut">
                             {trendData.statistics.min} - {trendData.statistics.max}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-walnut-muted">
                           Min to Max severity recorded
                         </p>
                       </div>
@@ -265,15 +265,15 @@ export default function TrendsPage() {
 
                     <Card variant="default" padding="default">
                       <div className="space-y-2">
-                        <h3 className="text-sm font-semibold text-gray-700">
+                        <h3 className="text-sm font-semibold text-walnut">
                           Days Present
                         </h3>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-bold text-gray-900">
+                          <span className="text-3xl font-bold text-walnut">
                             {getPercentageDaysPresent().toFixed(0)}%
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-walnut-muted">
                           {trendData.dataPoints.length} of {selectedDays} days
                         </p>
                       </div>
@@ -281,17 +281,17 @@ export default function TrendsPage() {
 
                     <Card variant="default" padding="default">
                       <div className="space-y-2">
-                        <h3 className="text-sm font-semibold text-gray-700">
+                        <h3 className="text-sm font-semibold text-walnut">
                           Trend Direction
                         </h3>
                         <div className="flex items-baseline gap-2">
                           <span
                             className={`text-2xl font-bold ${
                               getTrendDirection() === 'improving'
-                                ? 'text-green-600'
+                                ? 'text-sage'
                                 : getTrendDirection() === 'worsening'
-                                ? 'text-red-600'
-                                : 'text-gray-600'
+                                ? 'text-coral'
+                                : 'text-walnut-muted'
                             }`}
                           >
                             {getTrendDirection() === 'improving' && '⬇️ Improving'}
@@ -299,7 +299,7 @@ export default function TrendsPage() {
                             {getTrendDirection() === 'stable' && '➡️ Stable'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-walnut-muted">
                           Based on recent data points
                         </p>
                       </div>

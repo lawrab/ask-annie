@@ -49,7 +49,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 /**
- * Input component following the Annie's Health Journal design system
+ * Input component following the Soft Dawn design system
+ *
+ * Uses warm, accessible colors:
+ * - Deep Walnut for text
+ * - Deep Sage for focus states
+ * - Rose accents for borders
  *
  * @example
  * ```tsx
@@ -90,9 +95,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const errorId = `${inputId}-error`;
     const helperTextId = `${inputId}-helper`;
 
-    // Base input styles
+    // Base input styles following Soft Dawn design
     const baseStyles =
-      'block border rounded-md placeholder-gray-400 text-gray-900 transition-colors focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed';
+      'block border rounded-lg placeholder-walnut-muted text-walnut transition-colors duration-200 focus:outline-none disabled:bg-mist disabled:cursor-not-allowed';
 
     // Size styles
     const sizeStyles = {
@@ -101,10 +106,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       large: 'px-4 py-3 text-base',
     };
 
-    // State styles
+    // State styles - using Soft Dawn colors
     const stateStyles = error
-      ? 'border-red-400 focus:ring-red-500 focus:border-red-500'
-      : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500';
+      ? 'border-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+      : 'border-walnut-200 focus:ring-2 focus:ring-sage focus:border-sage';
 
     // Width styles
     const widthStyles = fullWidth ? 'w-full' : '';
@@ -134,7 +139,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-walnut mb-1"
           >
             {label}
             {required && <span className="text-red-600 ml-1" aria-label="required">*</span>}
@@ -145,7 +150,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {/* Start icon */}
           {startIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-walnut-muted">
               {startIcon}
             </div>
           )}
@@ -172,14 +177,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900 text-sm"
+                  className="text-walnut-muted hover:text-walnut focus:outline-none focus:text-walnut text-sm"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   tabIndex={-1}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               ) : (
-                <div className="text-gray-400 pointer-events-none">{endIcon}</div>
+                <div className="text-walnut-muted pointer-events-none">{endIcon}</div>
               )}
             </div>
           )}
@@ -194,7 +199,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Helper text (only show if no error) */}
         {!error && helperText && (
-          <p id={helperTextId} className="mt-1 text-sm text-gray-500">
+          <p id={helperTextId} className="mt-1 text-sm text-walnut-muted">
             {helperText}
           </p>
         )}

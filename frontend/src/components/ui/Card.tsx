@@ -6,7 +6,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
    * Visual variant of the card
    * @default 'elevated'
    */
-  variant?: 'default' | 'elevated' | 'outlined' | 'interactive';
+  variant?: 'default' | 'elevated' | 'outlined' | 'interactive' | 'mist';
 
   /**
    * Padding size
@@ -33,7 +33,17 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Card component for displaying structured content
+ * Card component following the Soft Dawn design system
+ *
+ * Features soft, organic shapes with gentle shadows.
+ * Uses 24px border radius for a warm, approachable feel.
+ *
+ * Variants:
+ * - default: White background, no shadow
+ * - elevated: White background with soft card shadow
+ * - outlined: White background with subtle border
+ * - interactive: Elevated with hover/focus states
+ * - mist: Morning Mist background for subtle emphasis
  *
  * @example
  * ```tsx
@@ -60,15 +70,16 @@ const CardBase = forwardRef<HTMLDivElement, CardProps>(
     },
     ref
   ) => {
-    // Base styles
-    const baseStyles = 'bg-white rounded-lg transition-shadow';
+    // Base styles - rounded-2xl for soft, organic feel
+    const baseStyles = 'bg-white rounded-2xl transition-all duration-200';
 
-    // Variant styles
+    // Variant styles following Soft Dawn design system
     const variantStyles = {
       default: '',
-      elevated: 'shadow-md',
-      outlined: 'border border-gray-200',
-      interactive: 'shadow-md hover:shadow-lg cursor-pointer',
+      elevated: 'shadow-card',
+      outlined: 'border border-rose/20',
+      interactive: 'shadow-card hover:shadow-lifted cursor-pointer',
+      mist: 'bg-mist shadow-soft',
     };
 
     // Padding styles
@@ -81,7 +92,7 @@ const CardBase = forwardRef<HTMLDivElement, CardProps>(
 
     // Interactive styles
     const interactiveStyles = interactive || onClick
-      ? 'cursor-pointer hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2'
+      ? 'cursor-pointer hover:shadow-lifted hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2'
       : '';
 
     // Combine styles
@@ -148,7 +159,7 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('mb-4 pb-3 border-b border-gray-200', className)}
+        className={cn('mb-4 pb-3 border-b border-rose/20', className)}
         {...props}
       >
         {children}
@@ -192,7 +203,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('mt-4 pt-3 border-t border-gray-200 flex gap-2', className)}
+        className={cn('mt-4 pt-3 border-t border-rose/20 flex gap-2', className)}
         {...props}
       >
         {children}

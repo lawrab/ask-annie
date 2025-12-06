@@ -2,34 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * =============================================================================
+ * SOFT DAWN DESIGN SYSTEM - Base Styles
+ * Annie's Journal - "The quiet moment of a new morning"
+ *
+ * All color combinations meet WCAG AA standards
+ * Reference: docs/soft-dawn-design-brief.md
+ * =============================================================================
+ */
+
 @layer base {
   body {
-    @apply bg-gray-50 font-sans text-gray-900 antialiased;
+    @apply bg-cream font-sans text-walnut antialiased;
+  }
+
+  /* Headings use serif font for journal/book feel */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+
+  /* Links default to Deep Sage */
+  a {
+    @apply text-sage transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-walnut;
   }
 }
 
 @layer components {
+  /*
+   * ---------------------------------------------------------------------------
+   * BUTTONS
+   * Following Soft Dawn design brief specifications
+   * ---------------------------------------------------------------------------
+   */
+
   .btn {
-    @apply rounded-lg px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 
+  /* Primary Button - Blush Rose background, Deep Walnut text (7.4:1 contrast) */
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply bg-rose text-walnut shadow-soft hover:bg-rose-hover hover:shadow-card hover:-translate-y-0.5 focus:ring-rose;
   }
 
+  /* CTA Button - Deep Terracotta background, white text (4.9:1 contrast) */
+  .btn-cta {
+    @apply bg-terracotta text-white shadow-soft hover:bg-terracotta-hover hover:shadow-card hover:-translate-y-0.5 focus:ring-terracotta;
+  }
+
+  /* Secondary/Ghost Button - Outlined with rose border */
   .btn-secondary {
-    @apply bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500;
+    @apply border-2 border-rose bg-transparent text-walnut hover:bg-rose hover:text-walnut focus:ring-rose;
   }
 
+  /* Outline Button - For less prominent actions */
   .btn-outline {
-    @apply border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500;
+    @apply border-2 border-walnut-200 bg-white text-walnut hover:bg-cream hover:border-rose focus:ring-sage;
   }
+
+  /*
+   * ---------------------------------------------------------------------------
+   * FORM INPUTS
+   * ---------------------------------------------------------------------------
+   */
 
   .input {
-    @apply w-full rounded-lg border border-gray-300 px-4 py-2 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0;
+    @apply w-full rounded-lg border border-walnut-200 bg-white px-4 py-2 text-walnut transition-colors duration-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-0 placeholder:text-walnut-muted;
   }
 
+  /*
+   * ---------------------------------------------------------------------------
+   * CARDS
+   * Soft, organic shapes with gentle shadows
+   * ---------------------------------------------------------------------------
+   */
+
   .card {
-    @apply rounded-lg bg-white p-6 shadow-md;
+    @apply rounded-2xl bg-white p-6 shadow-card;
+  }
+
+  .card-mist {
+    @apply rounded-2xl bg-mist p-6 shadow-soft;
+  }
+
+  /*
+   * ---------------------------------------------------------------------------
+   * RECORDING PULSE ANIMATION
+   * Living Coral decorative animation for voice recording
+   * ---------------------------------------------------------------------------
+   */
+
+  .recording-pulse {
+    @apply animate-pulse-gentle bg-coral;
+  }
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * UTILITY CLASSES
+ * ---------------------------------------------------------------------------
+ */
+
+@layer utilities {
+  /* Subtle paper texture for tactile feel */
+  .paper-texture {
+    position: relative;
+  }
+
+  .paper-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 1;
   }
 }

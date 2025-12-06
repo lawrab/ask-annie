@@ -48,14 +48,14 @@ export default function CheckInGuidance({
   // Loading state
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
+      <div className={`bg-white rounded-xl shadow-sm border border-rose/20 p-6 ${className}`}>
         <div className="animate-pulse space-y-4">
-          <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div className="h-5 bg-rose/30 rounded w-1/3"></div>
+          <div className="h-4 bg-rose/30 rounded w-2/3"></div>
           <div className="flex gap-2">
-            <div className="h-8 bg-gray-200 rounded-full w-24"></div>
-            <div className="h-8 bg-gray-200 rounded-full w-20"></div>
-            <div className="h-8 bg-gray-200 rounded-full w-28"></div>
+            <div className="h-8 bg-rose/30 rounded-full w-24"></div>
+            <div className="h-8 bg-rose/30 rounded-full w-20"></div>
+            <div className="h-8 bg-rose/30 rounded-full w-28"></div>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function CheckInGuidance({
   // Error state - show generic guidance instead
   if (error || !context) {
     return (
-      <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
+      <div className={`bg-white rounded-xl shadow-sm border border-rose/20 p-6 ${className}`}>
         <NewUserGuidance />
       </div>
     );
@@ -75,11 +75,11 @@ export default function CheckInGuidance({
   const hasHistory = context.lastCheckIn || context.recentSymptoms.length > 0;
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm border border-rose/20 overflow-hidden ${className}`}>
       {/* Header with Action Buttons */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-100">
+      <div className="bg-gradient-to-r from-cream to-rose/30 px-6 py-4 border-b border-rose/20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-walnut flex items-center gap-2">
             <span role="img" aria-label="clipboard">📋</span>
             Your Check-In Guide
           </h3>
@@ -90,8 +90,8 @@ export default function CheckInGuidance({
                   onClick={isRecording ? onStopRecording : onStartRecording}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     isRecording
-                      ? 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg'
-                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-md hover:shadow-lg'
+                      ? 'bg-coral text-white hover:bg-red-600 shadow-md hover:shadow-lg animate-pulse-gentle'
+                      : 'bg-terracotta text-white hover:bg-terracotta-hover shadow-soft hover:shadow-card'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -134,19 +134,19 @@ export default function CheckInGuidance({
         {hasHistory ? (
           <>
             {/* Best Practice Tips for Returning Users */}
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">For a great check-in</p>
-              <ul className="text-sm text-gray-600 space-y-1">
+            <div className="bg-cream rounded-lg p-3 border border-rose/20">
+              <p className="text-xs text-walnut-muted uppercase tracking-wide mb-2">For a great check-in</p>
+              <ul className="text-sm text-walnut space-y-1">
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-sage">✓</span>
                   <span>Compare each symptom to last time: <strong>better, worse, or same?</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-sage">✓</span>
                   <span>Mention any <strong>new symptoms</strong> or ones that resolved</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-sage">✓</span>
                   <span>Note what might have <strong>helped or triggered</strong> changes</span>
                 </li>
               </ul>
@@ -155,10 +155,10 @@ export default function CheckInGuidance({
             {/* Last Check-In Context */}
             {context.lastCheckIn && (
               <div>
-                <p className="text-sm text-gray-600 mb-2 flex items-center gap-1.5">
+                <p className="text-sm text-walnut mb-2 flex items-center gap-1.5">
                   <span role="img" aria-label="pin">📍</span>
                   <span className="font-medium">Last check-in</span>
-                  <span className="text-gray-400">({context.lastCheckIn.timeAgo}):</span>
+                  <span className="text-walnut-muted">({context.lastCheckIn.timeAgo}):</span>
                 </p>
                 {context.lastCheckIn.symptoms.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -171,14 +171,14 @@ export default function CheckInGuidance({
                       </span>
                     ))}
                     {context.lastCheckIn.symptoms.length > 5 && (
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-walnut-muted">
                         +{context.lastCheckIn.symptoms.length - 5} more
                       </span>
                     )}
                   </div>
                 )}
                 {context.lastCheckIn.notes && (
-                  <p className="text-sm text-gray-500 italic">
+                  <p className="text-sm text-walnut-muted italic">
                     &ldquo;{context.lastCheckIn.notes}&rdquo;
                   </p>
                 )}
@@ -188,7 +188,7 @@ export default function CheckInGuidance({
             {/* Recent Symptoms with Trends */}
             {context.recentSymptoms.length > 0 && (
               <div>
-                <p className="text-sm text-gray-600 mb-2 flex items-center gap-1.5">
+                <p className="text-sm text-walnut mb-2 flex items-center gap-1.5">
                   <span role="img" aria-label="chart">📊</span>
                   <span className="font-medium">Your symptoms to update:</span>
                 </p>
@@ -203,7 +203,7 @@ export default function CheckInGuidance({
                     </span>
                   ))}
                   {context.recentSymptoms.length > 5 && (
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-walnut-muted">
                       +{context.recentSymptoms.length - 5} more
                     </span>
                   )}
@@ -228,7 +228,7 @@ export default function CheckInGuidance({
 
         {/* Streak Motivation */}
         {context.streak.current >= 3 && context.streak.message && (
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-walnut">
             <span role="img" aria-label="fire" className="text-lg">🔥</span>
             <span className="font-medium">{context.streak.message}</span>
           </div>
@@ -245,35 +245,35 @@ function NewUserGuidance() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-gray-700 flex items-center gap-2 font-medium">
+        <p className="text-sm text-walnut flex items-center gap-2 font-medium">
           <span role="img" aria-label="wave">👋</span>
           Welcome to your first check-in!
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-walnut-muted mt-1">
           The easiest way is to tap <strong>&quot;Start Voice Check-in&quot;</strong> and simply talk about how you&apos;re feeling.
         </p>
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">Example</p>
-        <p className="text-sm text-gray-600 italic">
+      <div className="bg-cream rounded-lg p-3 border border-rose/20">
+        <p className="text-xs text-walnut-muted uppercase tracking-wide mb-1.5">Example</p>
+        <p className="text-sm text-walnut italic">
           &quot;I have a headache, about a 6 out of 10. Also feeling some fatigue, maybe a 4. I didn&apos;t sleep well last night and skipped breakfast.&quot;
         </p>
       </div>
 
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Tips for better tracking</p>
-        <ul className="text-sm text-gray-600 space-y-1.5">
+        <p className="text-xs text-walnut-muted uppercase tracking-wide mb-2">Tips for better tracking</p>
+        <ul className="text-sm text-walnut space-y-1.5">
           <li className="flex items-start gap-2">
-            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span className="text-sage mt-0.5">✓</span>
             <span>Rate symptoms <strong>1-10</strong> so we can track changes over time</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span className="text-sage mt-0.5">✓</span>
             Mention activities, food, sleep, or stress that might be related
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span className="text-sage mt-0.5">✓</span>
             Check in daily for the best insights
           </li>
         </ul>
@@ -303,11 +303,11 @@ function getTrendIcon(trend: 'improving' | 'worsening' | 'stable'): string {
 function getTrendStyles(trend: 'improving' | 'worsening' | 'stable'): string {
   switch (trend) {
     case 'improving':
-      return 'bg-green-50 text-green-700 border-green-200';
+      return 'bg-sage-light/30 text-sage border-sage/30';
     case 'worsening':
-      return 'bg-red-50 text-red-700 border-red-200';
+      return 'bg-coral/10 text-coral border-coral/30';
     case 'stable':
     default:
-      return 'bg-gray-50 text-gray-700 border-gray-200';
+      return 'bg-cream text-walnut border-rose/30';
   }
 }

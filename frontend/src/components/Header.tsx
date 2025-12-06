@@ -22,6 +22,11 @@ export interface HeaderProps {
 /**
  * Shared header component with profile dropdown navigation
  * Displays app title, optional Trends link, and user profile menu
+ *
+ * Uses Soft Dawn design system:
+ * - Deep Terracotta background for warmth
+ * - White text for contrast
+ * - Soft shadows
  */
 export function Header({ title, subtitle, currentPage }: HeaderProps) {
   const navigate = useNavigate();
@@ -30,7 +35,7 @@ export function Header({ title, subtitle, currentPage }: HeaderProps) {
   const displaySubtitle = subtitle || `Welcome, ${user?.username}!`;
 
   return (
-    <header className="bg-indigo-600 text-white shadow-md">
+    <header className="bg-terracotta text-white shadow-card">
       <div className="container mx-auto px-4 py-4 sm:py-6">
         <div className="flex justify-between items-center gap-4">
           {/* Title section */}
@@ -52,7 +57,7 @@ export function Header({ title, subtitle, currentPage }: HeaderProps) {
               >
                 {title || "Annie's Health Journal"}
               </h1>
-              <p className="text-indigo-100 text-sm sm:text-base truncate">{displaySubtitle}</p>
+              <p className="text-white/80 text-sm sm:text-base truncate">{displaySubtitle}</p>
             </div>
           </div>
 
@@ -63,7 +68,7 @@ export function Header({ title, subtitle, currentPage }: HeaderProps) {
                 onClick={() => navigate('/trends')}
                 variant="secondary"
                 size="small"
-                className="whitespace-nowrap bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="whitespace-nowrap bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
               >
                 <span className="hidden sm:inline">Trends</span>
                 <span className="sm:hidden">📈</span>

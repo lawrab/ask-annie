@@ -6,7 +6,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * The visual style variant of the button
    * @default 'primary'
    */
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'link';
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'link' | 'cta';
 
   /**
    * The size of the button
@@ -52,14 +52,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Button component following the Annie's Health Journal design system
+ * Button component following the Soft Dawn design system
+ *
+ * Variants:
+ * - primary: Blush Rose background, Deep Walnut text (7.4:1 contrast)
+ * - cta: Deep Terracotta background, white text (4.9:1 contrast) - for main actions
+ * - secondary: Rose border, transparent background
+ * - tertiary: Transparent, for less prominent actions
+ * - danger: Red for destructive actions
+ * - link: Text-only link style
  *
  * @example
  * ```tsx
- * <Button variant="primary">Save Check-in</Button>
+ * <Button variant="cta">Start Check-in</Button>
+ * <Button variant="primary">Save</Button>
  * <Button variant="danger" icon={<TrashIcon />}>Delete</Button>
  * <Button variant="secondary" loading>Processing...</Button>
- * <Button iconOnly aria-label="Delete"><TrashIcon /></Button>
  * ```
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -81,19 +89,26 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // Base styles - always applied
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+      'inline-flex items-center justify-center font-sans font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
-    // Variant styles
+    // Variant styles following Soft Dawn design system
     const variantStyles = {
+      // Primary: Blush Rose background, Deep Walnut text
       primary:
-        'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500 disabled:hover:bg-primary-600',
+        'bg-rose text-walnut shadow-soft hover:bg-rose-hover hover:shadow-card hover:-translate-y-0.5 focus:ring-rose disabled:hover:bg-rose disabled:hover:translate-y-0 disabled:hover:shadow-soft',
+      // CTA: Deep Terracotta background, white text - for main conversion actions
+      cta: 'bg-terracotta text-white shadow-soft hover:bg-terracotta-hover hover:shadow-card hover:-translate-y-0.5 focus:ring-terracotta disabled:hover:bg-terracotta disabled:hover:translate-y-0 disabled:hover:shadow-soft',
+      // Secondary: Rose border, transparent background
       secondary:
-        'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 focus:ring-primary-500 disabled:hover:bg-white',
+        'border-2 border-rose bg-transparent text-walnut hover:bg-rose hover:text-walnut focus:ring-rose disabled:hover:bg-transparent',
+      // Tertiary: Minimal styling for less prominent actions
       tertiary:
-        'bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-primary-500 disabled:hover:bg-transparent',
+        'bg-transparent hover:bg-cream text-walnut-muted hover:text-walnut focus:ring-sage disabled:hover:bg-transparent',
+      // Danger: Red for destructive actions
       danger:
         'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 disabled:hover:bg-red-600',
-      link: 'bg-transparent hover:underline text-primary-600 hover:text-primary-700 focus:ring-primary-500 p-0 h-auto disabled:hover:no-underline',
+      // Link: Text-only link style
+      link: 'bg-transparent hover:underline text-sage hover:text-walnut focus:ring-sage p-0 h-auto disabled:hover:no-underline',
     };
 
     // Size styles

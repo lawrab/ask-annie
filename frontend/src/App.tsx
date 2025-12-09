@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminRoute } from './components/AdminRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuthStore } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
@@ -12,6 +13,7 @@ import TrendsPage from './pages/TrendsPage';
 import SettingsPage from './pages/SettingsPage';
 import DeleteAccountPage from './pages/DeleteAccountPage';
 import DesignSystemPage from './pages/DesignSystemPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function App() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
@@ -70,6 +72,16 @@ function App() {
             <ProtectedRoute>
               <DeleteAccountPage />
             </ProtectedRoute>
+          }
+        />
+
+        {/* Admin-only routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboardPage />
+            </AdminRoute>
           }
         />
 

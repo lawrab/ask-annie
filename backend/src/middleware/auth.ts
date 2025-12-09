@@ -43,3 +43,49 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     next();
   })(req, res, next);
 };
+
+/**
+ * Admin authorization middleware
+ * Requires user to be authenticated AND have admin privileges
+ *
+ * Usage:
+ *   router.get('/admin-only', authenticate, requireAdmin, controller);
+ *
+ * IMPORTANT: Must be used AFTER authenticate middleware
+ *
+ * On success: Proceeds to next middleware
+ * On failure: Returns 403 Forbidden
+ */
+export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  // Check if user is authenticated (should be set by authenticate middleware)
+  if (!req.user) {
+    logger.warn('Admin check failed: no authenticated user');
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
+    return;
+  }
+
+  // Check if user has admin privileges
+  const user = req.user as { id: string; isAdmin?: boolean };
+  if (!user.isAdmin) {
+    logger.warn('Admin access denied', {
+      userId: user.id,
+      ip: req.ip,
+      path: req.path,
+    });
+    res.status(403).json({
+      success: false,
+      error: 'Admin privileges required',
+    });
+    return;
+  }
+
+  logger.info('Admin access granted', {
+    userId: user.id,
+    path: req.path,
+  });
+
+  next();
+};

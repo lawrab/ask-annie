@@ -16,7 +16,7 @@ export interface HeaderProps {
   /**
    * Which page is currently active (to hide that nav link)
    */
-  currentPage?: 'dashboard' | 'trends' | 'settings' | 'checkin';
+  currentPage?: 'dashboard' | 'trends' | 'settings' | 'checkin' | 'admin';
 }
 
 /**
@@ -72,6 +72,17 @@ export function Header({ title, subtitle, currentPage }: HeaderProps) {
               >
                 <span className="hidden sm:inline">Trends</span>
                 <span className="sm:hidden">📈</span>
+              </Button>
+            )}
+            {user?.isAdmin && currentPage !== 'admin' && (
+              <Button
+                onClick={() => navigate('/admin')}
+                variant="secondary"
+                size="small"
+                className="whitespace-nowrap bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+              >
+                <span className="hidden sm:inline">Admin</span>
+                <span className="sm:hidden">🔐</span>
               </Button>
             )}
             <ProfileDropdown />

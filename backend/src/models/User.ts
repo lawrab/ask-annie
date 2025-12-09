@@ -8,6 +8,7 @@ export interface IUser extends Document {
   email: string;
   notificationTimes: string[];
   notificationsEnabled: boolean;
+  isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +47,10 @@ const userSchema = new Schema<IUser>(
     notificationsEnabled: {
       type: Boolean,
       default: true,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -47,6 +47,7 @@ describe('authStore', () => {
         email: 'test@example.com',
         notificationTimes: ['08:00'],
         notificationsEnabled: true,
+        isAdmin: false,
         createdAt: '2024-01-01T00:00:00.000Z',
       };
       const mockToken = 'mock-jwt-token';
@@ -74,6 +75,7 @@ describe('authStore', () => {
         email: 'test@example.com',
         notificationTimes: ['08:00'],
         notificationsEnabled: true,
+        isAdmin: false,
         createdAt: '2024-01-01T00:00:00.000Z',
       };
       const mockToken = 'mock-jwt-token';
@@ -103,6 +105,7 @@ describe('authStore', () => {
             email: 'test@example.com',
             notificationTimes: ['08:00'],
             notificationsEnabled: true,
+            isAdmin: false,
             createdAt: '2024-01-01T00:00:00.000Z',
           },
           token: 'mock-token',
@@ -124,6 +127,7 @@ describe('authStore', () => {
         email: 'new@example.com',
         notificationTimes: ['08:00'],
         notificationsEnabled: true,
+        isAdmin: false,
         createdAt: '2024-01-01T00:00:00.000Z',
       };
       const mockToken = 'new-mock-token';
@@ -151,6 +155,7 @@ describe('authStore', () => {
         email: 'new@example.com',
         notificationTimes: ['08:00'],
         notificationsEnabled: true,
+        isAdmin: false,
         createdAt: '2024-01-01T00:00:00.000Z',
       };
       const mockToken = 'new-mock-token';
@@ -183,6 +188,7 @@ describe('authStore', () => {
             email: 'test@example.com',
             notificationTimes: ['08:00'],
             notificationsEnabled: true,
+            isAdmin: false,
             createdAt: '2024-01-01T00:00:00.000Z',
           },
           token: 'mock-token',
@@ -243,6 +249,7 @@ describe('authStore', () => {
         email: 'test@example.com',
         notificationTimes: ['08:00'],
         notificationsEnabled: true,
+        isAdmin: false,
         createdAt: '2024-01-01T00:00:00.000Z',
       };
       const mockToken = 'stored-token';
@@ -303,6 +310,7 @@ describe('authStore', () => {
             email: 'test@example.com',
             notificationTimes: ['08:00'],
             notificationsEnabled: true,
+            isAdmin: false,
             createdAt: '2024-01-01T00:00:00.000Z',
           },
           token: 'mock-token',
@@ -330,6 +338,7 @@ describe('authStore', () => {
           email: 'test@example.com',
           notificationTimes: ['08:00'],
           notificationsEnabled: true,
+          isAdmin: false,
           createdAt: '2024-01-01T00:00:00.000Z',
         },
         token: null,

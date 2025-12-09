@@ -37,6 +37,7 @@ passport.use(
         id: String(user._id),
         username: user.username,
         email: user.email,
+        isAdmin: user.isAdmin,
       });
     } catch (error) {
       logger.error('Error in JWT strategy', { error });

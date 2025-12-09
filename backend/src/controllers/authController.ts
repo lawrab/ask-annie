@@ -304,6 +304,7 @@ export async function verifyMagicLink(
           email: user.email,
           notificationTimes: user.notificationTimes,
           notificationsEnabled: user.notificationsEnabled,
+          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
         },
         token: jwtToken,

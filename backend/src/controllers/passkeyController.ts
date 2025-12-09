@@ -353,6 +353,7 @@ export async function verifyAuthentication(
           email: user.email,
           notificationTimes: user.notificationTimes,
           notificationsEnabled: user.notificationsEnabled,
+          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
         },
         token: jwtToken,

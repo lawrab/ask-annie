@@ -12,6 +12,7 @@ import {
   getBrowserDeviceName,
 } from '../utils/passkeys';
 import { Header } from '../components/Header';
+import { UserStatsCard } from '../components/UserStatsCard';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -218,6 +219,12 @@ export default function SettingsPage() {
                 </div>
               </div>
             </Card>
+          </section>
+
+          {/* User Activity Stats */}
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Activity</h2>
+            <UserStatsCard />
           </section>
 
           {/* Security */}

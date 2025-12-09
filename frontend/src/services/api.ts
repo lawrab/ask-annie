@@ -56,6 +56,7 @@ export interface User {
   email: string;
   notificationTimes: string[];
   notificationsEnabled: boolean;
+  isAdmin: boolean;
   createdAt: string;
 }
 
@@ -549,6 +550,57 @@ export const passkeysApi = {
       `/auth/passkeys/${id}`,
       { deviceName }
     );
+    return response.data;
+  },
+};
+
+// Reporting API types
+export interface UserStats {
+  userId: string;
+  username: string;
+  email: string;
+  checkInCount: number;
+  lastCheckIn: string | null;
+  registeredAt: string;
+}
+
+export interface SystemStats {
+  totalUsers: number;
+  totalCheckIns: number;
+  users: UserStats[];
+}
+
+export interface IndividualUserStats {
+  userId: string;
+  username: string;
+  email: string;
+  checkInCount: number;
+  lastCheckIn: string | null;
+  registeredAt: string;
+  firstCheckIn: string | null;
+}
+
+export interface SystemStatsResponse {
+  success: boolean;
+  data: SystemStats;
+}
+
+export interface IndividualStatsResponse {
+  success: boolean;
+  data: IndividualUserStats;
+}
+
+// Reporting API
+export const reportingApi = {
+  // Get stats for the authenticated user
+  getMyStats: async (): Promise<IndividualStatsResponse> => {
+    const response = await apiClient.get<IndividualStatsResponse>('/reporting/my-stats');
+    return response.data;
+  },
+
+  // Get system-wide stats for all users (admin only)
+  getAdminStats: async (): Promise<SystemStatsResponse> => {
+    const response = await apiClient.get<SystemStatsResponse>('/reporting/admin/all-users');
     return response.data;
   },
 };

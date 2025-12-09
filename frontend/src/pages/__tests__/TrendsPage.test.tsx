@@ -59,6 +59,7 @@ describe('TrendsPage', () => {
     email: 'test@example.com',
     notificationTimes: ['08:00'],
     notificationsEnabled: true,
+    isAdmin: false,
     createdAt: '2024-01-01T00:00:00.000Z',
   };
 

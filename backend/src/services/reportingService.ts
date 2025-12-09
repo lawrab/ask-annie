@@ -68,7 +68,10 @@ export async function getAllUsersStats(): Promise<SystemStats> {
 
   // Create a map of userId to check-in stats for quick lookup
   const statsMap = new Map(
-    checkInStats.map((stat) => [stat._id.toString(), { count: stat.count, lastCheckIn: stat.lastCheckIn }])
+    checkInStats.map((stat) => [
+      stat._id.toString(),
+      { count: stat.count, lastCheckIn: stat.lastCheckIn },
+    ])
   );
 
   // Combine user data with check-in stats

@@ -36,11 +36,7 @@ export async function getAdminStats(
  * GET /api/reporting/my-stats
  * Returns check-in statistics for the authenticated user
  */
-export async function getMyStats(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function getMyStats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = (req.user as { id: string })!.id;
 

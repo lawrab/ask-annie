@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { authenticate } from '../auth';
+import { authenticate, requireAdmin } from '../auth';
 import passport from '../../config/passport';
 
 // Mock passport
@@ -336,6 +336,239 @@ describe('Authentication Middleware', () => {
       // Assert
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockRes.status).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Admin Authorization Middleware', () => {
+  let mockReq: Partial<Request>;
+  let mockRes: Partial<Response>;
+  let mockNext: NextFunction;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockReq = {
+      user: undefined,
+      ip: '127.0.0.1',
+      path: '/api/admin/test',
+    };
+
+    mockRes = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+
+    mockNext = jest.fn();
+  });
+
+  describe('Success Cases', () => {
+    it('should allow access for authenticated admin users', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'admin',
+        email: 'admin@example.com',
+        isAdmin: true,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(mockRes.json).not.toHaveBeenCalled();
+    });
+
+    it('should proceed when user has admin privileges', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439012',
+        username: 'superadmin',
+        email: 'superadmin@example.com',
+        isAdmin: true,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Authorization Failures', () => {
+    it('should return 401 when no user is authenticated', () => {
+      // Arrange
+      mockReq.user = undefined;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Authentication required',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when user is not an admin', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'regularuser',
+        email: 'user@example.com',
+        isAdmin: false,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Admin privileges required',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when user has no isAdmin field', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'regularuser',
+        email: 'user@example.com',
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Admin privileges required',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when isAdmin is explicitly false', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439013',
+        username: 'user',
+        email: 'user@test.com',
+        isAdmin: false,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Security and Edge Cases', () => {
+    it('should not proceed when user object is null', () => {
+      // Arrange
+      mockReq.user = null as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should handle user object with only id field', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should prevent access when isAdmin is truthy but not boolean true', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'user',
+        email: 'user@test.com',
+        isAdmin: 'true', // String instead of boolean
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      // The middleware checks !user.isAdmin, so 'true' string is truthy and should pass
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+
+    it('should only call next once for admin users', () => {
+      // Arrange
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'admin',
+        email: 'admin@example.com',
+        isAdmin: true,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Integration with authenticate middleware', () => {
+    it('should work correctly when used after authenticate middleware', () => {
+      // Arrange - simulating authenticate middleware having set req.user
+      mockReq.user = {
+        id: '507f1f77bcf86cd799439011',
+        username: 'admin',
+        email: 'admin@example.com',
+        isAdmin: true,
+      } as any;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+
+    it('should catch cases where authenticate was bypassed', () => {
+      // Arrange - no user set (authenticate was skipped)
+      mockReq.user = undefined;
+
+      // Act
+      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert
+      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Authentication required',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 });

@@ -16,6 +16,7 @@ import {
   DayQuality,
   CorrelationEntry,
 } from './types';
+import { logger } from '../../utils/logger';
 
 /**
  * Generate comprehensive doctor summary for a time period
@@ -77,15 +78,23 @@ export async function generateDoctorSummary(
   const flaggedEntries = checkIns
     .filter((c) => c.flaggedForDoctor)
     .map((c) => {
-      const symptoms = c.structured.symptoms;
-      const symptomsMap = symptoms instanceof Map ? symptoms : new Map(Object.entries(symptoms));
+      const symptoms = c.structured?.symptoms;
+      // Handle both Map and plain object, and ensure we get proper entries
+      let symptomsMap: Map<string, SymptomValue>;
+      if (symptoms instanceof Map) {
+        symptomsMap = symptoms;
+      } else if (symptoms && typeof symptoms === 'object') {
+        symptomsMap = new Map(Object.entries(symptoms));
+      } else {
+        symptomsMap = new Map();
+      }
 
       return {
         timestamp: c.timestamp.toISOString(),
         symptoms: Object.fromEntries(symptomsMap.entries()),
-        activities: c.structured.activities,
-        triggers: c.structured.triggers,
-        notes: c.structured.notes,
+        activities: c.structured?.activities || [],
+        triggers: c.structured?.triggers || [],
+        notes: c.structured?.notes || '',
         rawTranscript: c.rawTranscript,
       };
     });
@@ -126,8 +135,16 @@ function generateSymptomSummary(checkIns: ICheckInData[]): SymptomSummaryEntry[]
 
   // Collect all symptom occurrences
   for (const checkIn of checkIns) {
-    const symptoms = checkIn.structured.symptoms;
-    const symptomsMap = symptoms instanceof Map ? symptoms : new Map(Object.entries(symptoms));
+    const symptoms = checkIn.structured?.symptoms;
+    // Handle both Map and plain object, and ensure we get proper entries
+    let symptomsMap: Map<string, SymptomValue>;
+    if (symptoms instanceof Map) {
+      symptomsMap = symptoms;
+    } else if (symptoms && typeof symptoms === 'object') {
+      symptomsMap = new Map(Object.entries(symptoms));
+    } else {
+      symptomsMap = new Map();
+    }
 
     symptomsMap.forEach((value: SymptomValue, name: string) => {
       const severity = extractSeverity(value);
@@ -227,8 +244,16 @@ function analyzeGoodBadDays(
       const symptomNames = new Set<string>();
 
       for (const checkIn of dayCheckIns) {
-        const symptoms = checkIn.structured.symptoms;
-        const symptomsMap = symptoms instanceof Map ? symptoms : new Map(Object.entries(symptoms));
+        const symptoms = checkIn.structured?.symptoms;
+        // Handle both Map and plain object, and ensure we get proper entries
+        let symptomsMap: Map<string, SymptomValue>;
+        if (symptoms instanceof Map) {
+          symptomsMap = symptoms;
+        } else if (symptoms && typeof symptoms === 'object') {
+          symptomsMap = new Map(Object.entries(symptoms));
+        } else {
+          symptomsMap = new Map();
+        }
 
         symptomsMap.forEach((value: SymptomValue, name: string) => {
           symptomNames.add(name);
@@ -421,13 +446,44 @@ function analyzeCorrelations(checkIns: ICheckInData[]): CorrelationEntry[] {
   const itemOccurrences = new Map<string, number>();
   const symptomItemPairs = new Map<string, number>();
 
+  logger.info('Starting correlation analysis', { totalCheckIns: checkIns.length });
+
   for (const checkIn of checkIns) {
-    const symptoms = checkIn.structured.symptoms;
-    const symptomsMap = symptoms instanceof Map ? symptoms : new Map(Object.entries(symptoms));
+    const symptoms = checkIn.structured?.symptoms;
+    // Handle both Map and plain object, and ensure we get proper entries
+    // Use a more defensive approach to handle various data formats
+    let symptomsMap: Map<string, SymptomValue>;
+    if (symptoms instanceof Map) {
+      symptomsMap = symptoms;
+    } else if (symptoms && typeof symptoms === 'object') {
+      // Handle plain object
+      symptomsMap = new Map(Object.entries(symptoms));
+    } else {
+      // Handle null, undefined, or other invalid values
+      symptomsMap = new Map();
+    }
     const symptomNames = Array.from(symptomsMap.keys());
 
+    // Ensure activities and triggers are arrays
+    const activities = Array.isArray(checkIn.structured?.activities)
+      ? checkIn.structured.activities
+      : [];
+    const triggers = Array.isArray(checkIn.structured?.triggers)
+      ? checkIn.structured.triggers
+      : [];
+
+    logger.debug('Processing check-in for correlation', {
+      checkInId: checkIn._id,
+      symptomCount: symptomNames.length,
+      activityCount: activities.length,
+      triggerCount: triggers.length,
+      symptoms: symptomNames,
+      activities,
+      triggers,
+    });
+
     // Track activities
-    for (const activity of checkIn.structured.activities) {
+    for (const activity of activities) {
       const itemKey = `activity:${activity}`;
       itemOccurrences.set(itemKey, (itemOccurrences.get(itemKey) || 0) + 1);
 
@@ -439,7 +495,7 @@ function analyzeCorrelations(checkIns: ICheckInData[]): CorrelationEntry[] {
     }
 
     // Track triggers
-    for (const trigger of checkIn.structured.triggers) {
+    for (const trigger of triggers) {
       const itemKey = `trigger:${trigger}`;
       itemOccurrences.set(itemKey, (itemOccurrences.get(itemKey) || 0) + 1);
 
@@ -450,6 +506,13 @@ function analyzeCorrelations(checkIns: ICheckInData[]): CorrelationEntry[] {
       }
     }
   }
+
+  logger.info('Correlation tracking complete', {
+    uniqueItems: itemOccurrences.size,
+    uniquePairs: symptomItemPairs.size,
+    itemOccurrences: Array.from(itemOccurrences.entries()),
+    symptomItemPairs: Array.from(symptomItemPairs.entries()).slice(0, 20), // Log first 20 pairs
+  });
 
   // Calculate correlation strength for each pair
   symptomItemPairs.forEach((coOccurrenceCount, pairKey) => {
@@ -477,6 +540,11 @@ function analyzeCorrelations(checkIns: ICheckInData[]): CorrelationEntry[] {
         correlationStrength,
       });
     }
+  });
+
+  logger.info('Correlation analysis complete', {
+    totalCorrelations: correlations.length,
+    correlations: correlations.slice(0, 10), // Log first 10
   });
 
   // Sort by correlation strength (strongest first)

@@ -5,6 +5,7 @@ import {
   getSymptomTrend,
   getStreak,
   getQuickStats,
+  getSummary,
 } from '../controllers/analysisController';
 
 const router = Router();
@@ -40,5 +41,15 @@ router.get('/streak', getStreak);
  * Query params: days (default: 7, max: 90)
  */
 router.get('/quick-stats', getQuickStats);
+
+/**
+ * GET /api/analysis/summary
+ * Generate comprehensive doctor summary report for a time period
+ * Query params:
+ *   - startDate (required): Start date in ISO format (YYYY-MM-DD)
+ *   - endDate (required): End date in ISO format (YYYY-MM-DD)
+ *   - flaggedOnly (optional): Only include flagged check-ins (default: false)
+ */
+router.get('/summary', getSummary);
 
 export default router;

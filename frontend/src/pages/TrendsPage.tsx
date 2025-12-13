@@ -254,7 +254,7 @@ export default function TrendsPage() {
                         </h3>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-bold text-walnut">
-                            {trendData.statistics.min} - {trendData.statistics.max}
+                            {Math.round(trendData.statistics.min)} - {Math.round(trendData.statistics.max)}
                           </span>
                         </div>
                         <p className="text-xs text-walnut-muted">

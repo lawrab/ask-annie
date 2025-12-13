@@ -4,6 +4,7 @@ import {
   analyzeTrendForSymptom,
   calculateStreak,
   calculateQuickStats,
+  generateDoctorSummary,
 } from '../services/analysisService';
 import { logger } from '../utils/logger';
 
@@ -187,6 +188,79 @@ export async function getQuickStats(
     });
   } catch (error) {
     logger.error('Error fetching quick stats', { error });
+    next(error);
+  }
+}
+
+/**
+ * GET /api/analysis/summary
+ * Generate comprehensive doctor summary report for a time period
+ */
+export async function getSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = (req.user as { id: string })!.id;
+
+    // Parse and validate date parameters
+    const startDateParam = req.query.startDate as string | undefined;
+    const endDateParam = req.query.endDate as string | undefined;
+    const flaggedOnlyParam = req.query.flaggedOnly as string | undefined;
+
+    // Validate required parameters
+    if (!startDateParam || !endDateParam) {
+      res.status(400).json({
+        success: false,
+        error: 'Both startDate and endDate query parameters are required',
+      });
+      return;
+    }
+
+    // Parse dates
+    const startDate = new Date(startDateParam);
+    const endDate = new Date(endDateParam);
+
+    // Validate dates
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)',
+      });
+      return;
+    }
+
+    if (startDate > endDate) {
+      res.status(400).json({
+        success: false,
+        error: 'startDate must be before or equal to endDate',
+      });
+      return;
+    }
+
+    // Parse flaggedOnly parameter (default: false)
+    const flaggedOnly = flaggedOnlyParam === 'true';
+
+    logger.info('Generating doctor summary', {
+      userId,
+      startDate: startDateParam,
+      endDate: endDateParam,
+      flaggedOnly,
+    });
+
+    // Generate summary
+    const summary = await generateDoctorSummary(userId, startDate, endDate, flaggedOnly);
+
+    logger.info('Doctor summary generated', {
+      userId,
+      totalCheckins: summary.overview.totalCheckins,
+      uniqueSymptoms: summary.overview.uniqueSymptoms,
+      flaggedCheckins: summary.overview.flaggedCheckins,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    logger.error('Error generating doctor summary', { error });
     next(error);
   }
 }

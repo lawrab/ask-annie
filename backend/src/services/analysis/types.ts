@@ -150,3 +150,93 @@ export interface QuickStats {
   averageSeverity: AverageSeverityComparison;
   latestCheckIn?: LatestCheckInData;
 }
+
+/**
+ * Symptom summary with aggregated statistics and time range
+ */
+export interface SymptomSummaryEntry {
+  symptom: string;
+  count: number;
+  minSeverity: number;
+  maxSeverity: number;
+  avgSeverity: number;
+  firstReported: string;
+  lastReported: string;
+  trend: 'improving' | 'worsening' | 'stable';
+  frequency: number; // Percentage of days with this symptom
+}
+
+/**
+ * Day quality classification
+ */
+export type DayQuality = 'good' | 'bad' | 'interpolated_good' | 'interpolated_bad';
+
+/**
+ * Day with quality classification
+ */
+export interface DayQualityEntry {
+  date: string;
+  quality: DayQuality;
+  avgSeverity: number;
+  maxSeverity: number;
+  symptomCount: number;
+  hasCheckIn: boolean;
+}
+
+/**
+ * Analysis of good vs bad days over a period
+ */
+export interface GoodBadDayAnalysis {
+  totalGoodDays: number;
+  totalBadDays: number;
+  avgTimeBetweenGoodDays: number;
+  avgTimeBetweenBadDays: number;
+  avgBadDayStreakLength: number;
+  longestBadDayStreak: number;
+  dailyQuality: DayQualityEntry[];
+}
+
+/**
+ * Correlation between activities/triggers and symptoms
+ */
+export interface CorrelationEntry {
+  item: string;
+  itemType: 'activity' | 'trigger';
+  symptom: string;
+  coOccurrenceCount: number;
+  totalItemOccurrences: number;
+  correlationStrength: number; // 0-100 percentage
+}
+
+/**
+ * Flagged check-in entry for doctor summary
+ */
+export interface FlaggedEntry {
+  timestamp: string;
+  symptoms: { [key: string]: { severity: number; location?: string; notes?: string } };
+  activities: string[];
+  triggers: string[];
+  notes: string;
+  rawTranscript: string;
+}
+
+/**
+ * Complete doctor summary for a time period
+ */
+export interface DoctorSummary {
+  period: {
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+  };
+  overview: {
+    totalCheckins: number;
+    flaggedCheckins: number;
+    uniqueSymptoms: number;
+    daysWithCheckins: number;
+  };
+  symptomSummary: SymptomSummaryEntry[];
+  goodBadDayAnalysis: GoodBadDayAnalysis;
+  correlations: CorrelationEntry[];
+  flaggedEntries: FlaggedEntry[];
+}

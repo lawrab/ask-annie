@@ -14,6 +14,7 @@ import SettingsPage from './pages/SettingsPage';
 import DeleteAccountPage from './pages/DeleteAccountPage';
 import DesignSystemPage from './pages/DesignSystemPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import DoctorSummaryPage from './pages/DoctorSummaryPage';
 
 function App() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
@@ -55,6 +56,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TrendsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/summary"
+          element={
+            <ProtectedRoute>
+              <DoctorSummaryPage />
             </ProtectedRoute>
           }
         />

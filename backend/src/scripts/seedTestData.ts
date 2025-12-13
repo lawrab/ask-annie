@@ -81,7 +81,9 @@ async function seedTestData() {
     console.log('\nSummary:');
     console.log(`- Total check-ins: ${checkIns.length}`);
     console.log(`- Flagged entries: ${flaggedCount}`);
-    console.log(`- Date range: ${checkIns[0].timestamp.toISOString().split('T')[0]} to ${checkIns[checkIns.length - 1].timestamp.toISOString().split('T')[0]}`);
+    console.log(
+      `- Date range: ${checkIns[0].timestamp.toISOString().split('T')[0]} to ${checkIns[checkIns.length - 1].timestamp.toISOString().split('T')[0]}`
+    );
 
     process.exit(0);
   } catch (error) {
@@ -163,8 +165,8 @@ function createCheckIn(
     period === 'peak'
       ? 'Pain significantly worse today'
       : period === 'improving'
-      ? 'Feeling better with treatment'
-      : 'Managing symptoms';
+        ? 'Feeling better with treatment'
+        : 'Managing symptoms';
 
   // Raw transcript
   const transcripts = {

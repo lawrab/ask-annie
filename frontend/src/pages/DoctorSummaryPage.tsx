@@ -382,7 +382,7 @@ export default function DoctorSummaryPage() {
                           </p>
                         </div>
                         <div className="ml-4">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-terracotta-light text-terracotta">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-terracotta text-white">
                             {corr.correlationStrength}%
                           </span>
                         </div>

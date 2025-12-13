@@ -26,6 +26,7 @@ module.exports = {
     '!src/types/**', // Type definitions
     '!src/routes/**', // Route configuration (thin wrappers)
     '!src/migrations/**', // Migration scripts (tested manually on staging/dev)
+    '!src/scripts/**', // Utility scripts (tested manually)
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],

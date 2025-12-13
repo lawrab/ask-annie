@@ -31,7 +31,8 @@ const router = Router();
 
 /**
  * Rate limiter for authentication endpoints to prevent brute force attacks
- * Allows 5 requests per 15 minutes per IP in production
+ * Allows 5 requests per 15 minutes per user (based on email)
+ * Falls back to IP-based limiting if email is not available
  * Disabled for localhost in development
  */
 const authLimiter = rateLimit({
@@ -43,6 +44,16 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Use email-based rate limiting for per-user limits instead of per-IP
+  keyGenerator: (req) => {
+    // Try to get email from request body (login, register, magic link, passkey auth)
+    const email = req.body?.email;
+    if (email && typeof email === 'string') {
+      return `user:${email.toLowerCase()}`;
+    }
+    // Fall back to IP-based limiting if no email available
+    return `ip:${req.ip}`;
+  },
   skip: (req) => {
     // Skip rate limiting for localhost in development
     const isLocalhost = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1';

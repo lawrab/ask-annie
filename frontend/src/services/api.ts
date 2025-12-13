@@ -359,6 +359,81 @@ export const checkInsApi = {
   },
 };
 
+// Doctor Summary Types
+export interface SymptomSummaryEntry {
+  symptom: string;
+  count: number;
+  minSeverity: number;
+  maxSeverity: number;
+  avgSeverity: number;
+  firstReported: string;
+  lastReported: string;
+  trend: 'improving' | 'worsening' | 'stable';
+  frequency: number;
+}
+
+export type DayQuality = 'good' | 'bad' | 'interpolated_good' | 'interpolated_bad';
+
+export interface DayQualityEntry {
+  date: string;
+  quality: DayQuality;
+  avgSeverity: number;
+  maxSeverity: number;
+  symptomCount: number;
+  hasCheckIn: boolean;
+}
+
+export interface GoodBadDayAnalysis {
+  totalGoodDays: number;
+  totalBadDays: number;
+  avgTimeBetweenGoodDays: number;
+  avgTimeBetweenBadDays: number;
+  avgBadDayStreakLength: number;
+  longestBadDayStreak: number;
+  dailyQuality: DayQualityEntry[];
+}
+
+export interface CorrelationEntry {
+  item: string;
+  itemType: 'activity' | 'trigger';
+  symptom: string;
+  coOccurrenceCount: number;
+  totalItemOccurrences: number;
+  correlationStrength: number;
+}
+
+export interface FlaggedEntry {
+  timestamp: string;
+  symptoms: Record<string, SymptomValue>;
+  activities: string[];
+  triggers: string[];
+  notes: string;
+  rawTranscript: string;
+}
+
+export interface DoctorSummary {
+  period: {
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+  };
+  overview: {
+    totalCheckins: number;
+    flaggedCheckins: number;
+    uniqueSymptoms: number;
+    daysWithCheckins: number;
+  };
+  symptomSummary: SymptomSummaryEntry[];
+  goodBadDayAnalysis: GoodBadDayAnalysis;
+  correlations: CorrelationEntry[];
+  flaggedEntries: FlaggedEntry[];
+}
+
+export interface DoctorSummaryResponse {
+  success: boolean;
+  data: DoctorSummary;
+}
+
 // Analysis API
 export const analysisApi = {
   getStreak: async (): Promise<StreakResponse> => {
@@ -383,6 +458,21 @@ export const analysisApi = {
       `/analysis/trends/${encodeURIComponent(symptom)}`,
       { params: { days } }
     );
+    return response.data;
+  },
+
+  getDoctorSummary: async (
+    startDate: string,
+    endDate: string,
+    flaggedOnly: boolean = false
+  ): Promise<DoctorSummaryResponse> => {
+    const response = await apiClient.get<DoctorSummaryResponse>('/analysis/summary', {
+      params: {
+        startDate,
+        endDate,
+        flaggedOnly: flaggedOnly ? 'true' : 'false',
+      },
+    });
     return response.data;
   },
 };

@@ -290,73 +290,160 @@ export default function DoctorSummaryPage() {
                   </div>
                 </div>
 
-                {/* Daily Quality Calendar View */}
+                {/* Daily Quality Activity View (GitHub-style) */}
                 <div className="mt-4">
-                  <h4 className="text-sm font-semibold text-walnut mb-3">Daily Quality Calendar</h4>
+                  <h4 className="text-sm font-semibold text-walnut mb-3">Daily Quality</h4>
 
-                  {/* Day of week headers */}
-                  <div className="grid grid-cols-7 gap-1 mb-1">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                      <div key={day} className="text-center text-xs font-semibold text-walnut-muted py-1">
-                        {day}
+                  <div className="overflow-x-auto">
+                    <div className="inline-flex flex-col gap-1">
+                      {/* Month labels */}
+                      <div className="flex gap-1 ml-6 mb-1">
+                        {(() => {
+                          const days = summary.goodBadDayAnalysis.dailyQuality;
+                          const monthLabels: JSX.Element[] = [];
+                          let currentMonth = '';
+                          let weekIndex = 0;
+
+                          days.forEach((day, idx) => {
+                            const date = new Date(day.date);
+                            const month = date.toLocaleDateString('en-US', { month: 'short' });
+                            const dayOfWeek = date.getDay();
+
+                            if (dayOfWeek === 0 || idx === 0) {
+                              if (month !== currentMonth) {
+                                monthLabels.push(
+                                  <div
+                                    key={`month-${weekIndex}`}
+                                    className="text-xs text-walnut-muted"
+                                    style={{ width: '12px', textAlign: 'center' }}
+                                  >
+                                    {month}
+                                  </div>
+                                );
+                                currentMonth = month;
+                              } else {
+                                monthLabels.push(
+                                  <div key={`month-${weekIndex}`} style={{ width: '12px' }} />
+                                );
+                              }
+                              weekIndex++;
+                            }
+                          });
+
+                          return monthLabels;
+                        })()}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Calendar grid */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {(() => {
-                      const days = summary.goodBadDayAnalysis.dailyQuality;
-                      const firstDate = new Date(days[0].date);
-                      const firstDayOfWeek = firstDate.getDay(); // 0 = Sunday
+                      {/* Grid: 7 rows (days of week) x N columns (weeks) */}
+                      <div className="flex gap-1">
+                        {/* Day labels */}
+                        <div className="flex flex-col gap-1 text-xs text-walnut-muted justify-around pr-1">
+                          <div style={{ height: '12px' }}>Sun</div>
+                          <div style={{ height: '12px' }}>Mon</div>
+                          <div style={{ height: '12px' }}>Tue</div>
+                          <div style={{ height: '12px' }}>Wed</div>
+                          <div style={{ height: '12px' }}>Thu</div>
+                          <div style={{ height: '12px' }}>Fri</div>
+                          <div style={{ height: '12px' }}>Sat</div>
+                        </div>
 
-                      // Add empty cells for days before the first date
-                      const calendarCells = [];
-                      for (let i = 0; i < firstDayOfWeek; i++) {
-                        calendarCells.push(
-                          <div key={`empty-${i}`} className="aspect-square" />
-                        );
-                      }
+                        {/* Activity grid */}
+                        <div className="flex gap-1">
+                          {(() => {
+                            const days = summary.goodBadDayAnalysis.dailyQuality;
+                            const firstDate = new Date(days[0].date);
+                            const firstDayOfWeek = firstDate.getDay();
 
-                      // Add all the actual day cells
-                      days.forEach((day) => {
-                        const date = new Date(day.date);
-                        const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+                            // Organize days into weeks
+                            const weeks: (typeof days[0] | null)[][] = [[]];
+                            let currentWeek = 0;
 
-                        calendarCells.push(
-                          <div
-                            key={day.date}
-                            className={`aspect-square flex flex-col items-center justify-center rounded border cursor-help ${
-                              day.quality.includes('good')
-                                ? 'bg-sage-light border-sage text-sage hover:bg-sage hover:text-white'
-                                : day.quality.includes('bad')
-                                ? 'bg-coral-light border-coral text-coral hover:bg-coral hover:text-white'
-                                : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-300'
-                            }`}
-                            title={`${dayOfWeek}, ${date.toLocaleDateString()}\n${day.quality.replace('_', ' ')} day${day.hasCheckIn ? '\n✓ Check-in recorded' : '\n(interpolated)'}${day.hasCheckIn ? `\nAvg severity: ${day.avgSeverity.toFixed(1)}` : ''}`}
-                          >
-                            <span className="text-xs font-semibold">{date.getDate()}</span>
-                            {day.hasCheckIn && <span className="text-[10px] leading-none">✓</span>}
-                          </div>
-                        );
-                      });
+                            // Add empty cells for days before the first date
+                            for (let i = 0; i < firstDayOfWeek; i++) {
+                              weeks[currentWeek].push(null);
+                            }
 
-                      return calendarCells;
-                    })()}
+                            // Add all days
+                            days.forEach((day) => {
+                              const date = new Date(day.date);
+                              const dayOfWeek = date.getDay();
+
+                              if (dayOfWeek === 0 && weeks[currentWeek].length > 0) {
+                                currentWeek++;
+                                weeks[currentWeek] = [];
+                              }
+
+                              weeks[currentWeek].push(day);
+                            });
+
+                            // Fill the last week with empty cells if needed
+                            while (weeks[currentWeek].length < 7) {
+                              weeks[currentWeek].push(null);
+                            }
+
+                            // Render weeks as columns
+                            return weeks.map((week, weekIdx) => (
+                              <div key={`week-${weekIdx}`} className="flex flex-col gap-1">
+                                {week.map((day, dayIdx) => {
+                                  if (!day) {
+                                    return (
+                                      <div
+                                        key={`empty-${weekIdx}-${dayIdx}`}
+                                        className="w-3 h-3 rounded-sm"
+                                        style={{ width: '12px', height: '12px' }}
+                                      />
+                                    );
+                                  }
+
+                                  const date = new Date(day.date);
+                                  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+                                    date.getDay()
+                                  ];
+
+                                  return (
+                                    <div
+                                      key={day.date}
+                                      className={`w-3 h-3 rounded-sm border cursor-help transition-transform hover:scale-125 ${
+                                        day.quality.includes('good')
+                                          ? day.hasCheckIn
+                                            ? 'bg-sage border-sage'
+                                            : 'bg-sage-light border-sage-light'
+                                          : day.quality.includes('bad')
+                                          ? day.hasCheckIn
+                                            ? 'bg-coral border-coral'
+                                            : 'bg-coral-light border-coral-light'
+                                          : 'bg-gray-200 border-gray-300'
+                                      }`}
+                                      style={{ width: '12px', height: '12px' }}
+                                      title={`${dayOfWeek}, ${date.toLocaleDateString()}\n${day.quality.replace('_', ' ')} day${day.hasCheckIn ? '\n✓ Check-in recorded' : '\n(interpolated)'}${day.hasCheckIn ? `\nAvg severity: ${day.avgSeverity.toFixed(1)}` : ''}`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Legend */}
                   <div className="flex flex-wrap gap-3 mt-3 text-xs">
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded border bg-sage-light border-sage"></div>
-                      <span className="text-walnut-muted">Good day</span>
+                      <div className="w-3 h-3 rounded-sm bg-sage border-sage border"></div>
+                      <span className="text-walnut-muted">Good day (check-in)</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded border bg-coral-light border-coral"></div>
-                      <span className="text-walnut-muted">Bad day</span>
+                      <div className="w-3 h-3 rounded-sm bg-sage-light border-sage-light border"></div>
+                      <span className="text-walnut-muted">Good day (interpolated)</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-walnut-muted">✓ = Check-in recorded</span>
+                      <div className="w-3 h-3 rounded-sm bg-coral border-coral border"></div>
+                      <span className="text-walnut-muted">Bad day (check-in)</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-sm bg-coral-light border-coral-light border"></div>
+                      <span className="text-walnut-muted">Bad day (interpolated)</span>
                     </div>
                   </div>
                 </div>

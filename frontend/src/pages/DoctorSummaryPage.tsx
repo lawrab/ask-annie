@@ -218,7 +218,7 @@ export default function DoctorSummaryPage() {
                               {symptom.avgSeverity.toFixed(1)}
                             </td>
                             <td className="py-2 text-center text-walnut">
-                              {symptom.minSeverity} - {symptom.maxSeverity}
+                              {Math.round(symptom.minSeverity)} - {Math.round(symptom.maxSeverity)}
                             </td>
                             <td className="py-2 text-center">
                               <span
@@ -452,7 +452,7 @@ function formatSummaryAsText(summary: DoctorSummary): string {
   lines.push('-'.repeat(50));
   summary.symptomSummary.forEach((s) => {
     lines.push(
-      `${formatDisplayName(s.symptom)}: ${s.frequency.toFixed(1)}% frequency, Avg: ${s.avgSeverity.toFixed(1)}, Range: ${s.minSeverity}-${s.maxSeverity}, Trend: ${s.trend}`
+      `${formatDisplayName(s.symptom)}: ${s.frequency.toFixed(1)}% frequency, Avg: ${s.avgSeverity.toFixed(1)}, Range: ${Math.round(s.minSeverity)}-${Math.round(s.maxSeverity)}, Trend: ${s.trend}`
     );
   });
   lines.push('');

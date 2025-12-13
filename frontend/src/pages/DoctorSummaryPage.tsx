@@ -263,16 +263,18 @@ export default function DoctorSummaryPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-walnut-muted">Avg Between Good</p>
+                    <p className="text-sm text-walnut-muted">Good Days Pattern</p>
                     <p className="text-xl font-semibold text-walnut">
-                      {summary.goodBadDayAnalysis.avgTimeBetweenGoodDays.toFixed(1)} days
+                      1 every {summary.goodBadDayAnalysis.avgTimeBetweenGoodDays.toFixed(1)}
                     </p>
+                    <p className="text-xs text-walnut-muted">days</p>
                   </div>
                   <div>
-                    <p className="text-sm text-walnut-muted">Avg Between Bad</p>
+                    <p className="text-sm text-walnut-muted">Bad Days Pattern</p>
                     <p className="text-xl font-semibold text-walnut">
-                      {summary.goodBadDayAnalysis.avgTimeBetweenBadDays.toFixed(1)} days
+                      1 every {summary.goodBadDayAnalysis.avgTimeBetweenBadDays.toFixed(1)}
                     </p>
+                    <p className="text-xs text-walnut-muted">days</p>
                   </div>
                   <div>
                     <p className="text-sm text-walnut-muted">Avg Bad Streak</p>
@@ -290,24 +292,72 @@ export default function DoctorSummaryPage() {
 
                 {/* Daily Quality Calendar View */}
                 <div className="mt-4">
-                  <h4 className="text-sm font-semibold text-walnut mb-2">Daily Quality</h4>
-                  <div className="grid grid-cols-7 gap-1 text-xs">
-                    {summary.goodBadDayAnalysis.dailyQuality.map((day) => (
-                      <div
-                        key={day.date}
-                        className={`aspect-square flex flex-col items-center justify-center rounded border ${
-                          day.quality.includes('good')
-                            ? 'bg-sage-light border-sage text-sage'
-                            : day.quality.includes('bad')
-                            ? 'bg-coral-light border-coral text-coral'
-                            : 'bg-gray-100 border-gray-300 text-gray-500'
-                        }`}
-                        title={`${day.date}: ${day.quality} (${day.hasCheckIn ? 'checked in' : 'interpolated'})`}
-                      >
-                        <span className="font-medium">{new Date(day.date).getDate()}</span>
-                        {day.hasCheckIn && <span className="text-xs">✓</span>}
+                  <h4 className="text-sm font-semibold text-walnut mb-3">Daily Quality Calendar</h4>
+
+                  {/* Day of week headers */}
+                  <div className="grid grid-cols-7 gap-1 mb-1">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                      <div key={day} className="text-center text-xs font-semibold text-walnut-muted py-1">
+                        {day}
                       </div>
                     ))}
+                  </div>
+
+                  {/* Calendar grid */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const days = summary.goodBadDayAnalysis.dailyQuality;
+                      const firstDate = new Date(days[0].date);
+                      const firstDayOfWeek = firstDate.getDay(); // 0 = Sunday
+
+                      // Add empty cells for days before the first date
+                      const calendarCells = [];
+                      for (let i = 0; i < firstDayOfWeek; i++) {
+                        calendarCells.push(
+                          <div key={`empty-${i}`} className="aspect-square" />
+                        );
+                      }
+
+                      // Add all the actual day cells
+                      days.forEach((day) => {
+                        const date = new Date(day.date);
+                        const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+
+                        calendarCells.push(
+                          <div
+                            key={day.date}
+                            className={`aspect-square flex flex-col items-center justify-center rounded border cursor-help ${
+                              day.quality.includes('good')
+                                ? 'bg-sage-light border-sage text-sage hover:bg-sage hover:text-white'
+                                : day.quality.includes('bad')
+                                ? 'bg-coral-light border-coral text-coral hover:bg-coral hover:text-white'
+                                : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-300'
+                            }`}
+                            title={`${dayOfWeek}, ${date.toLocaleDateString()}\n${day.quality.replace('_', ' ')} day${day.hasCheckIn ? '\n✓ Check-in recorded' : '\n(interpolated)'}${day.hasCheckIn ? `\nAvg severity: ${day.avgSeverity.toFixed(1)}` : ''}`}
+                          >
+                            <span className="text-xs font-semibold">{date.getDate()}</span>
+                            {day.hasCheckIn && <span className="text-[10px] leading-none">✓</span>}
+                          </div>
+                        );
+                      });
+
+                      return calendarCells;
+                    })()}
+                  </div>
+
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-3 mt-3 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded border bg-sage-light border-sage"></div>
+                      <span className="text-walnut-muted">Good day</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded border bg-coral-light border-coral"></div>
+                      <span className="text-walnut-muted">Bad day</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-walnut-muted">✓ = Check-in recorded</span>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -368,7 +418,7 @@ export default function DoctorSummaryPage() {
                                 className="inline-flex items-center px-2 py-1 bg-white rounded text-xs"
                               >
                                 <span className="font-medium text-walnut">{formatDisplayName(name)}</span>
-                                <span className="ml-1 text-coral font-semibold">({value.severity}/10)</span>
+                                <span className="ml-1 text-coral font-semibold">({Math.round(value.severity)}/10)</span>
                                 {value.location && (
                                   <span className="ml-1 text-walnut-muted">- {value.location}</span>
                                 )}
@@ -461,8 +511,8 @@ function formatSummaryAsText(summary: DoctorSummary): string {
   lines.push('-'.repeat(50));
   lines.push(`Good Days: ${summary.goodBadDayAnalysis.totalGoodDays}`);
   lines.push(`Bad Days: ${summary.goodBadDayAnalysis.totalBadDays}`);
-  lines.push(`Avg Between Good Days: ${summary.goodBadDayAnalysis.avgTimeBetweenGoodDays.toFixed(1)} days`);
-  lines.push(`Avg Between Bad Days: ${summary.goodBadDayAnalysis.avgTimeBetweenBadDays.toFixed(1)} days`);
+  lines.push(`Good Days Pattern: 1 every ${summary.goodBadDayAnalysis.avgTimeBetweenGoodDays.toFixed(1)} days`);
+  lines.push(`Bad Days Pattern: 1 every ${summary.goodBadDayAnalysis.avgTimeBetweenBadDays.toFixed(1)} days`);
   lines.push(
     `Avg Bad Day Streak: ${summary.goodBadDayAnalysis.avgBadDayStreakLength.toFixed(1)} days`
   );

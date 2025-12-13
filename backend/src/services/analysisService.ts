@@ -23,9 +23,17 @@ export {
   LatestSymptomComparison,
   LatestCheckInData,
   QuickStats,
+  SymptomSummaryEntry,
+  DayQuality,
+  DayQualityEntry,
+  GoodBadDayAnalysis,
+  CorrelationEntry,
+  FlaggedEntry,
+  DoctorSummary,
   // Functions
   analyzeSymptomsForUser,
   analyzeTrendForSymptom,
   calculateStreak,
   calculateQuickStats,
+  generateDoctorSummary,
 } from './analysis';

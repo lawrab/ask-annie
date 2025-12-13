@@ -5,6 +5,7 @@ import {
   getSymptomTrend,
   getStreak,
   getQuickStats,
+  getSummary,
 } from '../analysisController';
 import * as analysisService from '../../services/analysisService';
 
@@ -31,6 +32,7 @@ describe('Analysis Controller', () => {
   >;
   let mockCalculateStreak: jest.MockedFunction<typeof analysisService.calculateStreak>;
   let mockCalculateQuickStats: jest.MockedFunction<typeof analysisService.calculateQuickStats>;
+  let mockGenerateDoctorSummary: jest.MockedFunction<typeof analysisService.generateDoctorSummary>;
 
   beforeEach(() => {
     mockRequest = {
@@ -60,6 +62,10 @@ describe('Analysis Controller', () => {
 
     mockCalculateQuickStats = analysisService.calculateQuickStats as jest.MockedFunction<
       typeof analysisService.calculateQuickStats
+    >;
+
+    mockGenerateDoctorSummary = analysisService.generateDoctorSummary as jest.MockedFunction<
+      typeof analysisService.generateDoctorSummary
     >;
 
     jest.clearAllMocks();
@@ -491,6 +497,192 @@ describe('Analysis Controller', () => {
       mockCalculateQuickStats.mockRejectedValue(error);
 
       await getQuickStats(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockResponse.status).not.toHaveBeenCalled();
+      expect(mockResponse.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getSummary', () => {
+    it('should return doctor summary for valid date range', async () => {
+      mockRequest.query = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      };
+
+      const mockSummary = {
+        period: {
+          startDate: '2024-01-01T00:00:00.000Z',
+          endDate: '2024-01-31T00:00:00.000Z',
+          totalDays: 31,
+        },
+        overview: { totalCheckins: 10, flaggedCheckins: 2, uniqueSymptoms: 5, daysWithCheckins: 8 },
+        symptomSummary: [
+          {
+            symptom: 'back_pain',
+            count: 5,
+            minSeverity: 3,
+            maxSeverity: 8,
+            avgSeverity: 5.5,
+            firstReported: '2024-01-05',
+            lastReported: '2024-01-25',
+            trend: 'stable' as const,
+            frequency: 62.5,
+          },
+        ],
+        goodBadDayAnalysis: {
+          totalGoodDays: 20,
+          totalBadDays: 5,
+          avgTimeBetweenGoodDays: 1.5,
+          avgTimeBetweenBadDays: 6,
+          avgBadDayStreakLength: 1.7,
+          longestBadDayStreak: 3,
+          dailyQuality: [],
+        },
+        correlations: [
+          {
+            item: 'sitting',
+            itemType: 'activity' as const,
+            symptom: 'back_pain',
+            coOccurrenceCount: 5,
+            totalItemOccurrences: 5,
+            correlationStrength: 100,
+          },
+        ],
+        flaggedEntries: [],
+      };
+
+      mockGenerateDoctorSummary.mockResolvedValue(mockSummary);
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockGenerateDoctorSummary).toHaveBeenCalledWith(
+        'user123',
+        expect.any(Date),
+        expect.any(Date),
+        false
+      );
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        data: mockSummary,
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should use flaggedOnly parameter when provided', async () => {
+      mockRequest.query = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        flaggedOnly: 'true',
+      };
+
+      const mockSummary = {
+        period: {
+          startDate: '2024-01-01T00:00:00.000Z',
+          endDate: '2024-01-31T00:00:00.000Z',
+          totalDays: 31,
+        },
+        overview: { totalCheckins: 2, flaggedCheckins: 2, uniqueSymptoms: 2, daysWithCheckins: 2 },
+        symptomSummary: [],
+        goodBadDayAnalysis: {
+          totalGoodDays: 0,
+          totalBadDays: 2,
+          avgTimeBetweenGoodDays: 0,
+          avgTimeBetweenBadDays: 0,
+          avgBadDayStreakLength: 0,
+          longestBadDayStreak: 0,
+          dailyQuality: [],
+        },
+        correlations: [],
+        flaggedEntries: [],
+      };
+
+      mockGenerateDoctorSummary.mockResolvedValue(mockSummary);
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockGenerateDoctorSummary).toHaveBeenCalledWith(
+        'user123',
+        expect.any(Date),
+        expect.any(Date),
+        true
+      );
+    });
+
+    it('should return 400 when startDate is missing', async () => {
+      mockRequest.query = {
+        endDate: '2024-01-31',
+      };
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Both startDate and endDate query parameters are required',
+      });
+      expect(mockGenerateDoctorSummary).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when endDate is missing', async () => {
+      mockRequest.query = {
+        startDate: '2024-01-01',
+      };
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Both startDate and endDate query parameters are required',
+      });
+      expect(mockGenerateDoctorSummary).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for invalid date format', async () => {
+      mockRequest.query = {
+        startDate: 'invalid-date',
+        endDate: '2024-01-31',
+      };
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)',
+      });
+      expect(mockGenerateDoctorSummary).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when startDate is after endDate', async () => {
+      mockRequest.query = {
+        startDate: '2024-02-01',
+        endDate: '2024-01-01',
+      };
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'startDate must be before or equal to endDate',
+      });
+      expect(mockGenerateDoctorSummary).not.toHaveBeenCalled();
+    });
+
+    it('should call next with error when service throws', async () => {
+      mockRequest.query = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      };
+
+      const error = new Error('Database error');
+      mockGenerateDoctorSummary.mockRejectedValue(error);
+
+      await getSummary(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockResponse.status).not.toHaveBeenCalled();

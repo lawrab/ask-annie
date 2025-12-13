@@ -468,9 +468,7 @@ function analyzeCorrelations(checkIns: ICheckInData[]): CorrelationEntry[] {
     const activities = Array.isArray(checkIn.structured?.activities)
       ? checkIn.structured.activities
       : [];
-    const triggers = Array.isArray(checkIn.structured?.triggers)
-      ? checkIn.structured.triggers
-      : [];
+    const triggers = Array.isArray(checkIn.structured?.triggers) ? checkIn.structured.triggers : [];
 
     logger.debug('Processing check-in for correlation', {
       checkInId: checkIn._id,

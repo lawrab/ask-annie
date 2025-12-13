@@ -60,7 +60,13 @@ export async function generateDoctorSummary(
   // Calculate period metrics
   const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   const flaggedCheckins = checkIns.filter((c) => c.flaggedForDoctor).length;
-  const uniqueSymptoms = new Set(checkIns.flatMap((c) => Object.keys(c.structured.symptoms))).size;
+  const uniqueSymptoms = new Set(
+    checkIns.flatMap((c) => {
+      const symptoms = c.structured?.symptoms;
+      if (!symptoms || typeof symptoms !== 'object') return [];
+      return Object.keys(symptoms);
+    })
+  ).size;
 
   // Get unique dates with check-ins
   const datesWithCheckins = new Set(checkIns.map((c) => formatDateKey(c.timestamp)));

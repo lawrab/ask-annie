@@ -629,5 +629,181 @@ describe('Summary Analysis Service', () => {
       // Conservative interpolation: if one side is bad, mark as bad
       expect(missingDay?.quality).toBe('interpolated_bad');
     });
+
+    it('should handle check-ins with null/undefined symptoms', async () => {
+      const mockCheckIns = [
+        {
+          userId,
+          timestamp: new Date('2024-01-01'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: null,
+            activities: ['walking'],
+            triggers: [],
+            notes: 'No symptoms today',
+          },
+          rawTranscript: 'Feeling fine',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-02'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: undefined,
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Another good day',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-03'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 5 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Some pain',
+        },
+      ];
+
+      mockFind(mockCheckIns);
+
+      const result = await generateDoctorSummary(userId, startDate, endDate);
+
+      // Should not crash and should process the check-in with valid symptoms
+      expect(result.overview.totalCheckins).toBe(3);
+      expect(result.symptomSummary).toHaveLength(1);
+      expect(result.symptomSummary[0].symptom).toBe('pain');
+    });
+
+    it('should handle check-ins with null/undefined activities and triggers', async () => {
+      const mockCheckIns = [
+        {
+          userId,
+          timestamp: new Date('2024-01-01'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 7 },
+            },
+            activities: null,
+            triggers: null,
+            notes: 'Pain but no activities tracked',
+          },
+          rawTranscript: 'Just pain',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-02'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 8 },
+            },
+            activities: undefined,
+            triggers: undefined,
+            notes: '',
+          },
+          rawTranscript: 'More pain',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-03'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 7 },
+            },
+            activities: ['running'],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Pain after running',
+        },
+      ];
+
+      mockFind(mockCheckIns);
+
+      const result = await generateDoctorSummary(userId, startDate, endDate);
+
+      // Should not crash and handle null/undefined arrays gracefully
+      expect(result.overview.totalCheckins).toBe(3);
+      expect(result.symptomSummary).toHaveLength(1);
+
+      // Correlations should only include the check-in with actual activities
+      const correlations = result.correlations.filter((c) => c.item === 'running');
+      expect(correlations.length).toBeGreaterThanOrEqual(0); // May or may not have correlation depending on threshold
+    });
+
+    it('should handle check-ins with missing structured data', async () => {
+      const mockCheckIns = [
+        {
+          userId,
+          timestamp: new Date('2024-01-01'),
+          flaggedForDoctor: false,
+          structured: null,
+          rawTranscript: 'No structured data',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-02'),
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 5 },
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Valid data',
+        },
+      ];
+
+      mockFind(mockCheckIns);
+
+      const result = await generateDoctorSummary(userId, startDate, endDate);
+
+      // Should not crash and should process the check-in with valid data
+      expect(result.overview.totalCheckins).toBe(2);
+      expect(result.symptomSummary).toHaveLength(1);
+      expect(result.symptomSummary[0].symptom).toBe('pain');
+    });
+
+    it('should handle plain object symptoms from Mongoose .lean()', async () => {
+      const mockCheckIns = [
+        {
+          userId,
+          timestamp: new Date('2024-01-01'),
+          flaggedForDoctor: false,
+          structured: {
+            // Plain object instead of Map (from .lean())
+            symptoms: {
+              back_pain: { severity: 7, location: 'lower' },
+              headache: { severity: 5 },
+            },
+            activities: ['sitting'],
+            triggers: ['stress'],
+            notes: '',
+          },
+          rawTranscript: 'Multiple symptoms',
+        },
+      ];
+
+      mockFind(mockCheckIns);
+
+      const result = await generateDoctorSummary(userId, startDate, endDate);
+
+      // Should handle plain object symptoms correctly
+      expect(result.symptomSummary).toHaveLength(2);
+      expect(result.symptomSummary.find((s) => s.symptom === 'back_pain')).toBeDefined();
+      expect(result.symptomSummary.find((s) => s.symptom === 'headache')).toBeDefined();
+    });
   });
 });

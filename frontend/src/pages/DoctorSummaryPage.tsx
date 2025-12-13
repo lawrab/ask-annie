@@ -193,56 +193,102 @@ export default function DoctorSummaryPage() {
                 {summary.symptomSummary.length === 0 ? (
                   <p className="text-walnut-muted text-center py-8">No symptoms recorded in this period</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b border-walnut-200">
-                        <tr className="text-left">
-                          <th className="pb-2 font-semibold text-walnut">Symptom</th>
-                          <th className="pb-2 font-semibold text-walnut text-center">Frequency</th>
-                          <th className="pb-2 font-semibold text-walnut text-center">Avg Severity</th>
-                          <th className="pb-2 font-semibold text-walnut text-center">Range</th>
-                          <th className="pb-2 font-semibold text-walnut text-center">Trend</th>
-                          <th className="pb-2 font-semibold text-walnut">First / Last</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {summary.symptomSummary.map((symptom, idx) => (
-                          <tr key={symptom.symptom} className={idx % 2 === 0 ? 'bg-cream' : ''}>
-                            <td className="py-2 text-walnut font-medium">
-                              {formatDisplayName(symptom.symptom)}
-                            </td>
-                            <td className="py-2 text-center text-walnut">
-                              {symptom.frequency.toFixed(1)}%
-                            </td>
-                            <td className="py-2 text-center text-walnut">
-                              {symptom.avgSeverity.toFixed(1)}
-                            </td>
-                            <td className="py-2 text-center text-walnut">
-                              {Math.round(symptom.minSeverity)} - {Math.round(symptom.maxSeverity)}
-                            </td>
-                            <td className="py-2 text-center">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                  symptom.trend === 'improving'
-                                    ? 'bg-sage-light text-sage'
-                                    : symptom.trend === 'worsening'
-                                    ? 'bg-coral-light text-coral'
-                                    : 'bg-walnut-light text-walnut-muted'
-                                }`}
-                              >
-                                {symptom.trend === 'improving' && '↓ Improving'}
-                                {symptom.trend === 'worsening' && '↑ Worsening'}
-                                {symptom.trend === 'stable' && '→ Stable'}
-                              </span>
-                            </td>
-                            <td className="py-2 text-xs text-walnut-muted">
-                              {symptom.firstReported} / {symptom.lastReported}
-                            </td>
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="border-b border-walnut-200">
+                          <tr className="text-left">
+                            <th className="pb-2 font-semibold text-walnut">Symptom</th>
+                            <th className="pb-2 font-semibold text-walnut text-center">Frequency</th>
+                            <th className="pb-2 font-semibold text-walnut text-center">Avg Severity</th>
+                            <th className="pb-2 font-semibold text-walnut text-center">Range</th>
+                            <th className="pb-2 font-semibold text-walnut text-center">Trend</th>
+                            <th className="pb-2 font-semibold text-walnut">First / Last</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {summary.symptomSummary.map((symptom, idx) => (
+                            <tr key={symptom.symptom} className={idx % 2 === 0 ? 'bg-cream' : ''}>
+                              <td className="py-2 text-walnut font-medium">
+                                {formatDisplayName(symptom.symptom)}
+                              </td>
+                              <td className="py-2 text-center text-walnut">
+                                {symptom.frequency.toFixed(1)}%
+                              </td>
+                              <td className="py-2 text-center text-walnut">
+                                {symptom.avgSeverity.toFixed(1)}
+                              </td>
+                              <td className="py-2 text-center text-walnut">
+                                {Math.round(symptom.minSeverity)} - {Math.round(symptom.maxSeverity)}
+                              </td>
+                              <td className="py-2 text-center">
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                    symptom.trend === 'improving'
+                                      ? 'bg-sage-light text-sage'
+                                      : symptom.trend === 'worsening'
+                                      ? 'bg-coral-light text-coral'
+                                      : 'bg-walnut-light text-walnut-muted'
+                                  }`}
+                                >
+                                  {symptom.trend === 'improving' && '↓ Improving'}
+                                  {symptom.trend === 'worsening' && '↑ Worsening'}
+                                  {symptom.trend === 'stable' && '→ Stable'}
+                                </span>
+                              </td>
+                              <td className="py-2 text-xs text-walnut-muted">
+                                {symptom.firstReported} / {symptom.lastReported}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      {summary.symptomSummary.map((symptom) => (
+                        <div key={symptom.symptom} className="p-3 bg-cream rounded-lg border border-walnut-200">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-semibold text-walnut">{formatDisplayName(symptom.symptom)}</h4>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                symptom.trend === 'improving'
+                                  ? 'bg-sage-light text-sage'
+                                  : symptom.trend === 'worsening'
+                                  ? 'bg-coral-light text-coral'
+                                  : 'bg-walnut-light text-walnut-muted'
+                              }`}
+                            >
+                              {symptom.trend === 'improving' && '↓ Improving'}
+                              {symptom.trend === 'worsening' && '↑ Worsening'}
+                              {symptom.trend === 'stable' && '→ Stable'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-walnut-muted">Frequency:</span>
+                              <span className="ml-1 font-medium text-walnut">{symptom.frequency.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-walnut-muted">Avg Severity:</span>
+                              <span className="ml-1 font-medium text-walnut">{symptom.avgSeverity.toFixed(1)}</span>
+                            </div>
+                            <div>
+                              <span className="text-walnut-muted">Range:</span>
+                              <span className="ml-1 font-medium text-walnut">
+                                {Math.round(symptom.minSeverity)} - {Math.round(symptom.maxSeverity)}
+                              </span>
+                            </div>
+                            <div className="col-span-2 text-xs text-walnut-muted">
+                              {symptom.firstReported} → {symptom.lastReported}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </Card>
 

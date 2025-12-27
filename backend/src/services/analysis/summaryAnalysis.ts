@@ -218,6 +218,7 @@ function generateSymptomSummary(checkIns: ICheckInData[]): SymptomSummaryEntry[]
 /**
  * Analyze good vs bad days with interpolation for missing days
  *
+ * For days with multiple check-ins, uses the most recent check-in to determine quality.
  * Bad day criteria: any symptom >= 7 OR average symptoms >= 6
  */
 function analyzeGoodBadDays(
@@ -245,30 +246,34 @@ function analyzeGoodBadDays(
     const dayCheckIns = dayMap.get(dateKey) || [];
 
     if (dayCheckIns.length > 0) {
-      // Day has check-ins, classify based on symptoms
+      // Day has check-ins, use most recent check-in to classify the day
+      // Sort by timestamp descending to get most recent first
+      const sortedCheckIns = [...dayCheckIns].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const mostRecentCheckIn = sortedCheckIns[0];
+
       const allSeverities: number[] = [];
       const symptomNames = new Set<string>();
 
-      for (const checkIn of dayCheckIns) {
-        const symptoms = checkIn.structured?.symptoms;
-        // Handle both Map and plain object, and ensure we get proper entries
-        let symptomsMap: Map<string, SymptomValue>;
-        if (symptoms instanceof Map) {
-          symptomsMap = symptoms;
-        } else if (symptoms && typeof symptoms === 'object') {
-          symptomsMap = new Map(Object.entries(symptoms));
-        } else {
-          symptomsMap = new Map();
-        }
-
-        symptomsMap.forEach((value: SymptomValue, name: string) => {
-          symptomNames.add(name);
-          const severity = extractSeverity(value);
-          if (severity !== null) {
-            allSeverities.push(severity);
-          }
-        });
+      // Extract symptoms from most recent check-in only
+      const symptoms = mostRecentCheckIn.structured?.symptoms;
+      let symptomsMap: Map<string, SymptomValue>;
+      if (symptoms instanceof Map) {
+        symptomsMap = symptoms;
+      } else if (symptoms && typeof symptoms === 'object') {
+        symptomsMap = new Map(Object.entries(symptoms));
+      } else {
+        symptomsMap = new Map();
       }
+
+      symptomsMap.forEach((value: SymptomValue, name: string) => {
+        symptomNames.add(name);
+        const severity = extractSeverity(value);
+        if (severity !== null) {
+          allSeverities.push(severity);
+        }
+      });
 
       const maxSeverity = allSeverities.length > 0 ? Math.max(...allSeverities) : 0;
       const avgSeverity =

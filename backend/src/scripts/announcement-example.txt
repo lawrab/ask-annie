@@ -1,0 +1,23 @@
+# Thank You for Using Annie's Health Journal!
+
+We're so grateful to have you as part of our community. Your commitment to tracking your health is inspiring, and we're here to support you every step of the way.
+
+We've been hard at work adding new features to make your health tracking experience even better. Here's what's new:
+
+## Recent Updates
+
+- **Doctor Summary Reports**: Generate comprehensive health reports that you can share with your healthcare providers. These reports include symptom patterns, triggers, and trends over time.
+
+- **Improved Pattern Recognition**: Our system now better identifies correlations between your symptoms, activities, and triggers to help you understand what affects your health.
+
+- **Enhanced Security**: We've added rate limiting and improved authentication to keep your health data safe and secure.
+
+- **Better User Experience**: We've refined the design system with our "Soft Dawn" theme for a more comfortable and intuitive interface.
+
+## What's Next
+
+We're continuously working to improve Annie's Health Journal based on your feedback. If you have suggestions or need help, please don't hesitate to reach out.
+
+Thank you for trusting us with your health journey. Together, we're making health tracking simple, insightful, and empowering.
+
+**Keep tracking, keep thriving!**

@@ -354,6 +354,49 @@ describe('Summary Analysis Service', () => {
       expect(day?.avgSeverity).toBe(6);
     });
 
+    it('should use most recent check-in for days with multiple check-ins', async () => {
+      const mockCheckIns = [
+        {
+          userId,
+          timestamp: new Date('2024-01-01T08:00:00'), // Morning - bad
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 9 }, // Severe pain in morning
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Terrible morning',
+        },
+        {
+          userId,
+          timestamp: new Date('2024-01-01T14:00:00'), // Afternoon - improved
+          flaggedForDoctor: false,
+          structured: {
+            symptoms: {
+              pain: { severity: 2 }, // Much better in afternoon
+            },
+            activities: [],
+            triggers: [],
+            notes: '',
+          },
+          rawTranscript: 'Feeling much better',
+        },
+      ];
+
+      mockFind(mockCheckIns);
+
+      const result = await generateDoctorSummary(userId, startDate, endDate);
+
+      const day = result.goodBadDayAnalysis.dailyQuality.find((d) => d.date === '2024-01-01');
+      // Should use most recent check-in (afternoon with severity 2), so day is GOOD
+      expect(day?.quality).toBe('good');
+      expect(day?.maxSeverity).toBe(2);
+      expect(day?.avgSeverity).toBe(2);
+    });
+
     it('should analyze correlations between activities and symptoms', async () => {
       const mockCheckIns = [
         {

@@ -65,6 +65,8 @@ async function transcribeWithOpenAI(
       model: 'whisper-1',
       language: language,
       response_format: 'verbose_json',
+      prompt:
+        'Patient reporting health symptoms with severity ratings from 1 to 10, where 10 is the worst. Common terms: pain, headache, nausea, fatigue, migraine.',
     });
 
     logger.info('OpenAI transcription completed', {
@@ -108,6 +110,11 @@ async function transcribeWithFasterWhisper(
     if (language) {
       formData.append('language', language);
     }
+
+    formData.append(
+      'prompt',
+      'Patient reporting health symptoms with severity ratings from 1 to 10, where 10 is the worst. Common terms: pain, headache, nausea, fatigue, migraine.'
+    );
 
     // Call faster-whisper-server API
     const response = await axios.post(WHISPER_URL, formData, {
